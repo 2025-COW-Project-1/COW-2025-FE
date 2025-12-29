@@ -42,6 +42,7 @@ export interface LoginResponse {
 export interface SignupRequest {
   name: string;
   studentId: string;
+  department: string;
   password: string;
 }
 
@@ -50,6 +51,7 @@ export interface UserInfo {
   id: number;
   studentId: string;
   name: string;
+  department?: string;
   email?: string;
   role?: string;
 }

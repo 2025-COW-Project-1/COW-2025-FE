@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const existingUser = findUserByStudentId(mockUsers, studentId);
     const selectedUser =
-      existingUser ?? createMockUser('테스트 사용자', studentId);
+      existingUser ?? createMockUser('테스트 사용자', studentId, '미지정');
 
     const mockToken = `mock-token-${studentId}`;
     storage.setToken(mockToken);
@@ -93,7 +93,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
   };
 
-  const signup = async (name: string, studentId: string, _password: string) => {
+  const signup = async (
+    name: string,
+    studentId: string,
+    department: string,
+    _password: string
+  ) => {
     void _password; // 비밀번호는 목업에서 검증하지 않음
     // ============================================
     // 개발용 목업 회원가입
@@ -108,7 +113,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       throw new Error('이미 가입된 학번입니다.');
     }
 
-    const newUser = createMockUser(name || '테스트 사용자', studentId);
+    const newUser = createMockUser(
+      name || '테스트 사용자',
+      studentId,
+      department || '미지정'
+    );
     const nextUsers = [...mockUsers, newUser];
     setMockUsers(nextUsers);
     saveMockUsers(nextUsers);

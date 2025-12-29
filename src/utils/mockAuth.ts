@@ -47,11 +47,13 @@ export const findUserByStudentId = (users: UserInfo[], studentId: string) =>
 export const createMockUser = (
   name: string,
   studentId: string,
+  department?: string,
   email?: string
 ): UserInfo => ({
   id: Date.now(),
   name,
   studentId,
+  department,
   email,
 });
 

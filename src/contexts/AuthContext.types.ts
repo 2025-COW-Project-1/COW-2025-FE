@@ -7,7 +7,12 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (studentId: string, password: string) => Promise<void>;
   logout: () => void | Promise<void>; // 서버 연결 시 Promise<void>로 변경
-  signup: (name: string, studentId: string, password: string) => Promise<void>;
+  signup: (
+    name: string,
+    studentId: string,
+    department: string,
+    password: string
+  ) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(

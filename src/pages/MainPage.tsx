@@ -1,9 +1,36 @@
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+
 const MainPage = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <header className="max-w-6xl mx-auto flex justify-between items-center mb-10">
         <h1 className="text-2xl font-black text-[#003366]">MJU DASHBOARD</h1>
-        <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+        <div className="flex items-center gap-4">
+          {user && (
+            <span className="text-sm text-gray-600">
+              {user.name}님 ({user.studentId})
+            </span>
+          )}
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 text-sm text-gray-600 hover:text-[#003366] transition-colors"
+          >
+            로그아웃
+          </button>
+          <div
+            className="w-10 h-10 bg-gray-300 rounded-full"
+            aria-label="프로필"
+          />
+        </div>
       </header>
 
       <main className="max-w-6xl mx-auto">
