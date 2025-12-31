@@ -53,7 +53,29 @@ export default function SettlementsPage() {
   };
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+
+    // 초기값이 이미 loading=true, error=null 이라서
+    // effect 안에서 setState를 "동기"로 호출할 필요가 없음
+    settlementsApi
+      .list()
+      .then((data) => {
+        if (cancelled) return;
+        setReports(data);
+        setError(null);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const terms = useMemo(() => {
