@@ -1,14 +1,24 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Reveal from '../components/Reveal';
 import ProjectCard from '../components/ProjectCard';
-import { projects } from '../api/mock/projects';
+import { projectsApi } from '../api/projects';
+import type { Project } from '../api/projects';
 
 export default function MainPage() {
-  const active = projects.filter((p) => p.status === 'active').slice(0, 3);
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    projectsApi.list().then(setProjects).catch(console.error);
+  }, []);
+
+  const active = useMemo(
+    () => projects.filter((p) => p.status === 'active').slice(0, 3),
+    [projects]
+  );
 
   return (
     <div>
-      {/* Hero */}
       <section className="bg-white">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 py-16 md:grid-cols-2">
           <Reveal className="space-y-6">
@@ -52,7 +62,6 @@ export default function MainPage() {
         </div>
       </section>
 
-      {/* 진행중 프로젝트 프리뷰 */}
       <section className="mx-auto max-w-6xl px-4 py-14">
         <Reveal>
           <div className="flex items-end justify-between gap-4">
@@ -74,25 +83,11 @@ export default function MainPage() {
         </Reveal>
 
         <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-          {active.length === 0 ? (
-            <Reveal className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">
-              현재 진행중인 프로젝트가 없어요.
-              <div className="mt-4">
-                <Link
-                  to="/projects?status=upcoming"
-                  className="font-bold text-primary hover:underline"
-                >
-                  준비중 프로젝트 보기 →
-                </Link>
-              </div>
+          {active.map((p, i) => (
+            <Reveal key={p.id} delayMs={i * 70}>
+              <ProjectCard project={p} />
             </Reveal>
-          ) : (
-            active.map((p, i) => (
-              <Reveal key={p.id} delayMs={i * 70}>
-                <ProjectCard project={p} />
-              </Reveal>
-            ))
-          )}
+          ))}
         </div>
       </section>
     </div>

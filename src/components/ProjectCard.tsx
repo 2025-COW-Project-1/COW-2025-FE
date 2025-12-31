@@ -1,7 +1,7 @@
 // src/components/ProjectCard.tsx
 import { Link } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
-import type { Project } from '../api/mock/projects';
+import type { Project } from '../api/projects';
 
 function formatPrice(n?: number) {
   if (typeof n !== 'number') return null;
@@ -10,6 +10,7 @@ function formatPrice(n?: number) {
 
 export default function ProjectCard({ project }: { project: Project }) {
   const canApply = project.status === 'active';
+  const priceText = formatPrice(project.price);
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white">
@@ -26,9 +27,10 @@ export default function ProjectCard({ project }: { project: Project }) {
           <div className="text-lg font-bold text-slate-900">
             {project.title}
           </div>
-          {formatPrice(project.price) && (
+
+          {priceText && (
             <div className="shrink-0 text-sm font-bold text-primary">
-              {formatPrice(project.price)}
+              {priceText}
             </div>
           )}
         </div>

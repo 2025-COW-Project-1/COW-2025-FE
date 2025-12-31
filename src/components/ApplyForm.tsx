@@ -1,6 +1,5 @@
-// src/components/ApplyForm.tsx
 import { useState } from 'react';
-import type { Project } from '../api/mock/projects';
+import type { Project } from '../api/projects';
 
 export default function ApplyForm({ project }: { project: Project }) {
   const canApply = project.status === 'active';

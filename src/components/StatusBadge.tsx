@@ -1,5 +1,4 @@
-// src/components/StatusBadge.tsx
-import type { ProjectStatus } from '../api/mock/projects';
+import type { ProjectStatus } from '../api/projects';
 
 const LABEL: Record<ProjectStatus, string> = {
   upcoming: '준비중',

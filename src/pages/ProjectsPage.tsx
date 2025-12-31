@@ -1,9 +1,9 @@
-// src/pages/ProjectsPage.tsx
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Reveal from '../components/Reveal';
 import ProjectCard from '../components/ProjectCard';
-import { projects } from '../api/mock/projects';
-import type { ProjectStatus } from '../api/mock/projects';
+import { projectsApi } from '../api/projects';
+import type { Project, ProjectStatus } from '../api/projects';
 
 type TabValue = ProjectStatus | 'all';
 
@@ -20,12 +20,20 @@ function isProjectStatus(v: string): v is ProjectStatus {
 
 export default function ProjectsPage() {
   const [sp, setSp] = useSearchParams();
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    projectsApi.list().then(setProjects).catch(console.error);
+  }, []);
 
   const raw = sp.get('status');
   const status: TabValue = raw ? (isProjectStatus(raw) ? raw : 'all') : 'all';
 
-  const filtered =
-    status === 'all' ? projects : projects.filter((p) => p.status === status);
+  const filtered = useMemo(
+    () =>
+      status === 'all' ? projects : projects.filter((p) => p.status === status),
+    [projects, status]
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -36,11 +44,9 @@ export default function ProjectsPage() {
         </p>
       </Reveal>
 
-      {/* Tabs */}
       <Reveal delayMs={80} className="mt-6 flex flex-wrap gap-2">
         {TABS.map((t) => {
           const active = status === t.value;
-
           return (
             <button
               key={t.value}
@@ -62,19 +68,12 @@ export default function ProjectsPage() {
         })}
       </Reveal>
 
-      {/* List */}
       <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
-        {filtered.length === 0 ? (
-          <Reveal className="md:col-span-3 rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">
-            해당 상태의 프로젝트가 아직 없어요.
+        {filtered.map((p, i) => (
+          <Reveal key={p.id} delayMs={i * 60}>
+            <ProjectCard project={p} />
           </Reveal>
-        ) : (
-          filtered.map((p, i) => (
-            <Reveal key={p.id} delayMs={i * 60}>
-              <ProjectCard project={p} />
-            </Reveal>
-          ))
-        )}
+        ))}
       </div>
     </div>
   );

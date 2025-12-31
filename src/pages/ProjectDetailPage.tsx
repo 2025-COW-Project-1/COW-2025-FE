@@ -1,15 +1,28 @@
-// src/pages/ProjectDetailPage.tsx
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Reveal from '../components/Reveal';
 import StatusBadge from '../components/StatusBadge';
 import ApplyForm from '../components/ApplyForm';
-import { getProjectById } from '../api/mock/projects';
+import { projectsApi } from '../api/projects';
+import type { Project } from '../api/projects';
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
-  const project = projectId ? getProjectById(projectId) : undefined;
+  const [project, setProject] = useState<Project | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-  if (!project) {
+  useEffect(() => {
+    if (!projectId) return;
+    projectsApi
+      .getById(projectId)
+      .then((p) => {
+        if (!p) setNotFound(true);
+        else setProject(p);
+      })
+      .catch(console.error);
+  }, [projectId]);
+
+  if (notFound) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
         <h1 className="font-heading text-2xl text-slate-900">
@@ -21,6 +34,14 @@ export default function ProjectDetailPage() {
         >
           목록으로 돌아가기 →
         </Link>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">
+        로딩 중...
       </div>
     );
   }
@@ -66,23 +87,6 @@ export default function ProjectDetailPage() {
             <li>수익 사용 목적과 정산은 종료 후 공개합니다.</li>
             <li>마감 이후에는 신청이 불가해요.</li>
           </ul>
-
-          <div className="mt-6">
-            {project.status === 'active' ? (
-              <a
-                href="#apply"
-                className="inline-block rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white"
-              >
-                신청 섹션으로 이동
-              </a>
-            ) : (
-              <div className="rounded-2xl bg-slate-100 p-4 text-sm font-bold text-slate-600">
-                {project.status === 'closed'
-                  ? '이 프로젝트는 마감되었어요.'
-                  : '아직 준비중인 프로젝트예요.'}
-              </div>
-            )}
-          </div>
         </Reveal>
       </div>
 

@@ -1,4 +1,5 @@
-// src/api/mock/projects.ts
+import { api } from './client';
+
 export type ProjectStatus = 'upcoming' | 'active' | 'closed';
 
 export type ProjectOption = {
@@ -11,13 +12,17 @@ export type Project = {
   title: string;
   summary: string;
   status: ProjectStatus;
-  startAt: string;
-  endAt: string;
+  startAt: string; // YYYY-MM-DD
+  endAt: string; // YYYY-MM-DD
   price?: number;
   options?: ProjectOption[];
 };
 
-export const projects: Project[] = [
+// 개발 중에는 mock 쓰고, 나중에 백엔드 붙으면 .env.production에서 false로 바꿔서 실API 사용
+const USE_MOCK =
+  import.meta.env.VITE_USE_MOCK === 'true' || import.meta.env.DEV;
+
+const mockProjects: Project[] = [
   {
     id: 'spring-keyring',
     title: '봄맞이 키링 프로젝트',
@@ -52,6 +57,26 @@ export const projects: Project[] = [
   },
 ];
 
-export function getProjectById(id: string) {
-  return projects.find((p) => p.id === id);
-}
+// 혹시 다른 곳에서 바로 배열을 쓰고 싶을 수도 있어서 export도 해둠(선택)
+export const projects = mockProjects;
+
+export const projectsApi = {
+  async list(): Promise<Project[]> {
+    if (USE_MOCK) return mockProjects;
+
+    // ⚠️ 백엔드에 /api/projects가 생기면 그대로 사용 가능
+    return api<Project[]>('/api/projects');
+  },
+
+  async getById(id: string): Promise<Project | undefined> {
+    if (USE_MOCK) return mockProjects.find((p) => p.id === id);
+
+    // 백엔드에서 404면 api()가 throw할 수 있어서 undefined로 처리(페이지 로직 유지)
+    try {
+      return await api<Project>(`/api/projects/${id}`);
+    } catch (e) {
+      console.error(e);
+      return undefined;
+    }
+  },
+};
