@@ -23,7 +23,7 @@ export default function MainPage() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 py-16 md:grid-cols-2">
           <Reveal className="space-y-6">
             <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-5xl">
-              프로젝트로 만드는 굿즈,
+              "우리의 손끝에서, <br /> 명지가 피어납니다."
               <span className="block text-primary">명지공방</span>
             </h1>
 
@@ -37,7 +37,7 @@ export default function MainPage() {
                 to="/projects?status=active"
                 className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white"
               >
-                진행중 프로젝트 보기
+                진행 중인 프로젝트 보기
               </Link>
               <Link
                 to="/about"
@@ -67,10 +67,10 @@ export default function MainPage() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="font-heading text-2xl text-slate-900">
-                현재 진행중 프로젝트
+                진행 중인 프로젝트
               </h2>
               <p className="mt-2 text-sm text-slate-600">
-                지금 신청 가능한 프로젝트를 확인하세요.
+                지금 신청 가능한 굿즈를 확인하세요.
               </p>
             </div>
             <Link

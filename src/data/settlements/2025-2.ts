@@ -2,7 +2,7 @@
 import type { SettlementReport } from '../../types/settlements';
 
 const report: SettlementReport = {
-  id: '2025-2-gambaram',
+  id: '2025_2',
   term: '2025-2',
   projectTitle: '감바람 — 명지에 가을바람을 불다',
 

@@ -109,22 +109,23 @@ export default function Header() {
               문의
             </Link>
 
+            {/* ✅ CTA 버튼: "진행중 프로젝트 보기" -> "관리자 로그인" */}
             <Link
-              to="/projects?status=active"
+              to="/admin/login"
               onClick={() => setOpen(null)}
               className="ml-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
-              진행중 프로젝트 보기
+              관리자 로그인
             </Link>
           </nav>
 
-          {/* Mobile: 일단 CTA만 */}
+          {/* Mobile: CTA만 */}
           <div className="md:hidden">
             <Link
-              to="/projects?status=active"
+              to="/admin/login"
               className="rounded-xl bg-primary px-3 py-2 text-sm font-bold text-white"
             >
-              진행중 보기
+              관리자 로그인
             </Link>
           </div>
         </div>

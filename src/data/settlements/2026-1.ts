@@ -2,14 +2,14 @@
 import type { SettlementReport } from '../../types/settlements';
 
 const report: SettlementReport = {
-  id: '2026-1-placeholder',
+  id: '2026_1',
   term: '2026-1',
-  projectTitle: '2026-1 정산(준비중)',
+  projectTitle: '2026-1 정산(Comming soon)',
 
   sales: [],
   expenseGroups: [],
 
-  footerNote: '정산 데이터 준비중',
+  footerNote: 'Comming soon',
   instaHandle: '@mju_craft',
 };
 

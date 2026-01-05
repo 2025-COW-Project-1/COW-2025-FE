@@ -1,12 +1,12 @@
 // src/App.tsx
 import { Route, Routes } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
-
 import MainPage from './pages/MainPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import ResourcesPage from './pages/ResourcesPage';
 import SettlementsPage from './pages/SettlementsPage';
+import AdminLoginPage from './pages/AdminLoginPage';
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -26,6 +26,7 @@ export default function App() {
         <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/settlements" element={<SettlementsPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/about" element={<Placeholder title="명지공방 소개" />} />
         <Route path="/contact" element={<Placeholder title="문의" />} />
       </Route>

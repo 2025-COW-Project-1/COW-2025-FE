@@ -2,7 +2,7 @@
 import type { SettlementReport } from '../../types/settlements';
 
 const report: SettlementReport = {
-  id: '2025-1-placeholder',
+  id: '2025_1',
   term: '2025-1',
   projectTitle: '2025-1 정산(준비중)',
 
