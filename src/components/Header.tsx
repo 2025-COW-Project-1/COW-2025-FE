@@ -42,7 +42,6 @@ export default function Header() {
                 프로젝트 <span className="ml-1 text-slate-400">▾</span>
               </button>
 
-              {/* ✅ 밖 클릭 닫기: 백드롭(가장 단순, effect 불필요) */}
               {isProjectsOpen && (
                 <button
                   type="button"

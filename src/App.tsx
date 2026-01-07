@@ -1,21 +1,16 @@
 // src/App.tsx
 import { Route, Routes } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
+import AdminLayout from './components/AdminLayout';
 import MainPage from './pages/MainPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import ResourcesPage from './pages/ResourcesPage';
 import SettlementsPage from './pages/SettlementsPage';
 import AdminLoginPage from './pages/AdminLoginPage';
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-heading text-3xl text-primary">{title}</h1>
-      <p className="mt-2 text-slate-600">페이지 작업 예정</p>
-    </div>
-  );
-}
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
 
 export default function App() {
   return (
@@ -27,8 +22,11 @@ export default function App() {
         <Route path="/resources" element={<ResourcesPage />} />
         <Route path="/settlements" element={<SettlementsPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/about" element={<Placeholder title="명지공방 소개" />} />
-        <Route path="/contact" element={<Placeholder title="문의" />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+      </Route>
+      <Route element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminDashboardPage />} />
       </Route>
     </Routes>
   );

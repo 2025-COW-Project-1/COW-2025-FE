@@ -3,12 +3,14 @@ import { useEffect, useRef, useState, type PropsWithChildren } from 'react';
 type RevealProps = PropsWithChildren<{
   className?: string;
   delayMs?: number;
+  id?: string;
 }>;
 
 export default function Reveal({
   children,
   className = '',
   delayMs = 0,
+  id,
 }: RevealProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [shown, setShown] = useState(false);
@@ -34,6 +36,7 @@ export default function Reveal({
 
   return (
     <div
+      id={id}
       ref={ref}
       style={{ transitionDelay: `${delayMs}ms` }}
       className={[
