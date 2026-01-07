@@ -1,5 +1,4 @@
-// src/api/client.ts
-type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+﻿type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 export class ApiError extends Error {
   status: number;
@@ -12,8 +11,10 @@ export class ApiError extends Error {
   }
 }
 
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
+
 function getAccessToken(): string | null {
-  return localStorage.getItem('access_token');
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 type RequestOptions = {
@@ -51,7 +52,6 @@ export async function api<T>(
   const data: unknown = text ? safeJsonParse(text) : null;
 
   if (!res.ok) {
-    // ✅ any 없이 message 안전하게 추출
     const msg = extractErrorMessage(data);
     throw new ApiError(res.status, data, msg);
   }
@@ -67,20 +67,17 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
-/** 백엔드 에러 응답에서 message 추출 (any 금지 버전) */
+// Extract message from error response.
 function extractErrorMessage(data: unknown): string | undefined {
   if (!data) return undefined;
 
-  // 문자열 에러 본문이면 그대로 사용
   if (typeof data === 'string') return data;
 
-  // 객체라면 message 필드 확인
   if (typeof data === 'object') {
     const record = data as Record<string, unknown>;
     const msg = record['message'];
     if (typeof msg === 'string' && msg.trim().length > 0) return msg;
 
-    // 일부 백엔드가 error / detail / msg 등을 쓰는 경우 대비(선택)
     const alt = record['error'] ?? record['detail'] ?? record['msg'];
     if (typeof alt === 'string' && alt.trim().length > 0) return alt;
   }

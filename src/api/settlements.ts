@@ -1,6 +1,6 @@
-// src/api/settlements.ts
-import { api } from './client';
+﻿import { api } from './client';
 import { settlementReports } from '../data/settlements';
+import { loadAdminSettlements } from '../utils/adminSettlements';
 import type {
   SettlementReport,
   MoneyItem,
@@ -10,8 +10,17 @@ import type {
 const USE_MOCK =
   import.meta.env.VITE_USE_MOCK === 'true' || import.meta.env.DEV;
 
+export function getItemTotal(item: MoneyItem) {
+  if (item.unitPrice !== undefined || item.quantity !== undefined) {
+    const unitPrice = item.unitPrice ?? 0;
+    const quantity = item.quantity ?? 0;
+    return unitPrice * quantity;
+  }
+  return item.amount;
+}
+
 export function sumItems(items: MoneyItem[]) {
-  return items.reduce((acc, it) => acc + it.amount, 0);
+  return items.reduce((acc, it) => acc + getItemTotal(it), 0);
 }
 
 export function sumExpenses(groups: ExpenseGroup[]) {
@@ -28,16 +37,16 @@ export function calcReport(r: SettlementReport) {
 
 export const settlementsApi = {
   async list(): Promise<SettlementReport[]> {
-    if (USE_MOCK) return settlementReports;
+    if (USE_MOCK) {
+      const adminReports = loadAdminSettlements();
+      return adminReports.length ? adminReports : settlementReports;
+    }
 
-    // ✅ 백엔드 정산 API가 생기면 여기만 맞추면 됨
-    // 예: GET /api/settlements -> SettlementReport[] 혹은 {items:[...]}
     const raw = await api<unknown>('/api/settlements');
     return normalizeReportsResponse(raw).map(mapReportDto);
   },
 };
 
-/** 백엔드 응답이 배열이거나 {items/data/results} 형태여도 처리 */
 type SettlementReportDto = Record<string, unknown>;
 
 function normalizeReportsResponse(raw: unknown): SettlementReportDto[] {
@@ -50,7 +59,6 @@ function normalizeReportsResponse(raw: unknown): SettlementReportDto[] {
   return [];
 }
 
-/** DTO -> Report (백엔드 확정되면 여기 키만 정리하면 끝) */
 function mapReportDto(dto: SettlementReportDto): SettlementReport {
   const id = toStr(dto.id ?? dto.reportId) ?? `r_${Date.now()}`;
   const term = toStr(dto.term ?? dto.semester) ?? 'unknown';
@@ -75,9 +83,27 @@ function mapReportDto(dto: SettlementReportDto): SettlementReport {
 
 function mapItem(v: unknown): MoneyItem {
   const r = (v ?? {}) as Record<string, unknown>;
+  const label = toStr(r.label ?? r.name ?? r.title) ?? '항목';
+  const rawAmount = toNum(r.amount ?? r.value ?? r.total) ?? 0;
+  const unitPrice = toNum(r.unitPrice ?? r.unit_price ?? r.price) ?? undefined;
+  const quantity = toNum(r.quantity ?? r.qty ?? r.count) ?? undefined;
+
+  if (unitPrice !== undefined || quantity !== undefined) {
+    const normalizedQuantity = quantity ?? (unitPrice !== undefined ? 1 : 0);
+    const normalizedUnitPrice =
+      unitPrice ??
+      (normalizedQuantity ? rawAmount / normalizedQuantity : rawAmount);
+    return {
+      label,
+      amount: normalizedUnitPrice * normalizedQuantity,
+      unitPrice: normalizedUnitPrice,
+      quantity: normalizedQuantity,
+    };
+  }
+
   return {
-    label: toStr(r.label ?? r.name ?? r.title) ?? '항목',
-    amount: toNum(r.amount ?? r.value ?? r.price) ?? 0,
+    label,
+    amount: rawAmount,
   };
 }
 

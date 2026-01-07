@@ -1,10 +1,10 @@
-// src/api/admin.ts
+﻿// src/api/admin.ts
 import { api } from './client';
 
 export type AdminMe = {
   id: number;
   username: string;
-  role: string; // "ADMIN" 등
+  role: string; // e.g. "ADMIN"
 };
 
 export type AdminLoginBody = {
@@ -20,7 +20,6 @@ function joinBase(path: string) {
 }
 
 export const adminApi = {
-  // 로그인: 204 No Content 기대 → void로 처리
   login(body: AdminLoginBody) {
     return api<void>(joinBase('/api/admin/login'), {
       method: 'POST',
@@ -28,12 +27,10 @@ export const adminApi = {
     });
   },
 
-  // 내 정보 조회: 쿠키(ADMIN_ACCESS_TOKEN)가 자동으로 포함되어야 성공
   me() {
     return api<AdminMe>(joinBase('/api/admin/me'));
   },
 
-  // (나중에 필요하면)
   logout() {
     return api<void>(joinBase('/api/admin/logout'), { method: 'POST' });
   },
