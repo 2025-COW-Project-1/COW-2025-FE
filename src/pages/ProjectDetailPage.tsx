@@ -12,14 +12,42 @@ export default function ProjectDetailPage() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (!projectId) return;
+    let active = true;
+    const resetId = window.setTimeout(() => {
+      if (!active) return;
+      setNotFound(false);
+      setProject(null);
+    }, 0);
+
+    if (!projectId) {
+      const notFoundId = window.setTimeout(() => {
+        if (!active) return;
+        setNotFound(true);
+      }, 0);
+      return () => {
+        active = false;
+        window.clearTimeout(resetId);
+        window.clearTimeout(notFoundId);
+      };
+    }
+
     projectsApi
       .getById(projectId)
       .then((p) => {
+        if (!active) return;
         if (!p) setNotFound(true);
         else setProject(p);
       })
-      .catch(console.error);
+      .catch((err) => {
+        if (!active) return;
+        console.error(err);
+        setNotFound(true);
+      });
+
+    return () => {
+      active = false;
+      window.clearTimeout(resetId);
+    };
   }, [projectId]);
 
   if (notFound) {

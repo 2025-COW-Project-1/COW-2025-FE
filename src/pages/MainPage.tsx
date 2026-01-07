@@ -4,6 +4,7 @@ import Reveal from '../components/Reveal';
 import ProjectCard from '../components/ProjectCard';
 import { projectsApi } from '../api/projects';
 import type { Project } from '../api/projects';
+import mjucraftLogo from '../assets/mjucraftLogo.png';
 
 export default function MainPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -54,9 +55,17 @@ export default function MainPage() {
           >
             <div className="rounded-2xl bg-white p-8 shadow-sm">
               <div className="text-sm font-semibold text-slate-700">
-                여기에 굿즈/마스코트 이미지
+                명지공방 로고
               </div>
-              <div className="mt-3 h-48 rounded-xl bg-slate-100" />
+              <div className="mt-3 h-48 rounded-xl bg-slate-100">
+                <Link to="/about">
+                  <img
+                    src={mjucraftLogo}
+                    alt="명지공방 소개 페이지로 이동"
+                    className="w-full h-full object-contain"
+                  />
+                </Link>
+              </div>
             </div>
           </Reveal>
         </div>
