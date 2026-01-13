@@ -101,6 +101,14 @@ export default function Header() {
             </Link>
 
             <Link
+              to="/forms"
+              onClick={() => setOpen(null)}
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+            >
+              지원하기
+            </Link>
+
+            <Link
               to="/contact"
               onClick={() => setOpen(null)}
               className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
@@ -108,7 +116,6 @@ export default function Header() {
               문의
             </Link>
 
-            {/* ✅ CTA 버튼: "진행중 프로젝트 보기" -> "관리자 로그인" */}
             <Link
               to="/admin/login"
               onClick={() => setOpen(null)}

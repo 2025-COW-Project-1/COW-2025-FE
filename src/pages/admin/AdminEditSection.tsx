@@ -1,17 +1,17 @@
 ﻿import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
-import {
-  loadAdminEdit,
-  saveAdminEdit,
-  type AdminEdit,
-} from '../../utils/adminEdit';
+import { adminApi } from '../../api/admin';
 
-export default function AdminEditSection() {
+type AdminEditSectionProps = {
+  initialUsername?: string | null;
+};
+
+export default function AdminEditSection({
+  initialUsername = null,
+}: AdminEditSectionProps) {
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState<AdminEdit>(() =>
-    loadAdminEdit()
-  );
+  const [meUserId, setMeUserId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [isVerified, setIsVerified] = useState(false);
@@ -23,30 +23,32 @@ export default function AdminEditSection() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const maskedUserId = useMemo(() => {
-    if (!credentials.userId) return '';
-    if (credentials.userId.length <= 2) return credentials.userId;
-    return (
-      credentials.userId.slice(0, 2) + '•'.repeat(credentials.userId.length - 2)
-    );
-  }, [credentials.userId]);
 
-  const handleVerify = () => {
+  const maskedUserId = useMemo(() => {
+    const displayUserId = meUserId ?? initialUsername ?? '';
+    if (!displayUserId) return '';
+    if (displayUserId.length <= 2) return displayUserId;
+    return displayUserId.slice(0, 2) + '.'.repeat(displayUserId.length - 2);
+  }, [initialUsername, meUserId]);
+
+  const handleVerify = async () => {
     setError(null);
     setMessage(null);
 
-    const stored = loadAdminEdit();
-    if (
-      stored.userId !== currentUserId ||
-      stored.password !== currentPassword
-    ) {
+    try {
+      const expectedUserId = meUserId ?? initialUsername;
+      if (expectedUserId && currentUserId.trim() !== expectedUserId) {
+        setError('현재 아이디가 올바르지 않습니다.');
+        setIsVerified(false);
+        return;
+      }
+      await adminApi.verifyPassword({ password: currentPassword });
+      setIsVerified(true);
+      setMessage('인증되었습니다. 변경할 항목을 선택해 주세요.');
+    } catch {
       setError('현재 아이디 또는 비밀번호가 올바르지 않습니다.');
       setIsVerified(false);
-      return;
     }
-
-    setIsVerified(true);
-    setMessage('인증되었습니다. 변경할 항목을 선택해 주세요.');
   };
 
   const handleUpdateUserId = () => {
@@ -57,22 +59,21 @@ export default function AdminEditSection() {
       return;
     }
 
-    const stored = loadAdminEdit();
-    const updated: AdminEdit = {
-      userId: nextUserId.trim(),
-      password: stored.password,
-      updatedAt: Date.now(),
-    };
-
-    saveAdminEdit(updated);
-    setCredentials(updated);
-    setNextUserId('');
-    setIsVerified(false);
-    setActiveAction(null);
-    setMessage('아이디가 변경되었습니다. 다시 로그인해 주세요.');
-    window.setTimeout(() => {
-      navigate('/admin/login');
-    }, 1200);
+    adminApi
+      .updateUsername({ username: nextUserId.trim() })
+      .then(() => {
+        setMeUserId(nextUserId.trim());
+        setNextUserId('');
+        setIsVerified(false);
+        setActiveAction(null);
+        setMessage('아이디가 변경되었습니다. 다시 로그인해 주세요.');
+        window.setTimeout(() => {
+          navigate('/admin/login');
+        }, 1200);
+      })
+      .catch(() => {
+        setError('아이디 변경에 실패했습니다. 다시 시도해 주세요.');
+      });
   };
 
   const handleUpdatePassword = () => {
@@ -98,23 +99,21 @@ export default function AdminEditSection() {
       return;
     }
 
-    const stored = loadAdminEdit();
-    const updated: AdminEdit = {
-      userId: stored.userId,
-      password: nextPassword,
-      updatedAt: Date.now(),
-    };
-
-    saveAdminEdit(updated);
-    setCredentials(updated);
-    setNextPassword('');
-    setConfirmPassword('');
-    setIsVerified(false);
-    setActiveAction(null);
-    setMessage('비밀번호가 변경되었습니다. 다시 로그인해 주세요.');
-    window.setTimeout(() => {
-      navigate('/admin/login');
-    }, 1200);
+    adminApi
+      .updatePassword({ password: nextPassword })
+      .then(() => {
+        setNextPassword('');
+        setConfirmPassword('');
+        setIsVerified(false);
+        setActiveAction(null);
+        setMessage('비밀번호가 변경되었습니다. 다시 로그인해 주세요.');
+        window.setTimeout(() => {
+          navigate('/admin/login');
+        }, 1200);
+      })
+      .catch(() => {
+        setError('비밀번호 변경에 실패했습니다. 다시 시도해 주세요.');
+      });
   };
 
   return (

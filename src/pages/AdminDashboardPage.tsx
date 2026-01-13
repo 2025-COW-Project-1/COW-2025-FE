@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+ï»¿import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Reveal from '../components/Reveal';
+import { adminApi } from '../api/admin';
 import {
   loadAdminContent,
   saveAdminContent,
@@ -22,10 +23,11 @@ import AdminSettlementsSection from './admin/AdminSettlementsSection';
 import AdminEditSection from './admin/AdminEditSection';
 
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
   const location = useLocation();
   const section = location.hash.replace('#', '') || 'edit';
-  const [checking] = useState(false);
-  const [meName] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [meName, setMeName] = useState<string | null>(null);
   const [content, setContent] = useState<AdminContent>(() =>
     loadAdminContent()
   );
@@ -48,10 +50,30 @@ export default function AdminDashboardPage() {
       map[term] = list;
     });
     return map;
-  }, [content.projectsIntro]);  if (checking) {
+  }, [content.projectsIntro]);
+
+  useEffect(() => {
+    let active = true;
+    adminApi
+      .me()
+      .then((me) => {
+        if (!active) return;
+        setMeName(me.username);
+        setChecking(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        navigate('/admin/login');
+      });
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
+  if (checking) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">
-        °ü¸®ÀÚ ±ÇÇÑ È®ÀÎ Áß...
+        ê´€ë¦¬ì ê¶Œí•œ í™•ì¸ ì¤‘...
       </div>
     );
   }
@@ -67,10 +89,10 @@ export default function AdminDashboardPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="font-heading text-3xl text-primary">
-              °ü¸®ÀÚ ´ë½Ãº¸µå
+              ê´€ë¦¬ì ëŒ€ì‹œë³´ë“œ
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              {meName ? `${meName} °èÁ¤À¸·Î ·Î±×ÀÎ µÊ` : '°ü¸®ÀÚ ±ÇÇÑ'}
+              {meName ? `${meName} ê³„ì •ìœ¼ë¡œ ë¡œê·¸ì¸ ë¨` : 'ê´€ë¦¬ì ê¶Œí•œ'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -82,12 +104,12 @@ export default function AdminDashboardPage() {
               }}
               className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
             >
-              {dirty ? 'º¯°æ»çÇ× ÀúÀå' : 'ÀúÀåµÊ'}
+              {dirty ? 'ë³€ê²½ì‚¬í•­ ì €ì¥' : 'ì €ì¥ë¨'}
             </button>
           </div>
         </div>
       </Reveal>
-      {section === 'edit' && <AdminEditSection />}
+      {section === 'edit' && <AdminEditSection initialUsername={meName} />}
       {section === 'about' && (
         <AdminAboutSection content={content} updateContent={updateContent} />
       )}
@@ -121,6 +143,7 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
 
 
 

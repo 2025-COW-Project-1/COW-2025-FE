@@ -111,7 +111,7 @@ export default function ProjectDetailPage() {
         >
           <h2 className="font-heading text-xl text-slate-900">안내</h2>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600">
-            <li>수령/배송 방식은 프로젝트별로 달라요.</li>
+            <li>수령/배송 방식은 프로젝트 별로 달라요.</li>
             <li>수익 사용 목적과 정산은 종료 후 공개합니다.</li>
             <li>마감 이후에는 신청이 불가해요.</li>
           </ul>

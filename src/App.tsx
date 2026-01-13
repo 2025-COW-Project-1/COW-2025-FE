@@ -10,6 +10,7 @@ import SettlementsPage from './pages/SettlementsPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import AboutPage from './pages/AboutPage';
+import FormPage from './pages/FormPage';
 import ContactPage from './pages/ContactPage';
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/settlements" element={<SettlementsPage />} />
         <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/forms" element={<FormPage />} />
         <Route path="/contact" element={<ContactPage />} />
       </Route>
       <Route element={<AdminLayout />}>

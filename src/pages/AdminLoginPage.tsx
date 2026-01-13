@@ -1,14 +1,12 @@
 ﻿import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Reveal from '../components/Reveal';
-import { loadAdminEdit, verifyAdminEdit } from '../utils/adminEdit';
+import { adminApi } from '../api/admin';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
-  const [userId, setUserId] = useState(() => loadAdminEdit().userId);
-  const [password, setPassword] = useState(
-    () => loadAdminEdit().password
-  );
+  const [userId, setUserId] = useState('');
+  const [password, setPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,10 +32,7 @@ export default function AdminLoginPage() {
             setError(null);
 
             try {
-              const isValid = verifyAdminEdit(userId, password);
-              if (!isValid) {
-                throw new Error('아이디 또는 비밀번호가 올바르지 않습니다.');
-              }
+              await adminApi.login({ username: userId, password });
               navigate('/admin');
             } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
@@ -55,7 +50,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setUserId(e.target.value)}
               autoComplete="username"
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
-              placeholder="admin"
+              placeholder="아이디를 입력해주세요."
               required
               disabled={loading}
             />
@@ -71,7 +66,7 @@ export default function AdminLoginPage() {
               type="password"
               autoComplete="current-password"
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
-              placeholder="admin1234"
+              placeholder="비밀번호를 입력해주세요."
               required
               disabled={loading}
             />

@@ -43,7 +43,7 @@ export async function api<T>(
     method,
     headers,
     body: hasBody ? JSON.stringify(opts.body) : undefined,
-    credentials: 'include',
+    credentials: 'include', // 쿠키 삭제 응답 처리 가능
   });
 
   if (res.status === 204) return undefined as T;

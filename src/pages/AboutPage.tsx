@@ -1,11 +1,35 @@
-﻿import { useMemo } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import Reveal from '../components/Reveal';
 import BrandIcon from '../components/BrandIcon';
 import mjucraftLogo from '../assets/mjucraftLogo.png';
-import { loadAdminContent } from '../utils/adminContent';
+import { loadAdminContent, type AdminContent } from '../utils/adminContent';
+import { introApi, normalizeIntroResponse } from '../api/intro';
 
 export default function AboutPage() {
-  const content = useMemo(() => loadAdminContent(), []);
+  const [content, setContent] = useState<AdminContent>(() =>
+    loadAdminContent()
+  );
+  const fetchedRef = useRef(false);
+
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    let active = true;
+
+    introApi
+      .getIntro()
+      .then((data) => {
+        if (!active) return;
+        setContent((prev) => normalizeIntroResponse(data, prev));
+      })
+      .catch(() => {
+        if (!active) return;
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
