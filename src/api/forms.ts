@@ -29,14 +29,50 @@ export type ApplyResponse = {
   resultCode?: string;
 };
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
+const demoForm: ActiveFormResponse = {
+  formId: 1,
+  title: '2026-1학기 모집',
+  description: '명지공방 지원서를 작성해 주세요.',
+  questions: [
+    {
+      id: 10,
+      orderNo: 1,
+      label: '지원 동기',
+      description: '간단히 적어 주세요.',
+      required: true,
+    },
+    {
+      id: 11,
+      orderNo: 2,
+      label: '경험/프로젝트',
+      description: '관련 경험이 있다면 알려주세요.',
+      required: false,
+    },
+  ],
+};
+
 export const formsApi = {
-  getActiveForm() {
-    return api<ActiveFormResponse>('/api/forms/active');
+  async getActiveForm() {
+    try {
+      return await api<ActiveFormResponse>('/api/forms/active');
+    } catch (err) {
+      if (DEMO_MODE) return demoForm;
+      throw err;
+    }
   },
-  applyActiveForm(payload: ApplyRequest) {
-    return api<ApplyResponse>('/api/forms/active/apply', {
-      method: 'POST',
-      body: payload,
-    });
+  async applyActiveForm(payload: ApplyRequest) {
+    try {
+      return await api<ApplyResponse>('/api/forms/active/apply', {
+        method: 'POST',
+        body: payload,
+      });
+    } catch (err) {
+      if (DEMO_MODE) {
+        return { applicationId: Date.now(), resultCode: 'DEMO' };
+      }
+      throw err;
+    }
   },
 };

@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://recruit.bluerack.org/api/:path*"
+      "destination": "http://54.180.142.40/api/:path*"
     }
   ]
 }

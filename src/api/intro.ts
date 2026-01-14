@@ -1,12 +1,8 @@
 import { api } from './client';
-import type { AdminContent, ProjectIntro } from '../utils/adminContent';
+import type { AdminContent } from '../utils/adminContent';
 
-type IntroResponse = {
-  about?: Partial<AdminContent['about']>;
-  links?: Partial<AdminContent['links']>;
-  projectsIntro?: ProjectIntro[];
-  projects?: ProjectIntro[];
-};
+type IntroduceInfoResponse = Partial<AdminContent['about']>;
+type IntroduceSnsResponse = Partial<AdminContent['links']>;
 
 function mergeAbout(
   fallback: AdminContent['about'],
@@ -25,26 +21,28 @@ function mergeAbout(
   };
 }
 
-export function normalizeIntroResponse(
-  response: IntroResponse,
+export function normalizeIntroduceResponses(
+  info: IntroduceInfoResponse | undefined,
+  sns: IntroduceSnsResponse | undefined,
   fallback: AdminContent
 ): AdminContent {
   return {
     ...fallback,
-    about: mergeAbout(fallback.about, response.about),
+    about: mergeAbout(fallback.about, info),
     links: {
-      instagramUrl: response.links?.instagramUrl ?? fallback.links.instagramUrl,
-      kakaoUrl: response.links?.kakaoUrl ?? fallback.links.kakaoUrl,
+      instagramUrl: sns?.instagramUrl ?? fallback.links.instagramUrl,
+      kakaoUrl: sns?.kakaoUrl ?? fallback.links.kakaoUrl,
     },
-    projectsIntro:
-      response.projectsIntro ??
-      response.projects ??
-      fallback.projectsIntro,
+    projectsIntro: fallback.projectsIntro,
   };
 }
 
 export const introApi = {
-  getIntro() {
-    return api<IntroResponse>('/api/intro');
+  getInformation() {
+    return api<IntroduceInfoResponse>('/api/introduce/information');
+  },
+
+  getSns() {
+    return api<IntroduceSnsResponse>('/api/introduce/sns');
   },
 };

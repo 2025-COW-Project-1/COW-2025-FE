@@ -20,6 +20,7 @@ export type Project = {
 
 const USE_MOCK =
   import.meta.env.VITE_USE_MOCK === 'true' || import.meta.env.DEV;
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 const mockProjects: Project[] = [
   {
@@ -60,7 +61,12 @@ export const projects = mockProjects;
 export const projectsApi = {
   async list(): Promise<Project[]> {
     if (USE_MOCK) return mockProjects;
-    return api<Project[]>('/api/projects');
+    try {
+      return await api<Project[]>('/api/projects');
+    } catch (err) {
+      if (DEMO_MODE) return mockProjects;
+      throw err;
+    }
   },
 
   async getById(id: string): Promise<Project | undefined> {
@@ -69,6 +75,9 @@ export const projectsApi = {
     try {
       return await api<Project>(`/api/projects/${id}`);
     } catch (e) {
+      if (DEMO_MODE) {
+        return mockProjects.find((p) => p.id === id) ?? mockProjects[0];
+      }
       console.error(e);
       return undefined;
     }

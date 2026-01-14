@@ -13,21 +13,13 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     let active = true;
-    const resetId = window.setTimeout(() => {
-      if (!active) return;
-      setNotFound(false);
-      setProject(null);
-    }, 0);
+    setNotFound(false);
+    setProject(null);
 
     if (!projectId) {
-      const notFoundId = window.setTimeout(() => {
-        if (!active) return;
-        setNotFound(true);
-      }, 0);
+      setNotFound(true);
       return () => {
         active = false;
-        window.clearTimeout(resetId);
-        window.clearTimeout(notFoundId);
       };
     }
 
@@ -46,7 +38,6 @@ export default function ProjectDetailPage() {
 
     return () => {
       active = false;
-      window.clearTimeout(resetId);
     };
   }, [projectId]);
 

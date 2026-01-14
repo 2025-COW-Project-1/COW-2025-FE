@@ -1,7 +1,6 @@
-﻿import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+﻿import { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import Reveal from '../components/Reveal';
-import { adminApi } from '../api/admin';
 import {
   loadAdminContent,
   saveAdminContent,
@@ -23,11 +22,8 @@ import AdminSettlementsSection from './admin/AdminSettlementsSection';
 import AdminEditSection from './admin/AdminEditSection';
 
 export default function AdminDashboardPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const section = location.hash.replace('#', '') || 'edit';
-  const [checking, setChecking] = useState(true);
-  const [meName, setMeName] = useState<string | null>(null);
   const [content, setContent] = useState<AdminContent>(() =>
     loadAdminContent()
   );
@@ -52,32 +48,6 @@ export default function AdminDashboardPage() {
     return map;
   }, [content.projectsIntro]);
 
-  useEffect(() => {
-    let active = true;
-    adminApi
-      .me()
-      .then((me) => {
-        if (!active) return;
-        setMeName(me.username);
-        setChecking(false);
-      })
-      .catch(() => {
-        if (!active) return;
-        navigate('/admin/login');
-      });
-    return () => {
-      active = false;
-    };
-  }, [navigate]);
-
-  if (checking) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">
-        관리자 권한 확인 중...
-      </div>
-    );
-  }
-
   const updateContent = (next: AdminContent) => {
     setContent(next);
     setDirty(true);
@@ -91,9 +61,7 @@ export default function AdminDashboardPage() {
             <h1 className="font-heading text-3xl text-primary">
               관리자 대시보드
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
-              {meName ? `${meName} 계정으로 로그인 됨` : '관리자 권한'}
-            </p>
+            <p className="mt-2 text-sm text-slate-600">관리자 권한</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -109,7 +77,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </Reveal>
-      {section === 'edit' && <AdminEditSection initialUsername={meName} />}
+      {section === 'edit' && <AdminEditSection />}
       {section === 'about' && (
         <AdminAboutSection content={content} updateContent={updateContent} />
       )}
@@ -143,7 +111,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-
-
-

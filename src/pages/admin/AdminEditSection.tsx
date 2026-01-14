@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { adminApi } from '../../api/admin';
+import { ApiError } from '../../api/client';
 
 type AdminEditSectionProps = {
   initialUsername?: string | null;
@@ -11,7 +12,6 @@ export default function AdminEditSection({
   initialUsername = null,
 }: AdminEditSectionProps) {
   const navigate = useNavigate();
-  const [meUserId, setMeUserId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [isVerified, setIsVerified] = useState(false);
@@ -25,27 +25,37 @@ export default function AdminEditSection({
   const [error, setError] = useState<string | null>(null);
 
   const maskedUserId = useMemo(() => {
-    const displayUserId = meUserId ?? initialUsername ?? '';
+    const displayUserId = currentUserId.trim() || initialUsername || '';
     if (!displayUserId) return '';
     if (displayUserId.length <= 2) return displayUserId;
     return displayUserId.slice(0, 2) + '.'.repeat(displayUserId.length - 2);
-  }, [initialUsername, meUserId]);
+  }, [currentUserId, initialUsername]);
 
   const handleVerify = async () => {
     setError(null);
     setMessage(null);
 
     try {
-      const expectedUserId = meUserId ?? initialUsername;
+      const expectedUserId = initialUsername;
       if (expectedUserId && currentUserId.trim() !== expectedUserId) {
         setError('현재 아이디가 올바르지 않습니다.');
         setIsVerified(false);
         return;
       }
-      await adminApi.verifyPassword({ password: currentPassword });
+      await adminApi.updateAccount({
+        currentUserId: currentUserId.trim(),
+        currentPassword,
+        newUserId: currentUserId.trim(),
+        newPassword: currentPassword,
+      });
       setIsVerified(true);
       setMessage('인증되었습니다. 변경할 항목을 선택해 주세요.');
-    } catch {
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setIsVerified(true);
+        setMessage('인증되었습니다. 변경할 항목을 선택해 주세요.');
+        return;
+      }
       setError('현재 아이디 또는 비밀번호가 올바르지 않습니다.');
       setIsVerified(false);
     }
@@ -60,9 +70,14 @@ export default function AdminEditSection({
     }
 
     adminApi
-      .updateUsername({ username: nextUserId.trim() })
+      .updateAccount({
+        currentUserId: currentUserId.trim(),
+        currentPassword,
+        newUserId: nextUserId.trim(),
+        newPassword: currentPassword,
+      })
       .then(() => {
-        setMeUserId(nextUserId.trim());
+        setCurrentUserId(nextUserId.trim());
         setNextUserId('');
         setIsVerified(false);
         setActiveAction(null);
@@ -100,7 +115,12 @@ export default function AdminEditSection({
     }
 
     adminApi
-      .updatePassword({ password: nextPassword })
+      .updateAccount({
+        currentUserId: currentUserId.trim(),
+        currentPassword,
+        newUserId: currentUserId.trim(),
+        newPassword: nextPassword,
+      })
       .then(() => {
         setNextPassword('');
         setConfirmPassword('');

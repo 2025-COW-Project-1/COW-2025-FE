@@ -71,12 +71,10 @@ export default function SettlementsPage() {
   }, []);
 
   useEffect(() => {
-    const timerId = window.setTimeout(() => {
-      load({ reset: false });
-    }, 0);
+    mountedRef.current = true;
+    load({ reset: false });
     return () => {
       mountedRef.current = false;
-      window.clearTimeout(timerId);
     };
   }, [load]);
 

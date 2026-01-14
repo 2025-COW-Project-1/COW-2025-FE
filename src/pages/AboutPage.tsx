@@ -3,7 +3,7 @@ import Reveal from '../components/Reveal';
 import BrandIcon from '../components/BrandIcon';
 import mjucraftLogo from '../assets/mjucraftLogo.png';
 import { loadAdminContent, type AdminContent } from '../utils/adminContent';
-import { introApi, normalizeIntroResponse } from '../api/intro';
+import { introApi, normalizeIntroduceResponses } from '../api/intro';
 
 export default function AboutPage() {
   const [content, setContent] = useState<AdminContent>(() =>
@@ -16,11 +16,14 @@ export default function AboutPage() {
     fetchedRef.current = true;
     let active = true;
 
-    introApi
-      .getIntro()
-      .then((data) => {
+    Promise.allSettled([introApi.getInformation(), introApi.getSns()])
+      .then(([infoResult, snsResult]) => {
         if (!active) return;
-        setContent((prev) => normalizeIntroResponse(data, prev));
+        const info =
+          infoResult.status === 'fulfilled' ? infoResult.value : undefined;
+        const sns =
+          snsResult.status === 'fulfilled' ? snsResult.value : undefined;
+        setContent((prev) => normalizeIntroduceResponses(info, sns, prev));
       })
       .catch(() => {
         if (!active) return;
