@@ -1,16 +1,19 @@
-﻿import Reveal from '../../components/Reveal';
+import Reveal from '../../../components/Reveal';
 import {
   createLinkItem,
   type AdminContent,
   type LinkItem,
-} from '../../utils/adminContent';
+} from '../../../utils/adminContent';
 
 type Props = {
   content: AdminContent;
   updateContent: (next: AdminContent) => void;
 };
 
-export default function AdminLinktreeSection({ content, updateContent }: Props) {
+export default function AdminLinktreeSection({
+  content,
+  updateContent,
+}: Props) {
   const updateLinkItem = (id: string, patch: Partial<LinkItem>) => {
     updateContent({
       ...content,
@@ -27,7 +30,7 @@ export default function AdminLinktreeSection({ content, updateContent }: Props) 
       className="mt-10 rounded-3xl bg-white p-8"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-heading text-xl text-slate-900">링크트리 정보</h2>
+        <h2 className="font-heading text-xl text-slate-900">링크트리 관리</h2>
         <button
           type="button"
           onClick={() =>
@@ -58,7 +61,9 @@ export default function AdminLinktreeSection({ content, updateContent }: Props) 
               />
               <input
                 value={item.url}
-                onChange={(e) => updateLinkItem(item.id, { url: e.target.value })}
+                onChange={(e) =>
+                  updateLinkItem(item.id, { url: e.target.value })
+                }
                 placeholder="URL"
                 className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
               />

@@ -1,7 +1,7 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Reveal from '../components/Reveal';
-import { adminApi } from '../api/admin';
+import Reveal from '../../components/Reveal';
+import { adminApi } from '../../api/admin';
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();

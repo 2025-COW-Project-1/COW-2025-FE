@@ -1,8 +1,8 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Reveal from '../../components/Reveal';
-import { adminApi } from '../../api/admin';
-import { ApiError } from '../../api/client';
+import Reveal from '../../../components/Reveal';
+import { adminApi } from '../../../api/admin';
+import { ApiError } from '../../../api/client';
 
 type AdminEditSectionProps = {
   initialUsername?: string | null;
@@ -53,10 +53,10 @@ export default function AdminEditSection({
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setIsVerified(true);
-        setMessage('인증되었습니다. 변경할 항목을 선택해 주세요.');
+        setMessage('현재 아이디 또는 비밀번호가 올바르지 않습니다.');
         return;
       }
-      setError('현재 아이디 또는 비밀번호가 올바르지 않습니다.');
+      setError('새 아이디를 입력해 주세요.');
       setIsVerified(false);
     }
   };

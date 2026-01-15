@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import Reveal from '../components/Reveal';
-import StatusBadge from '../components/StatusBadge';
-import ApplyForm from '../components/ApplyForm';
-import { projectsApi } from '../api/projects';
-import type { Project } from '../api/projects';
+import Reveal from '../../components/Reveal';
+import StatusBadge from '../../components/StatusBadge';
+import ApplyForm from '../../components/ApplyForm';
+import { projectsApi } from '../../api/projects';
+import type { Project } from '../../api/projects';
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();

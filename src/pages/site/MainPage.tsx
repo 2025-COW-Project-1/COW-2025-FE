@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Reveal from '../components/Reveal';
-import ProjectCard from '../components/ProjectCard';
-import { projectsApi } from '../api/projects';
-import type { Project } from '../api/projects';
-import mjucraftLogo from '../assets/mjucraftLogo.png';
+import Reveal from '../../components/Reveal';
+import ProjectCard from '../../components/ProjectCard';
+import { projectsApi } from '../../api/projects';
+import type { Project } from '../../api/projects';
+import mjucraftLogo from '../../assets/mjucraftLogo.png';
 
 export default function MainPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -61,7 +61,7 @@ export default function MainPage() {
                 <Link to="/about">
                   <img
                     src={mjucraftLogo}
-                    alt="명지공방 소개 페이지로 이동"
+                    alt="명지공방 소개 페이지 이동"
                     className="w-full h-full object-contain"
                   />
                 </Link>
@@ -86,7 +86,7 @@ export default function MainPage() {
               to="/projects?status=active"
               className="text-sm font-bold text-primary hover:underline"
             >
-              전체 보기 →
+              전체보기
             </Link>
           </div>
         </Reveal>

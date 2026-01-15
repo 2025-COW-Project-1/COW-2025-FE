@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Reveal from '../components/Reveal';
-import ResourceCard from '../components/ResourceCard';
-import { resourcesApi } from '../api/resources';
-import type { ResourceItem, ResourceCategory } from '../api/resources';
+import Reveal from '../../components/Reveal';
+import ResourceCard from '../../components/ResourceCard';
+import { resourcesApi } from '../../api/resources';
+import type { ResourceItem, ResourceCategory } from '../../api/resources';
 
 const CATEGORY_TABS: { label: string; value: ResourceCategory | 'all' }[] = [
   { label: '전체', value: 'all' },

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import Reveal from '../components/Reveal';
-import BrandIcon from '../components/BrandIcon';
-import { addFeedbackEntry } from '../utils/feedbackStore';
-import { loadAdminContent } from '../utils/adminContent';
+import Reveal from '../../components/Reveal';
+import BrandIcon from '../../components/BrandIcon';
+import { addFeedbackEntry } from '../../utils/feedbackStore';
+import { loadAdminContent } from '../../utils/adminContent';
 
 export default function ContactPage() {
   const content = useMemo(() => loadAdminContent(), []);
@@ -58,9 +58,7 @@ export default function ContactPage() {
         delayMs={120}
         className="mt-10 rounded-3xl bg-white p-8"
       >
-        <h2 className="font-heading text-xl text-slate-900">
-          피드백 제출 폼
-        </h2>
+        <h2 className="font-heading text-xl text-slate-900">피드백 제출 폼</h2>
         <p className="mt-2 text-sm text-slate-600">
           명지공방에게 전하고 싶은 이야기를 들려주세요.
         </p>
@@ -114,7 +112,7 @@ export default function ContactPage() {
               rows={5}
               required
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60"
-              placeholder="자유롭게 작성해 주세요."
+              placeholder="자유롭게 작성해주세요."
             />
           </label>
 

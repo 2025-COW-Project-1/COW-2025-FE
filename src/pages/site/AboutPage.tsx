@@ -1,9 +1,9 @@
-ï»¿import { useEffect, useRef, useState } from 'react';
-import Reveal from '../components/Reveal';
-import BrandIcon from '../components/BrandIcon';
-import mjucraftLogo from '../assets/mjucraftLogo.png';
-import { loadAdminContent, type AdminContent } from '../utils/adminContent';
-import { introApi, normalizeIntroduceResponses } from '../api/intro';
+import { useEffect, useRef, useState } from 'react';
+import Reveal from '../../components/Reveal';
+import BrandIcon from '../../components/BrandIcon';
+import mjucraftLogo from '../../assets/mjucraftLogo.png';
+import { loadAdminContent, type AdminContent } from '../../utils/adminContent';
+import { introApi, normalizeIntroduceResponses } from '../../api/intro';
 
 export default function AboutPage() {
   const [content, setContent] = useState<AdminContent>(() =>
@@ -53,7 +53,7 @@ export default function AboutPage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center">
             <img
               src={mjucraftLogo}
-              alt="ëª…ì§€ê³µë°© ë¡œê³ "
+              alt="¸íÁö°ø¹æ ·Î°í"
               className="mx-auto h-40 w-90 rounded-2xl bg-slate-50 object-contain"
             />
             <p className="mt-4 text-sm font-bold text-slate-700">
@@ -86,7 +86,7 @@ export default function AboutPage() {
       </Reveal>
 
       <Reveal delayMs={160} className="mt-10 rounded-3xl bg-white p-8">
-        <h2 className="font-heading text-xl text-slate-900">ê³µì‹ ë§í¬</h2>
+        <h2 className="font-heading text-xl text-slate-900">°ø½Ä ¸µÅ©</h2>
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
           <a
             href={content.links.instagramUrl}
@@ -95,7 +95,7 @@ export default function AboutPage() {
             className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
             <BrandIcon kind="instagram" />
-            ì¸ìŠ¤íƒ€ê·¸ë¨ ë°”ë¡œê°€ê¸°
+            ÀÎ½ºÅ¸±×·¥ ¹Ù·Î°¡±â
           </a>
           <a
             href={content.links.kakaoUrl}
@@ -104,17 +104,17 @@ export default function AboutPage() {
             className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
             <BrandIcon kind="kakao" />
-            ì¹´ì¹´ì˜¤í†¡ ì˜¤í”ˆì±„íŒ… ë°”ë¡œê°€ê¸°
+            Ä«Ä«¿ÀÅå ¿ÀÇÂÃ¤ÆÃ ¹Ù·Î°¡±â
           </a>
         </div>
       </Reveal>
 
       <Reveal delayMs={200} className="mt-10 rounded-3xl bg-white p-8">
-        <h2 className="font-heading text-xl text-slate-900">í”„ë¡œì íŠ¸ ì†Œê°œ</h2>
+        <h2 className="font-heading text-xl text-slate-900">ÇÁ·ÎÁ§Æ® ¼Ò°³</h2>
         <div className="mt-4 space-y-4">
           {content.projectsIntro.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
-              ë“±ë¡ëœ í”„ë¡œì íŠ¸ ì†Œê°œê°€ ì—†ì–´ìš”.
+              µî·ÏµÈ ÇÁ·ÎÁ§Æ® ¼Ò°³°¡ ¾ø¾î¿ä.
             </div>
           ) : (
             content.projectsIntro.map((item) => (
@@ -157,3 +157,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

@@ -1,17 +1,17 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Reveal from '../components/Reveal';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Reveal from '../../components/Reveal';
 import {
   calcReport,
   getItemTotal,
   settlementsApi,
   sumItems,
-} from '../api/settlements';
-import type { SettlementReport } from '../types/settlements';
+} from '../../api/settlements';
+import type { SettlementReport } from '../../types/settlements';
 
 function money(n: number) {
   const sign = n < 0 ? '-' : '';
   const abs = Math.abs(n);
-  return `${sign}₩${abs.toLocaleString()}`;
+  return `${sign}${abs.toLocaleString()}원`;
 }
 
 function TabButton({
@@ -47,12 +47,7 @@ export default function SettlementsPage() {
   const [term, setTerm] = useState<'all' | string>('all');
   const mountedRef = useRef(true);
 
-  const load = useCallback((options?: { reset?: boolean }) => {
-    const shouldReset = options?.reset ?? true;
-    if (shouldReset) {
-      setLoading(true);
-      setError(null);
-    }
+  const load = useCallback(() => {
     settlementsApi
       .list()
       .then((data) => {
@@ -72,7 +67,7 @@ export default function SettlementsPage() {
 
   useEffect(() => {
     mountedRef.current = true;
-    load({ reset: false });
+    load();
     return () => {
       mountedRef.current = false;
     };
@@ -100,7 +95,11 @@ export default function SettlementsPage() {
           </div>
 
           <button
-            onClick={() => load()}
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              load();
+            }}
             className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
             새로고침
@@ -131,7 +130,11 @@ export default function SettlementsPage() {
             정산 내역을 불러오지 못했습니다: {error}
           </div>
           <button
-            onClick={() => load()}
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              load();
+            }}
             className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
           >
             다시 시도
@@ -141,7 +144,7 @@ export default function SettlementsPage() {
 
       {!loading && !error && filtered.length === 0 && (
         <Reveal className="mt-6 rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">
-          등록된 정산 내역이 없어요.
+          등록된 정산 내역이 없어요. 테이블 헤더
         </Reveal>
       )}
 
@@ -207,8 +210,8 @@ export default function SettlementsPage() {
                         </div>
                       </div>
                       <div className="rounded-xl bg-white p-3">
-                        <div className="text-xs text-slate-500">지출 합계</div>
-                        <div className="mt-1 font-bold">
+                        <div className="text-xs text-slate-500">
+                          지출 합계
                           {money(c.expenseTotal)}
                         </div>
                       </div>
