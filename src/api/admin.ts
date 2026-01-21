@@ -2,8 +2,14 @@
 import { api } from './client';
 
 export type AdminLoginBody = {
-  username: string;
+  userId: string;
   password: string;
+};
+
+export type AdminLoginResponse = {
+  loginId: string;
+  email: string;
+  accessToken: string;
 };
 
 export type UpdateAccountBody = {
@@ -13,7 +19,8 @@ export type UpdateAccountBody = {
   newPassword: string;
 };
 
-const ADMIN_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+const ADMIN_BASE = API_BASE ? `${API_BASE}/api` : '/api';
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 function joinBase(path: string) {
@@ -24,7 +31,7 @@ function joinBase(path: string) {
 export const adminApi = {
   async login(body: AdminLoginBody) {
     try {
-      return await api<void>(joinBase('/admin/login'), {
+      return await api<AdminLoginResponse>(joinBase('/admin/login'), {
         method: 'POST',
         body,
       });

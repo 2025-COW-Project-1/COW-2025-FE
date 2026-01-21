@@ -16,68 +16,64 @@ export type Project = {
   endAt: string; // YYYY-MM-DD
   price?: number;
   options?: ProjectOption[];
+  description?: string;
+  salesLink?: string;
+  thumbnailMediaId?: number | null;
+  imageMediaIds?: number[];
+  sortOrder?: number;
+  publishedAt?: string;
 };
 
-const USE_MOCK =
-  import.meta.env.VITE_USE_MOCK === 'true' || import.meta.env.DEV;
-const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+type ProjectResponse = {
+  id: number;
+  title: string;
+  summary: string;
+  description: string;
+  basePrice: number;
+  thumbnailMediaId: number | null;
+  salesLink: string;
+  sortOrder: number;
+  publishedAt: string;
+  imageMediaIds?: number[];
+};
 
-const mockProjects: Project[] = [
-  {
-    id: 'baby-maru-keyring',
-    title: '베이비마루 인형 키링',
-    summary: '명지대학교 마스코트의 아기 버전',
+function toProject(item: ProjectResponse): Project {
+  const publishedDate = item.publishedAt?.split('T')[0] ?? '';
+  return {
+    id: String(item.id),
+    title: item.title,
+    summary: item.summary,
+    description: item.description,
     status: 'active',
-    startAt: '2025-09-01',
-    endAt: '2026-02-15',
-    price: 21000,
-    options: [
-      { name: '패키징 O(+1,000원)', values: ['상자', '포장', '키체인'] },
-      { name: '패키징 X', values: ['현장수령'] },
-    ],
-  },
-  {
-    id: 'test1',
-    title: 'test1',
-    summary: 'test1',
-    status: 'upcoming',
-    startAt: '2026-03-01',
-    endAt: '2026-03-20',
-    price: 5900,
-  },
-  {
-    id: 'test2',
-    title: 'test2',
-    summary: 'test2',
-    status: 'closed',
-    startAt: '2025-10-01',
-    endAt: '2025-10-20',
-    price: 39000,
-  },
-];
-
-export const projects = mockProjects;
+    startAt: publishedDate,
+    endAt: publishedDate,
+    price: item.basePrice,
+    salesLink: item.salesLink,
+    thumbnailMediaId: item.thumbnailMediaId,
+    imageMediaIds: item.imageMediaIds,
+    sortOrder: item.sortOrder,
+    publishedAt: item.publishedAt,
+  };
+}
 
 export const projectsApi = {
   async list(): Promise<Project[]> {
-    if (USE_MOCK) return mockProjects;
-    try {
-      return await api<Project[]>('/api/projects');
-    } catch (err) {
-      if (DEMO_MODE) return mockProjects;
-      throw err;
-    }
+    const data = await api<ProjectResponse[] | { data: ProjectResponse[] }>(
+      '/api/projects'
+    );
+    const items = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
+    return items.map(toProject);
   },
 
   async getById(id: string): Promise<Project | undefined> {
-    if (USE_MOCK) return mockProjects.find((p) => p.id === id);
-
     try {
-      return await api<Project>(`/api/projects/${id}`);
+      const data = await api<ProjectResponse>(`/api/projects/${id}`);
+      return toProject(data);
     } catch (e) {
-      if (DEMO_MODE) {
-        return mockProjects.find((p) => p.id === id) ?? mockProjects[0];
-      }
       console.error(e);
       return undefined;
     }

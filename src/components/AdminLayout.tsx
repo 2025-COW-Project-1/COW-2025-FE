@@ -1,5 +1,7 @@
-﻿import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { adminApi } from '../api/admin';
+
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
 
 const NAV_ITEMS = [
   { label: '회원정보 수정', href: '/admin#edit' },
@@ -54,6 +56,7 @@ export default function AdminLayout() {
               try {
                 await adminApi.logout();
               } finally {
+                localStorage.removeItem(TOKEN_KEY);
                 navigate('/');
               }
             }}
