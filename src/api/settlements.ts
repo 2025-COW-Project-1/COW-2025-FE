@@ -9,7 +9,6 @@ import type {
 
 const USE_MOCK =
   import.meta.env.VITE_USE_MOCK === 'true' || import.meta.env.DEV;
-const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 export function getItemTotal(item: MoneyItem) {
   if (item.unitPrice !== undefined || item.quantity !== undefined) {
@@ -38,7 +37,7 @@ export function calcReport(r: SettlementReport) {
 
 export const settlementsApi = {
   async list(): Promise<SettlementReport[]> {
-    if (USE_MOCK || DEMO_MODE) {
+    if (USE_MOCK) {
       const adminReports = loadAdminSettlements();
       return adminReports.length ? adminReports : settlementReports;
     }
