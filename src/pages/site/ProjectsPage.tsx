@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Reveal from '../components/Reveal';
-import ProjectCard from '../components/ProjectCard';
-import { projectsApi } from '../api/projects';
-import type { Project, ProjectStatus } from '../api/projects';
+import Reveal from '../../components/Reveal';
+import ProjectCard from '../../components/ProjectCard';
+import { projectsApi } from '../../api/projects';
+import type { Project, ProjectStatus } from '../../api/projects';
 
 type TabValue = ProjectStatus | 'all';
 
 const TABS: { label: string; value: TabValue }[] = [
   { label: '전체', value: 'all' },
-  { label: '진행중', value: 'active' },
+  { label: '진행 중', value: 'active' },
   { label: '준비중', value: 'upcoming' },
   { label: '마감', value: 'closed' },
 ];

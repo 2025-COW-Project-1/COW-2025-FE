@@ -1,11 +1,11 @@
-﻿import type { Dispatch, SetStateAction } from 'react';
-import Reveal from '../../components/Reveal';
-import { ACCOUNTING_CATEGORIES } from '../../constants/accounting';
+import type { Dispatch, SetStateAction } from 'react';
+import Reveal from '../../../components/Reveal';
+import { ACCOUNTING_CATEGORIES } from '../../../constants/accounting';
 import {
   createSettlementReport,
   saveAdminSettlements,
-} from '../../utils/adminSettlements';
-import type { SettlementReport, MoneyItem } from '../../types/settlements';
+} from '../../../utils/adminSettlements';
+import type { SettlementReport, MoneyItem } from '../../../types/settlements';
 
 const TERM_OPTIONS = ['2025-1', '2025-2', '2026-1'];
 const DIRECT_INPUT = 'custom';
@@ -63,7 +63,8 @@ export default function AdminSettlementsSection({
 
   const mergeMoneyItem = (item: MoneyItem, patch: Partial<MoneyItem>) => {
     const next: MoneyItem = { ...item, ...patch };
-    if (next.unitPrice === undefined && next.quantity === undefined) return next;
+    if (next.unitPrice === undefined && next.quantity === undefined)
+      return next;
     const unitPrice = next.unitPrice ?? item.unitPrice ?? item.amount ?? 0;
     const quantity = next.quantity ?? item.quantity ?? 1;
     return { ...next, unitPrice, quantity, amount: unitPrice * quantity };
@@ -122,16 +123,24 @@ export default function AdminSettlementsSection({
     );
   };
 
-  const categoryTitles = ACCOUNTING_CATEGORIES.map((category) => category.title);
+  const categoryTitles = ACCOUNTING_CATEGORIES.map(
+    (category) => category.title
+  );
 
   return (
-    <Reveal id="settlements" delayMs={240} className="mt-10 rounded-3xl bg-white p-8">
+    <Reveal
+      id="settlements"
+      delayMs={240}
+      className="mt-10 rounded-3xl bg-white p-8"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-heading text-xl text-slate-900">정산 정보</h2>
+        <h2 className="font-heading text-xl text-slate-900">정산 관리</h2>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => updateSettlements([...settlements, createSettlementReport()])}
+            onClick={() =>
+              updateSettlements([...settlements, createSettlementReport()])
+            }
             className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
             정산 추가
@@ -151,7 +160,7 @@ export default function AdminSettlementsSection({
 
       {settlements.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
-          등록된 정산 내역이 없어요. 새로 추가해 주세요.
+          등록된 정산 내역이 없습니다. 정산을 추가해 주세요.
         </div>
       ) : (
         <div className="mt-6 space-y-6">
@@ -170,7 +179,7 @@ export default function AdminSettlementsSection({
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="text-sm font-bold text-slate-700">
-                    연도-학기별 정산
+                    프로젝트-학기별 정산
                   </div>
                   <button
                     type="button"
@@ -187,7 +196,9 @@ export default function AdminSettlementsSection({
 
                 <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                   <div className="space-y-2">
-                    <div className="text-xs font-bold text-slate-600">연도-학기</div>
+                    <div className="text-xs font-bold text-slate-600">
+                      프로젝트-학기
+                    </div>
                     <select
                       value={termSelectValue}
                       onChange={(e) => {
@@ -212,13 +223,15 @@ export default function AdminSettlementsSection({
                         onChange={(e) =>
                           updateSettlement(report.id, { term: e.target.value })
                         }
-                        placeholder="연도-학기 직접 입력"
+                        placeholder="프로젝트-학기 직접 입력"
                         className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
                       />
                     )}
                   </div>
                   <div className="space-y-2">
-                    <div className="text-xs font-bold text-slate-600">프로젝트</div>
+                    <div className="text-xs font-bold text-slate-600">
+                      프로젝트
+                    </div>
                     <select
                       value={projectSelectValue}
                       onChange={(e) => {
@@ -235,7 +248,7 @@ export default function AdminSettlementsSection({
                           {title}
                         </option>
                       ))}
-                      <option value={DIRECT_INPUT}>직접 입력</option>
+                      <option value={DIRECT_INPUT}>프로젝트 입력</option>
                     </select>
                     {projectSelectValue === DIRECT_INPUT && (
                       <input
@@ -264,7 +277,9 @@ export default function AdminSettlementsSection({
 
                 <div className="mt-5">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-bold text-slate-700">매출 항목</div>
+                    <div className="text-sm font-bold text-slate-700">
+                      매출 항목
+                    </div>
                     <button
                       type="button"
                       onClick={() =>
@@ -283,7 +298,7 @@ export default function AdminSettlementsSection({
 
                   {report.sales.length === 0 ? (
                     <div className="mt-2 text-sm text-slate-500">
-                      매출 내역이 없습니다.
+                      등록된 항목이 없습니다.
                     </div>
                   ) : (
                     <div className="mt-3 space-y-3">
@@ -311,7 +326,7 @@ export default function AdminSettlementsSection({
                                 }}
                                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700"
                               >
-                                <option value="">선택</option>
+                                <option value="">선택?</option>
                                 {projectOptions.map((title) => (
                                   <option key={title} value={title}>
                                     {title}
@@ -340,7 +355,7 @@ export default function AdminSettlementsSection({
                                   unitPrice: Number(e.target.value || 0),
                                 })
                               }
-                              placeholder="개당 가격"
+                              placeholder="단가 입력"
                               className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
                             />
                             <div className="flex items-center gap-2">
@@ -405,7 +420,9 @@ export default function AdminSettlementsSection({
 
                 <div className="mt-6">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-bold text-slate-700">지출 그룹</div>
+                    <div className="text-sm font-bold text-slate-700">
+                      지출 그룹
+                    </div>
                     <button
                       type="button"
                       onClick={() =>
@@ -424,7 +441,7 @@ export default function AdminSettlementsSection({
 
                   {report.expenseGroups.length === 0 ? (
                     <div className="mt-2 text-sm text-slate-500">
-                      지출 그룹이 없습니다.
+                      등록된 그룹이 없습니다.
                     </div>
                   ) : (
                     <div className="mt-3 space-y-4">
@@ -442,7 +459,7 @@ export default function AdminSettlementsSection({
                             <div className="flex flex-wrap items-start gap-2">
                               <div className="flex-1 space-y-2">
                                 <div className="text-xs font-bold text-slate-600">
-                                  회계 과목
+                                  회계 분류
                                 </div>
                                 <select
                                   value={categorySelectValue}
@@ -460,17 +477,23 @@ export default function AdminSettlementsSection({
                                       {title}
                                     </option>
                                   ))}
-                                  <option value={DIRECT_INPUT}>직접 입력</option>
+                                  <option value={DIRECT_INPUT}>
+                                    직접 입력
+                                  </option>
                                 </select>
                                 {categorySelectValue === DIRECT_INPUT && (
                                   <input
                                     value={group.title}
                                     onChange={(e) =>
-                                      updateExpenseGroup(report.id, groupIndex, {
-                                        title: e.target.value,
-                                      })
+                                      updateExpenseGroup(
+                                        report.id,
+                                        groupIndex,
+                                        {
+                                          title: e.target.value,
+                                        }
+                                      )
                                     }
-                                    placeholder="회계 과목 직접 입력"
+                                    placeholder="회계 분류 직접 입력"
                                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
                                   />
                                 )}
@@ -493,7 +516,7 @@ export default function AdminSettlementsSection({
                             <div className="mt-3 space-y-3">
                               {group.items.length === 0 ? (
                                 <div className="text-sm text-slate-500">
-                                  지출 내역이 없습니다.
+                                  등록된 그룹이 없습니다.
                                 </div>
                               ) : (
                                 group.items.map((item, itemIndex) => {
@@ -533,13 +556,19 @@ export default function AdminSettlementsSection({
                                         >
                                           <option value="">선택</option>
                                           {subjectOptions.map((subject) => (
-                                            <option key={subject} value={subject}>
+                                            <option
+                                              key={subject}
+                                              value={subject}
+                                            >
                                               {subject}
                                             </option>
                                           ))}
-                                          <option value={DIRECT_INPUT}>직접 입력</option>
+                                          <option value={DIRECT_INPUT}>
+                                            직접 입력
+                                          </option>
                                         </select>
-                                        {subjectSelectValue === DIRECT_INPUT && (
+                                        {subjectSelectValue ===
+                                          DIRECT_INPUT && (
                                           <input
                                             value={item.label}
                                             onChange={(e) =>
@@ -550,7 +579,7 @@ export default function AdminSettlementsSection({
                                                 { label: e.target.value }
                                               )
                                             }
-                                            placeholder="과목명 직접 입력"
+                                            placeholder="상세항목 직접 입력"
                                             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
                                           />
                                         )}
@@ -563,10 +592,14 @@ export default function AdminSettlementsSection({
                                             report.id,
                                             groupIndex,
                                             itemIndex,
-                                            { unitPrice: Number(e.target.value || 0) }
+                                            {
+                                              unitPrice: Number(
+                                                e.target.value || 0
+                                              ),
+                                            }
                                           )
                                         }
-                                        placeholder="개당 가격"
+                                        placeholder="단가 입력"
                                         className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary/60"
                                       />
                                       <div className="flex items-center gap-2">
@@ -577,7 +610,12 @@ export default function AdminSettlementsSection({
                                               report.id,
                                               groupIndex,
                                               itemIndex,
-                                              { quantity: Math.max(1, quantity - 1) }
+                                              {
+                                                quantity: Math.max(
+                                                  1,
+                                                  quantity - 1
+                                                ),
+                                              }
                                             )
                                           }
                                           className="h-9 w-9 rounded-lg border border-slate-200 text-sm font-bold text-slate-600"
@@ -637,7 +675,10 @@ export default function AdminSettlementsSection({
                                                       ? { ...g, items }
                                                       : g
                                                 );
-                                              return { ...entry, expenseGroups };
+                                              return {
+                                                ...entry,
+                                                expenseGroups,
+                                              };
                                             })
                                           );
                                         }}
@@ -656,7 +697,12 @@ export default function AdminSettlementsSection({
                               onClick={() => {
                                 const items = [
                                   ...group.items,
-                                  { label: '', amount: 0, unitPrice: 0, quantity: 1 },
+                                  {
+                                    label: '',
+                                    amount: 0,
+                                    unitPrice: 0,
+                                    quantity: 1,
+                                  },
                                 ];
                                 updateSettlements(
                                   settlements.map((entry) => {
@@ -673,7 +719,7 @@ export default function AdminSettlementsSection({
                               }}
                               className="mt-3 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
                             >
-                              지출 항목 추가
+                              항목 추가
                             </button>
                           </div>
                         );

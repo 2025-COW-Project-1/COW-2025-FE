@@ -1,5 +1,5 @@
-﻿import Reveal from '../../components/Reveal';
-import type { AdminContent } from '../../utils/adminContent';
+import Reveal from '../../../components/Reveal';
+import type { AdminContent } from '../../../utils/adminContent';
 import { toLines, toText } from './textUtils';
 
 type Props = {

@@ -1,6 +1,6 @@
-﻿import Reveal from '../../components/Reveal';
-import BrandIcon from '../../components/BrandIcon';
-import type { AdminContent } from '../../utils/adminContent';
+import Reveal from '../../../components/Reveal';
+import BrandIcon from '../../../components/BrandIcon';
+import type { AdminContent } from '../../../utils/adminContent';
 
 type Props = {
   content: AdminContent;

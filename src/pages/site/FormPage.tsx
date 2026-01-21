@@ -1,11 +1,11 @@
-﻿import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import Reveal from '../components/Reveal';
-import { ApiError } from '../api/client';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import Reveal from '../../components/Reveal';
+import { ApiError } from '../../api/client';
 import {
   formsApi,
   type ActiveFormResponse,
   type FormQuestion,
-} from '../api/forms';
+} from '../../api/forms';
 
 type MajorOption = {
   label: string;
@@ -60,7 +60,7 @@ export default function FormPage() {
       .catch((err) => {
         if (!active) return;
         if (err instanceof ApiError && err.status === 404) {
-          setLoadError('현재 모집 중인 폼이 없습니다.');
+          setLoadError('모집 폼을 불러오지 못했습니다.');
         } else {
           setLoadError('모집 폼을 불러오지 못했습니다.');
         }
@@ -102,7 +102,7 @@ export default function FormPage() {
     setSubmitError(null);
 
     if (hasMissingRequired) {
-      setSubmitError('필수 항목을 모두 입력해 주세요.');
+      setSubmitError('지원서 제출에 실패했습니다. 다시 시도해 주세요.');
       return;
     }
 
@@ -129,11 +129,11 @@ export default function FormPage() {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 404) {
-          setSubmitError('현재 모집 중이 아닙니다.');
+          setSubmitError('모집 폼을 불러오지 못했습니다.');
           return;
         }
         if (err.status === 409) {
-          setSubmitError('이미 제출된 지원서가 있습니다.');
+          setSubmitError('현재 모집 중이 아닙니다.');
           return;
         }
       }
@@ -217,7 +217,7 @@ export default function FormPage() {
                       required
                     >
                       <option value="" disabled>
-                        선택
+                        학년*
                       </option>
                       {MAJOR_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -237,7 +237,7 @@ export default function FormPage() {
                       required
                     >
                       <option value="" disabled>
-                        선택
+                        학년*
                       </option>
                       {GRADE_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>

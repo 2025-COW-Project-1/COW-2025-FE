@@ -1,9 +1,9 @@
-﻿import Reveal from '../../components/Reveal';
+import Reveal from '../../../components/Reveal';
 import {
   loadFeedbackEntries,
   removeFeedbackEntry,
   type FeedbackEntry,
-} from '../../utils/feedbackStore';
+} from '../../../utils/feedbackStore';
 
 type Props = {
   entries: FeedbackEntry[];
@@ -22,7 +22,7 @@ export default function AdminFeedbackListSection({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-heading text-xl text-slate-900">
-          피드백 제출 목록
+          피드백 응답 목록
         </h2>
         <button
           type="button"
@@ -35,7 +35,7 @@ export default function AdminFeedbackListSection({
       <div className="mt-4 space-y-3">
         {entries.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
-            아직 제출된 피드백이 없어요.
+            등록된 피드백이 없습니다.
           </div>
         ) : (
           entries.map((entry) => (

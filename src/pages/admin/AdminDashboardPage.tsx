@@ -1,25 +1,25 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import Reveal from '../components/Reveal';
+import Reveal from '../../components/Reveal';
 import {
   loadAdminContent,
   saveAdminContent,
   type AdminContent,
-} from '../utils/adminContent';
+} from '../../utils/adminContent';
 import {
   loadFeedbackEntries,
   type FeedbackEntry,
-} from '../utils/feedbackStore';
-import { loadAdminSettlements } from '../utils/adminSettlements';
-import type { SettlementReport } from '../types/settlements';
-import AdminAboutSection from './admin/AdminAboutSection';
-import AdminFeedbackFormSection from './admin/AdminFeedbackFormSection';
-import AdminFeedbackListSection from './admin/AdminFeedbackListSection';
-import AdminLinktreeSection from './admin/AdminLinktreeSection';
-import AdminLinksSection from './admin/AdminLinksSection';
-import AdminProjectsSection from './admin/AdminProjectsSection';
-import AdminSettlementsSection from './admin/AdminSettlementsSection';
-import AdminEditSection from './admin/AdminEditSection';
+} from '../../utils/feedbackStore';
+import { loadAdminSettlements } from '../../utils/adminSettlements';
+import type { SettlementReport } from '../../types/settlements';
+import AdminAboutSection from './sections/AdminAboutSection';
+import AdminFeedbackFormSection from './sections/AdminFeedbackFormSection';
+import AdminFeedbackListSection from './sections/AdminFeedbackListSection';
+import AdminLinktreeSection from './sections/AdminLinktreeSection';
+import AdminLinksSection from './sections/AdminLinksSection';
+import AdminProjectsSection from './sections/AdminProjectsSection';
+import AdminSettlementsSection from './sections/AdminSettlementsSection';
+import AdminEditSection from './sections/AdminEditSection';
 
 export default function AdminDashboardPage() {
   const location = useLocation();

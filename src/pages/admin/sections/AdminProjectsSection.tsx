@@ -1,9 +1,9 @@
-﻿import Reveal from '../../components/Reveal';
+import Reveal from '../../../components/Reveal';
 import {
   createProjectIntro,
   type AdminContent,
   type ProjectIntro,
-} from '../../utils/adminContent';
+} from '../../../utils/adminContent';
 
 type Props = {
   content: AdminContent;
@@ -53,28 +53,36 @@ export default function AdminProjectsSection({
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <input
                 value={item.term}
-                onChange={(e) => updateProject(item.id, { term: e.target.value })}
+                onChange={(e) =>
+                  updateProject(item.id, { term: e.target.value })
+                }
                 placeholder="학기 (예: 2025-1)"
                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
               />
               <input
                 value={item.date}
-                onChange={(e) => updateProject(item.id, { date: e.target.value })}
+                onChange={(e) =>
+                  updateProject(item.id, { date: e.target.value })
+                }
                 placeholder="날짜 (예: 25.04.01)"
                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
               />
               <input
                 value={item.title}
-                onChange={(e) => updateProject(item.id, { title: e.target.value })}
+                onChange={(e) =>
+                  updateProject(item.id, { title: e.target.value })
+                }
                 placeholder="프로젝트 제목"
                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
               />
             </div>
             <textarea
               value={item.summary}
-              onChange={(e) => updateProject(item.id, { summary: e.target.value })}
+              onChange={(e) =>
+                updateProject(item.id, { summary: e.target.value })
+              }
               rows={3}
-              placeholder="프로젝트 설명"
+              placeholder="프로젝트 요약"
               className="mt-3 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
             />
 
@@ -92,7 +100,7 @@ export default function AdminProjectsSection({
                       );
                       updateProject(item.id, { links });
                     }}
-                    placeholder="링크 제목"
+                    placeholder="링크 이름"
                     className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
                   />
                   <input
