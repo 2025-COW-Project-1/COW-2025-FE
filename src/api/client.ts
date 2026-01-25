@@ -1,5 +1,9 @@
 ﻿type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+export const withApiBase = (path: string) =>
+  API_BASE ? `${API_BASE}${path}` : path;
+
 export class ApiError extends Error {
   status: number;
   body: unknown;

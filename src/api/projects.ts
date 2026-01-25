@@ -1,4 +1,4 @@
-﻿import { api } from './client';
+﻿import { api, withApiBase } from './client';
 
 export type ProjectStatus = 'upcoming' | 'active' | 'closed';
 
@@ -59,7 +59,7 @@ function toProject(item: ProjectResponse): Project {
 export const projectsApi = {
   async list(): Promise<Project[]> {
     const data = await api<ProjectResponse[] | { data: ProjectResponse[] }>(
-      '/api/projects'
+      withApiBase('/projects')
     );
     const items = Array.isArray(data)
       ? data
@@ -71,7 +71,7 @@ export const projectsApi = {
 
   async getById(id: string): Promise<Project | undefined> {
     try {
-      const data = await api<ProjectResponse>(`/api/projects/${id}`);
+      const data = await api<ProjectResponse>(withApiBase(`/projects/${id}`));
       return toProject(data);
     } catch (e) {
       console.error(e);

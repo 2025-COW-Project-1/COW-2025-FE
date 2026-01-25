@@ -1,4 +1,4 @@
-﻿import { api } from './client';
+﻿import { api, withApiBase } from './client';
 import { settlementReports } from '../data/settlements';
 import { loadAdminSettlements } from '../utils/adminSettlements';
 import type {
@@ -42,7 +42,7 @@ export const settlementsApi = {
       return adminReports.length ? adminReports : settlementReports;
     }
 
-    const raw = await api<unknown>('/api/settlements');
+    const raw = await api<unknown>(withApiBase('/settlements'));
     return normalizeReportsResponse(raw).map(mapReportDto);
   },
 };

@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, withApiBase } from './client';
 
 export type ResourceCategory = 'journal' | 'template';
 export type ResourceLinkKind = 'folder' | 'file';
@@ -47,8 +47,6 @@ export const resources = mockResources;
 export const resourcesApi = {
   async list(): Promise<ResourceItem[]> {
     if (USE_MOCK) return mockResources;
-
-    // ⚠️ 백엔드에 /api/resources가 생기면 그대로 사용 가능
-    return api<ResourceItem[]>('/api/resources');
+    return api<ResourceItem[]>(withApiBase('/resources'));
   },
 };
