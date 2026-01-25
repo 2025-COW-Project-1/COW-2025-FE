@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, withApiBase } from './client';
 import type { AdminContent } from '../utils/adminContent';
 
 type IntroduceInfoResponse = Partial<AdminContent['about']>;
@@ -39,10 +39,10 @@ export function normalizeIntroduceResponses(
 
 export const introApi = {
   getInformation() {
-    return api<IntroduceInfoResponse>('/api/introduce/information');
+    return api<IntroduceInfoResponse>(withApiBase('/introduce/information'));
   },
 
   getSns() {
-    return api<IntroduceSnsResponse>('/api/introduce/sns');
+    return api<IntroduceSnsResponse>(withApiBase('/introduce/sns'));
   },
 };

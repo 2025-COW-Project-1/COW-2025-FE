@@ -1,4 +1,4 @@
-﻿import { api } from './client';
+﻿import { api, withApiBase } from './client';
 
 export type FormQuestion = {
   id: number;
@@ -56,7 +56,7 @@ const demoForm: ActiveFormResponse = {
 export const formsApi = {
   async getActiveForm() {
     try {
-      return await api<ActiveFormResponse>('/api/forms/active');
+      return await api<ActiveFormResponse>(withApiBase('/forms/active'));
     } catch (err) {
       if (DEMO_MODE) return demoForm;
       throw err;
@@ -64,10 +64,10 @@ export const formsApi = {
   },
   async applyActiveForm(payload: ApplyRequest) {
     try {
-      return await api<ApplyResponse>('/api/forms/active/apply', {
+      return await api<ApplyResponse>(withApiBase('/forms/active/apply'), {
         method: 'POST',
         body: payload,
-      });
+      });      
     } catch (err) {
       if (DEMO_MODE) {
         return { applicationId: Date.now(), resultCode: 'DEMO' };

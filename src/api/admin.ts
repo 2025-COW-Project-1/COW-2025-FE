@@ -1,5 +1,5 @@
 ﻿// src/api/admin.ts
-import { api } from './client';
+import { api, withApiBase } from './client';
 
 export type AdminLoginBody = {
   userId: string;
@@ -19,19 +19,12 @@ export type UpdateAccountBody = {
   newPassword: string;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
-const ADMIN_BASE = API_BASE ? `${API_BASE}/api` : '/api';
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
-
-function joinBase(path: string) {
-  const base = ADMIN_BASE.endsWith('/') ? ADMIN_BASE.slice(0, -1) : ADMIN_BASE;
-  return `${base}${path}`;
-}
 
 export const adminApi = {
   async login(body: AdminLoginBody) {
     try {
-      return await api<AdminLoginResponse>(joinBase('/admin/login'), {
+      return await api<AdminLoginResponse>(withApiBase('/admin/login'), {
         method: 'POST',
         body,
       });
@@ -42,11 +35,11 @@ export const adminApi = {
   },
 
   logout() {
-    return api<void>(joinBase('/admin/logout'), { method: 'POST' });
+    return api<void>(withApiBase('/admin/logout'), { method: 'POST' });
   },
 
   updateAccount(body: UpdateAccountBody) {
-    return api<void>(joinBase('/admin/account'), {
+    return api<void>(withApiBase('/admin/account'), {
       method: 'PATCH',
       body,
     }).catch((err) => {
