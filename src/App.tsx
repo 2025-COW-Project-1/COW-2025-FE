@@ -12,25 +12,29 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AboutPage from './pages/site/AboutPage';
 import FormPage from './pages/site/FormPage';
 import ContactPage from './pages/site/ContactPage';
+import FloatingSns from './components/FloatingSns';
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<SiteLayout />}>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-        <Route path="/resources" element={<ResourcesPage />} />
-        <Route path="/settlements" element={<SettlementsPage />} />
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/forms" element={<FormPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-      </Route>
-      <Route element={<AdminLayout />}>
-        <Route path="/admin" element={<AdminDashboardPage />} />
-      </Route>
-    </Routes>
+    <>
+      <Routes>
+        <Route element={<SiteLayout />}>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/settlements" element={<SettlementsPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/forms" element={<FormPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+        </Route>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboardPage />} />
+        </Route>
+      </Routes>
+
+      <FloatingSns />
+    </>
   );
 }
-
