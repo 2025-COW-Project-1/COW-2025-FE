@@ -36,12 +36,14 @@ export default function AdminLoginPage() {
 
             try {
               const result = await adminApi.login({ userId, password });
-              if (result?.accessToken) {
-                localStorage.setItem(TOKEN_KEY, result.accessToken);
+              if (!result?.accessToken) {
+                setError('아이디 또는 비밀번호가 올바르지 않습니다.');
+                return;
               }
+              localStorage.setItem(TOKEN_KEY, result.accessToken);
               if (result?.loginId) {
                 localStorage.setItem(LOGIN_ID_KEY, result.loginId);
-              }              
+              }
               navigate('/admin');
             } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
@@ -111,8 +113,7 @@ export default function AdminLoginPage() {
             <div className="rounded-2xl border border-rose-200 bg-white p-4 text-sm font-bold text-rose-700">
               로그인 실패: {error}
               <div className="mt-2 text-xs font-semibold text-slate-500">
-                <br />* 서버 설정에 따라 쿠키 도메인/프록시 설정이 필요할 수
-                있습니다.
+                <br />* 환경에 따라 쿠키 도메인/프록시 설정이 필요할 수 있습니다.
               </div>
             </div>
           )}
