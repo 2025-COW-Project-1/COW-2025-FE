@@ -3,9 +3,9 @@ import Header from './Header';
 
 export default function SiteLayout() {
   return (
-    <div className="min-h-screen bg-app-bg text-slate-900 font-body">
+    <div className="min-h-screen flex flex-col bg-app-bg text-slate-900 font-body">
       <Header />
-      <main className="pt-16">
+      <main className="flex-1 pt-16">
         <Outlet />
       </main>
 
@@ -16,7 +16,7 @@ export default function SiteLayout() {
             제작: 명지대학교 IT 서비스 개발 중앙 동아리 COW
           </div>
           <div className="mt-1">
-            © {new Date().getFullYear()} Myongji Workshop
+            © {new Date().getFullYear()} MJU Craft Studio
           </div>
         </div>
       </footer>
