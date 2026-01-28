@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { introApi, type IntroduceSnsItem } from '../api/intro';
+import instagramLogo from '../assets/logos/instagram.png';
+import kakaoLogo from '../assets/logos/kakao.png';
 
 function toSnsKind(value?: string) {
   const v = (value ?? '').toLowerCase();
@@ -39,7 +41,7 @@ export default function FloatingSns() {
         aria-label="Instagram"
       >
         <img
-          src="/src/assets/logos/instagram.png"
+          src={instagramLogo}
           alt="Instagram"
           className="h-full w-full rounded-full object-cover"
         />
@@ -54,7 +56,7 @@ export default function FloatingSns() {
         aria-label="KakaoTalk"
       >
         <img
-          src="/src/assets/logos/kakao.png"
+          src={kakaoLogo}
           alt="KakaoTalk"
           className="h-full w-full object-cover"
         />
