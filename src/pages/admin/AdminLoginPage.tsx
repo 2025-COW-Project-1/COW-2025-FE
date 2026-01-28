@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { adminApi } from '../../api/admin';
 
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
-
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+
+  const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
+  const LOGIN_ID_KEY = 'admin_login_id';
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +39,9 @@ export default function AdminLoginPage() {
               if (result?.accessToken) {
                 localStorage.setItem(TOKEN_KEY, result.accessToken);
               }
+              if (result?.loginId) {
+                localStorage.setItem(LOGIN_ID_KEY, result.loginId);
+              }              
               navigate('/admin');
             } catch (err) {
               const msg = err instanceof Error ? err.message : String(err);
