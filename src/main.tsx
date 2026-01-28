@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 
 createRoot(document.getElementById('root')!).render(
+  // StrictMode : 개발자용; 버그 더 빨리 드러냄
   <StrictMode>
     <BrowserRouter>
       <App />
