@@ -1,48 +1,91 @@
-import { api, withApiBase } from './client';
-import type { AdminContent } from '../utils/adminContent';
+import { api, withApiBase, ApiError } from './client';
 
-type IntroduceInfoResponse = Partial<AdminContent['about']>;
-type IntroduceSnsResponse = Partial<AdminContent['links']>;
+export type IntroduceDetailSection = {
+  id?: number | string;
+  title?: string;
+  subtitle?: string;
+  subTitle?: string;
+  summary?: string;
+  description?: string;
+  content?: string;
+  body?: string;
+  contents?: string;
+  sortOrder?: number;
+  order?: number;
+  imageKey?: string;
+  mediaKey?: string;
+  iconKey?: string;
+};
 
-function mergeAbout(
-  fallback: AdminContent['about'],
-  incoming?: Partial<AdminContent['about']>
-): AdminContent['about'] {
-  if (!incoming) return fallback;
-  return {
-    headline: incoming.headline ?? fallback.headline,
-    subheadline: incoming.subheadline ?? fallback.subheadline,
-    intro: incoming.intro ?? fallback.intro,
-    purposeTitle: incoming.purposeTitle ?? fallback.purposeTitle,
-    purposeBody: incoming.purposeBody ?? fallback.purposeBody,
-    logoTitle: incoming.logoTitle ?? fallback.logoTitle,
-    logoBody: incoming.logoBody ?? fallback.logoBody,
-    footerNote: incoming.footerNote ?? fallback.footerNote,
-  };
+export type IntroduceDetailResponse = {
+  title?: string;
+  subtitle?: string;
+  summary?: string;
+  heroLogoKeys?: string[];
+  sections?: IntroduceDetailSection[];
+  updatedAt?: string;
+};
+
+export type IntroduceMainSummary = {
+  title?: string;
+  subtitle?: string;
+  summary?: string;
+  heroLogoKeys?: string[];
+};
+
+export type IntroduceSnsItem = {
+  id?: number | string;
+  type?: string;
+  title?: string;
+  url?: string;
+  iconKey?: string;
+  sortOrder?: number;
+  active?: boolean;
+};
+
+function unwrapApiData<T>(raw: unknown): T | undefined {
+  if (!raw) return undefined;
+  if (Array.isArray(raw)) return raw as T;
+  if (typeof raw === 'object') {
+    const record = raw as Record<string, unknown>;
+    if ('data' in record) return record.data as T;
+  }
+  return raw as T;
 }
 
-export function normalizeIntroduceResponses(
-  info: IntroduceInfoResponse | undefined,
-  sns: IntroduceSnsResponse | undefined,
-  fallback: AdminContent
-): AdminContent {
-  return {
-    ...fallback,
-    about: mergeAbout(fallback.about, info),
-    links: {
-      instagramUrl: sns?.instagramUrl ?? fallback.links.instagramUrl,
-      kakaoUrl: sns?.kakaoUrl ?? fallback.links.kakaoUrl,
-    },
-    projectsIntro: fallback.projectsIntro,
-  };
+// 404 -> 빈 화면
+function safeGet<T>(promise: Promise<T>) {
+  return promise.catch((err) => {
+    if (err instanceof ApiError && err.status === 404) {
+      return null as T;
+    }
+    throw err;
+  });
 }
 
 export const introApi = {
-  getInformation() {
-    return api<IntroduceInfoResponse>(withApiBase('/introduce/information'));
+  getDetail() {
+    return safeGet(
+      api<unknown>(withApiBase('/introduce')).then((raw) =>
+        unwrapApiData<IntroduceDetailResponse>(raw)
+      )
+    );
+  },
+
+  getMain() {
+    return safeGet(
+      api<unknown>(withApiBase('/introduce/main')).then((raw) =>
+        unwrapApiData<IntroduceMainSummary>(raw)
+      )
+    );
   },
 
   getSns() {
-    return api<IntroduceSnsResponse>(withApiBase('/introduce/sns'));
+    return safeGet(
+      api<unknown>(withApiBase('/introduce/sns')).then((raw) => {
+        const data = unwrapApiData<IntroduceSnsItem[]>(raw);
+        return Array.isArray(data) ? data : [];
+      })
+    );
   },
 };
