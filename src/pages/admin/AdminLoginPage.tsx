@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { adminApi } from '../../api/admin';
 
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
-
 export default function AdminLoginPage() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState('');
