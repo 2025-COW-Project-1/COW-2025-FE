@@ -13,3 +13,28 @@
     color: rgb(15 23 42);
   }
 }
+
+
+@layer utilities {
+  @keyframes logo-marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-logo-marquee {
+    animation: logo-marquee 22s linear infinite;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 450ms ease-out;
+}

@@ -1,36 +1,43 @@
 import { api, withApiBase, ApiError } from './client';
 
-export type IntroduceDetailSection = {
-  id?: number | string;
-  title?: string;
-  subtitle?: string;
-  subTitle?: string;
-  summary?: string;
-  description?: string;
-  content?: string;
-  body?: string;
-  contents?: string;
-  sortOrder?: number;
-  order?: number;
-  imageKey?: string;
-  mediaKey?: string;
-  iconKey?: string;
-};
-
-export type IntroduceDetailResponse = {
-  title?: string;
-  subtitle?: string;
-  summary?: string;
-  heroLogoKeys?: string[];
-  sections?: IntroduceDetailSection[];
-  updatedAt?: string;
+export type IntroduceHeroLogo = {
+  key?: string;
+  imageUrl?: string;
 };
 
 export type IntroduceMainSummary = {
   title?: string;
   subtitle?: string;
   summary?: string;
-  heroLogoKeys?: string[];
+  heroLogos?: IntroduceHeroLogo[];
+};
+
+export type IntroduceDetailPayload = {
+  brand?: {
+    title?: string;
+    subtitle?: string;
+  };
+  intro?: {
+    title?: string;
+    slogan?: string;
+    body?: string;
+  };
+  purpose?: {
+    title?: string;
+    description?: string;
+  };
+  currentLogo?: {
+    title?: string;
+    imageKey?: string;
+    imageUrl?: string;
+    description?: string;
+  };
+  logoHistories?: Array<{
+    year?: string;
+    imageKey?: string;
+    imageUrl?: string;
+    description?: string;
+  }>;
 };
 
 export type IntroduceSnsItem = {
@@ -43,17 +50,10 @@ export type IntroduceSnsItem = {
   active?: boolean;
 };
 
-function unwrapApiData<T>(raw: unknown): T | undefined {
-  if (!raw) return undefined;
-  if (Array.isArray(raw)) return raw as T;
-  if (typeof raw === 'object') {
-    const record = raw as Record<string, unknown>;
-    if ('data' in record) return record.data as T;
-  }
-  return raw as T;
-}
+type ApiResult<T> = {
+  data?: T;
+};
 
-// 404 -> 빈 화면
 function safeGet<T>(promise: Promise<T>) {
   return promise.catch((err) => {
     if (err instanceof ApiError && err.status === 404) {
@@ -64,28 +64,27 @@ function safeGet<T>(promise: Promise<T>) {
 }
 
 export const introApi = {
-  getDetail() {
+  getDetail(): Promise<IntroduceDetailPayload | null> {
     return safeGet(
-      api<unknown>(withApiBase('/introduce')).then((raw) =>
-        unwrapApiData<IntroduceDetailResponse>(raw)
+      api<ApiResult<IntroduceDetailPayload>>(withApiBase('/introduce')).then(
+        (res) => res?.data ?? null
       )
     );
   },
 
-  getMain() {
+  getMain(): Promise<IntroduceMainSummary | null> {
     return safeGet(
-      api<unknown>(withApiBase('/introduce/main')).then((raw) =>
-        unwrapApiData<IntroduceMainSummary>(raw)
+      api<ApiResult<IntroduceMainSummary>>(withApiBase('/introduce/main')).then(
+        (res) => res?.data ?? null
       )
     );
   },
 
-  getSns() {
+  getSns(): Promise<IntroduceSnsItem[]> {
     return safeGet(
-      api<unknown>(withApiBase('/introduce/sns')).then((raw) => {
-        const data = unwrapApiData<IntroduceSnsItem[]>(raw);
-        return Array.isArray(data) ? data : [];
-      })
+      api<ApiResult<IntroduceSnsItem[]>>(withApiBase('/introduce/sns')).then(
+        (res) => res?.data ?? []
+      )
     );
   },
 };

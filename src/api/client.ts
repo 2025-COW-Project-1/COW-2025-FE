@@ -1,4 +1,4 @@
-﻿type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+﻿type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
 export const withApiBase = (path: string) =>
@@ -71,7 +71,6 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
-// Extract message from error response.
 function extractErrorMessage(data: unknown): string | undefined {
   if (!data) return undefined;
 
