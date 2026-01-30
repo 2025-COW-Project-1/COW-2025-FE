@@ -1,9 +1,13 @@
-import { ApiError, api, withApiBase } from './client';
+import { api, ApiError, withApiBase } from './client';
 
 export type SnsLink = {
   type?: string;
   url?: string;
   title?: string;
+};
+
+export type SnsAdminUpsertBody = {
+  url: string;
 };
 
 function unwrapApiData<T>(raw: unknown): T | undefined {
@@ -28,15 +32,32 @@ export const snsApi = {
   getInstagram() {
     return safeGet(
       api<unknown>(withApiBase('/sns/instagram')).then((raw) =>
-        unwrapApiData<SnsLink>(raw)
-      )
+        unwrapApiData<SnsLink>(raw),
+      ),
     );
   },
   getKakao() {
     return safeGet(
       api<unknown>(withApiBase('/sns/kakao')).then((raw) =>
-        unwrapApiData<SnsLink>(raw)
-      )
+        unwrapApiData<SnsLink>(raw),
+      ),
     );
+  },
+};
+
+// 관리자용
+export const snsAdminApi = {
+  async upsertInstagram(body: SnsAdminUpsertBody) {
+    await api<void>(withApiBase('/admin/sns/instagram'), {
+      method: 'PUT',
+      body,
+    });
+  },
+
+  async upsertKakao(body: SnsAdminUpsertBody) {
+    await api<void>(withApiBase('/admin/sns/kakao'), {
+      method: 'PUT',
+      body,
+    });
   },
 };
