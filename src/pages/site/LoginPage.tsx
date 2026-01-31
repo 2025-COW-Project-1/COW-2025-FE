@@ -97,11 +97,13 @@ export default function LoginPage() {
     const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
     const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
 
-    const popup = window.open(
-      popupUrl, // ✅ url 말고 popupUrl
-      'social-login',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
-    );
+    console.log('popupUrl =', popupUrl);
+const popup = window.open(
+  popupUrl,
+  'social-login',
+  `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
+);
+console.log('popup =', popup);
 
     if (!popup) {
       setStatus('error');
@@ -435,3 +437,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
