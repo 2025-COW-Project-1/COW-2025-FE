@@ -16,12 +16,13 @@ import AdminFeedbackFormSection from './sections/AdminFeedbackFormSection';
 import AdminFeedbackListSection from './sections/AdminFeedbackListSection';
 import AdminLinktreeSection from './sections/AdminLinktreeSection';
 import AdminLinksSection from './sections/AdminLinksSection';
+import { saveLinksToApi } from './sections/linksSave';
 import AdminProjectsSection from './sections/AdminProjectsSection';
 import AdminSettlementsSection from './sections/AdminSettlementsSection';
 import AdminEditSection from './sections/AdminEditSection';
 import AdminIntroduceEditorPage from './sections/AdminIntroduceEditorPage';
 
-const LOCAL_SAVE_SECTIONS = new Set(['links', 'linktree', 'projects', 'form']);
+// const LOCAL_SAVE_SECTIONS = new Set(['links', 'linktree', 'projects', 'form']);
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -34,19 +35,28 @@ export default function AdminDashboardPage() {
   const tabParam = new URLSearchParams(hashQuery).get('tab');
   const aboutTab = tabParam === 'detail' ? 'detail' : 'main';
 
-  const [content, setContent] = useState<AdminContent>(() =>
-    loadAdminContent()
-  );
+  const [content, setContent] = useState<AdminContent>(() => loadAdminContent());
   const [dirty, setDirty] = useState(false);
 
   const [entries, setEntries] = useState<FeedbackEntry[]>(() =>
-    loadFeedbackEntries()
+    loadFeedbackEntries(),
   );
 
   const [settlements, setSettlements] = useState<SettlementReport[]>(() =>
-    loadAdminSettlements()
+    loadAdminSettlements(),
   );
   const [settlementsDirty, setSettlementsDirty] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [saveMsgTone, setSaveMsgTone] = useState<'success' | 'error' | null>(
+    null,
+  );
+
+  useEffect(() => {
+    setSaveMsg(null);
+    setSaveMsgTone(null);
+  }, [section]);
 
   const projectOptionsByTerm = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -68,6 +78,34 @@ export default function AdminDashboardPage() {
   const updateContent = (next: AdminContent) => {
     setContent(next);
     setDirty(true);
+    setSaveMsg(null);
+    setSaveMsgTone(null);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveMsg(null);
+    setSaveMsgTone(null);
+
+    try {
+      saveAdminContent(content);
+      setDirty(false);
+
+      if (section === 'links') {
+        const result = await saveLinksToApi(content);
+        setSaveMsg(result.message);
+      } else {
+        setSaveMsg('저장했어요.');
+      }
+
+      setSaveMsgTone('success');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      setSaveMsg(message || '저장에 실패했어요.');
+      setSaveMsgTone('error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   useEffect(() => {
@@ -86,8 +124,6 @@ export default function AdminDashboardPage() {
     }
   }, [navigate, section, tabParam]);
 
-  const showLocalSaveButton = LOCAL_SAVE_SECTIONS.has(section);
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <Reveal>
@@ -99,20 +135,32 @@ export default function AdminDashboardPage() {
             <p className="mt-2 text-sm text-slate-600">관리자 권한</p>
           </div>
 
-          {showLocalSaveButton ? (
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  saveAdminContent(content);
-                  setDirty(false);
-                }}
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
-              >
-                {dirty ? '변경사항 저장' : '저장됨'}
-              </button>
+          <div className="flex flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className={[
+                'rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition',
+                saving ? 'opacity-60' : 'hover:opacity-95',
+              ].join(' ')}
+            >
+              {saving ? '저장 중...' : dirty ? '변경사항 저장' : '저장'}
+            </button>
+
+            <div className="min-h-[18px]">
+              {saveMsg && saveMsgTone === 'success' && (
+                <p className="text-xs font-semibold text-emerald-600">
+                  {saveMsg}
+                </p>
+              )}
+              {saveMsg && saveMsgTone === 'error' && (
+                <p className="text-xs font-semibold text-rose-600">
+                  {saveMsg}
+                </p>
+              )}
             </div>
-          ) : null}
+          </div>
         </div>
       </Reveal>
 

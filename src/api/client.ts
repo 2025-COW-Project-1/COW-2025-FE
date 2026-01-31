@@ -1,6 +1,9 @@
 ﻿type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(
+  /\/$/,
+  '',
+);
 export const withApiBase = (path: string) =>
   API_BASE ? `${API_BASE}${path}` : path;
 
@@ -29,7 +32,7 @@ type RequestOptions = {
 
 export async function api<T>(
   path: string,
-  opts: RequestOptions = {}
+  opts: RequestOptions = {},
 ): Promise<T> {
   const method = opts.method ?? 'GET';
 
