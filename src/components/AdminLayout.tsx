@@ -5,7 +5,7 @@ const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
 
 const NAV_ITEMS = [
   { label: '회원정보 수정', href: '/admin#edit' },
-  { label: '소개', href: '/admin#about' },
+  { label: '소개 수정', href: '/admin#about?tab=main' },
   { label: '링크', href: '/admin#links' },
   { label: '링크트리', href: '/admin#linktree' },
   { label: '프로젝트', href: '/admin#projects' },
@@ -17,7 +17,12 @@ const NAV_ITEMS = [
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const active = location.hash || '#edit';
+  const rawActive = location.hash || '#edit';
+  const [activePath = 'edit'] = rawActive.replace('#', '').split('?');
+  const normalizedActive =
+    activePath === 'about-main' || activePath === 'about-detail'
+      ? 'about'
+      : activePath;
 
   return (
     <div className="min-h-screen bg-app-bg font-body text-slate-900">
@@ -32,8 +37,9 @@ export default function AdminLayout() {
           </Link>
           <nav className="flex flex-1 flex-wrap items-center gap-1">
             {NAV_ITEMS.map((item) => {
-              const hash = `#${item.href.split('#')[1] ?? ''}`;
-              const isActive = active === hash;
+              const hash = item.href.split('#')[1] ?? '';
+              const [hashPath = ''] = hash.split('?');
+              const isActive = normalizedActive === hashPath;
               return (
                 <Link
                   key={item.href}

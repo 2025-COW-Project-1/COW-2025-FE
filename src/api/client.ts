@@ -74,7 +74,6 @@ function safeJsonParse(text: string): unknown {
   }
 }
 
-// Extract message from error response.
 function extractErrorMessage(data: unknown): string | undefined {
   if (!data) return undefined;
 
