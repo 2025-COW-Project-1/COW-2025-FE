@@ -232,9 +232,7 @@ export default function AdminIntroduceMainEditor() {
         </div>
 
         {error ? (
-          <div className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">
-            {error}
-          </div>
+          <div className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</div>
         ) : null}
 
         <div className="mt-6 grid grid-cols-1 gap-4">
@@ -268,24 +266,12 @@ export default function AdminIntroduceMainEditor() {
 **굵게**
 줄바꿈은 엔터`}
             />
-
-            <div className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-              <p className="font-semibold text-slate-600">입력 가이드</p>
-              <ul className="mt-1 list-disc pl-5 space-y-1">
-                <li>
-                  굵게: <span className="font-mono">**텍스트**</span>
-                </li>
-                <li>줄바꿈: 엔터</li>
-              </ul>
-            </div>
           </div>
         </div>
 
         <div className="mt-8">
           <div className="text-sm font-bold text-slate-700">로고 등록</div>
-          <p className="mt-1 text-xs text-slate-500">
-            이미지를 드래그하거나 파일을 선택해서 여러 장 등록할 수 있어요.
-          </p>
+          <p className="mt-1 text-xs text-slate-500">이미지를 드래그하거나 파일을 선택해서 여러 장 등록할 수 있어요.</p>
 
           <div
             onDragOver={(e) => {
@@ -300,9 +286,7 @@ export default function AdminIntroduceMainEditor() {
             }}
             className={[
               'mt-3 rounded-2xl border-2 border-dashed p-5 transition',
-              uploading
-                ? 'border-slate-200 bg-slate-50 opacity-70'
-                : 'border-slate-200 bg-white hover:bg-slate-50',
+              uploading ? 'border-slate-200 bg-slate-50 opacity-70' : 'border-slate-200 bg-white hover:bg-slate-50',
             ].join(' ')}
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -335,17 +319,12 @@ export default function AdminIntroduceMainEditor() {
             {main.heroLogos.map((logo, idx) => {
               const src = logo.imageUrl || logo.localPreviewUrl || '';
               return (
-                <div
-                  key={`${logo.key}-${idx}`}
-                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white"
-                >
+                <div key={`${logo.key}-${idx}`} className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white">
                   <div className="aspect-square w-full bg-slate-50">
                     {src ? (
                       <img src={src} alt={logo.fileName ?? logo.key} className="h-full w-full object-contain" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
-                        이미지 없음
-                      </div>
+                      <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">이미지 없음</div>
                     )}
                   </div>
 
@@ -382,7 +361,13 @@ export default function AdminIntroduceMainEditor() {
       <Reveal delayMs={120} className="rounded-3xl bg-white p-6">
         <h3 className="text-sm font-bold text-slate-700">미리보기</h3>
         <div className="mt-4">
-          <IntroduceMainView data={toIntroduceMainSummary(main)} fallback={fallback} useReveal={false} />
+          <IntroduceMainView
+            data={toIntroduceMainSummary(main)}
+            fallback={fallback}
+            useReveal={false}
+            variant="preview"
+            linkToAbout={false}
+          />
         </div>
       </Reveal>
     </div>

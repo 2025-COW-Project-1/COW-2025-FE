@@ -72,27 +72,45 @@ export default function IntroduceDetailView({ data, fallback, useReveal = true }
   const histories = hasData ? data?.logoHistories ?? [] : fallback?.logoHistories ?? [];
 
   const Top = (
-    <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.1fr_0.9fr] md:items-start">
-      <div className="order-1 rounded-3xl border border-slate-200 bg-white p-8 md:order-none md:col-start-1 md:row-start-1">
-        <h1 className="font-heading text-2xl text-primary">{title}</h1>
-        {subtitle ? <p className="mt-2 text-sm text-slate-700">{subtitle}</p> : null}
-        {body ? (
-          <div className="mt-5">
-            <Markdown value={body} />
-          </div>
-        ) : null}
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:items-stretch">
+      <div className="flex flex-col gap-8 md:row-span-2 md:h-full">
+        <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-7">
+          <h1 className="font-heading text-2xl text-primary">{title}</h1>
+          {subtitle ? <p className="mt-2 text-sm text-slate-700">{subtitle}</p> : null}
+          {body ? (
+            <div className="mt-5">
+              <Markdown value={body} />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-7">
+          <h2 className="font-heading text-xl text-slate-900">{purposeTitle}</h2>
+          {purposeDesc ? (
+            <div className="mt-4">
+              <Markdown value={purposeDesc} />
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      <div className="order-2 rounded-3xl border border-slate-200 bg-white p-6 md:order-none md:col-start-2 md:row-span-2">
+      <div className="rounded-3xl border border-slate-200 bg-white p-7 md:row-span-2 md:h-full">
         <h2 className="font-heading text-lg text-slate-900">{currentLogoTitle}</h2>
 
         {currentLogoUrl ? (
           <div className="mt-4">
-            <img
-              src={currentLogoUrl}
-              alt="로고"
-              className="h-64 w-full rounded-2xl object-contain"
-            />
+            <div className="flex h-[320px] w-full items-center justify-center rounded-2xl bg-slate-50">
+              <img
+                src={currentLogoUrl}
+                alt="로고"
+                className="
+                  max-h-full w-auto object-contain
+                  transition-transform duration-300 ease-out
+                  hover:scale-[1.02]
+                "
+                draggable={false}
+              />
+            </div>
           </div>
         ) : null}
 
@@ -102,52 +120,44 @@ export default function IntroduceDetailView({ data, fallback, useReveal = true }
           </div>
         ) : null}
       </div>
-
-      <div className="order-3 rounded-3xl border border-slate-200 bg-white p-8 md:order-none md:col-start-1 md:row-start-2">
-        <h2 className="font-heading text-xl text-slate-900">{purposeTitle}</h2>
-        {purposeDesc ? (
-          <div className="mt-4">
-            <Markdown value={purposeDesc} />
-          </div>
-        ) : null}
-      </div>
     </div>
   );
 
   const History = (
-    <div className="mt-12">
+    <div className="mt-8">
       {histories.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {histories.map((history, idx) => {
             const imageUrl = history.imageUrl ?? resolvePublicImageUrl(history.imageKey);
-  
+
             return (
               <div
                 key={`history-${idx}`}
-                className="rounded-3xl border border-slate-200 bg-white p-6"
+                className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6"
               >
                 {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={history.year ? `${history.year} 로고` : '로고'}
-                    className="h-40 w-full rounded-2xl object-contain"
-                  />
+                  <div className="flex h-44 w-full items-center justify-center rounded-2xl bg-slate-50">
+                    <img
+                      src={imageUrl}
+                      alt={history.year ? `${history.year} 로고` : '로고'}
+                      className="
+                        max-h-full w-auto object-contain
+                        transition-transform duration-300 ease-out
+                        hover:scale-[1.02]
+                      "
+                      draggable={false}
+                    />
+                  </div>
                 ) : null}
-  
+
                 {history.year ? (
-                  <p
-                    className={
-                      imageUrl
-                        ? 'mt-3 text-sm font-bold text-primary'
-                        : 'text-sm font-bold text-primary'
-                    }
-                  >
+                  <p className={imageUrl ? 'mt-3 text-sm font-bold text-primary' : 'text-sm font-bold text-primary'}>
                     {history.year}
                   </p>
                 ) : null}
-  
+
                 {history.description ? (
-                  <div className={history.year || imageUrl ? 'mt-2' : ''}>
+                  <div className={(history.year || imageUrl ? 'mt-2 ' : '') + 'line-clamp-4 text-sm text-slate-700'}>
                     <Markdown value={history.description} />
                   </div>
                 ) : null}
@@ -156,9 +166,7 @@ export default function IntroduceDetailView({ data, fallback, useReveal = true }
           })}
         </div>
       ) : (
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500">
-          준비중
-        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500">준비중</div>
       )}
     </div>
   );
