@@ -25,7 +25,6 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // ✅ 기본은 항상 user, 단 ?mode=admin이면 admin
   const initialMode: Mode = useMemo(() => {
     const q = searchParams.get('mode');
     if (q === 'admin') return 'admin';
@@ -71,11 +70,6 @@ export default function LoginPage() {
     );
   };
 
-  /**
-   * ✅ 소셜 로그인 팝업 열기
-   * - 새창에서 authorize URL 이동
-   * - 성공 시 /login/success 페이지에서 postMessage로 부모창에 토큰 전달
-   */
   const startSocialLogin = (provider: 'kakao' | 'naver') => {
     clearMessageIfNeeded();
 
@@ -87,7 +81,6 @@ export default function LoginPage() {
       return;
     }
 
-    // ✅ provider를 callback에서 알 수 있게 query로 추가
     const popupUrl = `${url}${
       url.includes('?') ? '&' : '?'
     }provider=${provider}`;
@@ -97,7 +90,6 @@ export default function LoginPage() {
     const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
     const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
 
-    console.log('popupUrl =', popupUrl);
 const popup = window.open(
   popupUrl,
   'social-login',
@@ -117,12 +109,6 @@ console.log('popup =', popup);
     popup.focus();
   };
 
-  /**
-   * ✅ 팝업에서 postMessage로 "로그인 성공"을 보내면 여기서 받음
-   * - 토큰 저장
-   * - 팝업 닫기
-   * - 메인으로 이동
-   */
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       // 보안: 같은 origin만 허용(개발 중이면 localhost / 배포면 도메인에 맞게)

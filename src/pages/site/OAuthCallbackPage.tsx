@@ -45,20 +45,17 @@ export default function OAuthCallbackPage({ provider }: Props) {
                 return loginWithNaver(code, state);
               })();
 
-        // ✅ 팝업으로 열린 콜백이면: 부모창(LoginPage)으로 토큰 전달 → 팝업 닫기
         if (window.opener && !window.opener.closed) {
           const msg: SocialAuthMessage = {
             type: 'SOCIAL_AUTH_SUCCESS',
             accessToken: res.accessToken,
           };
 
-          // 우선 동작 안정성 위해 '*' 사용 (배포 시 프론트 도메인으로 좁히는 걸 추천)
           window.opener.postMessage(msg, '*');
           window.close();
           return;
         }
 
-        // ✅ 팝업이 아니라 현재 탭에서 열린 콜백이면: 직접 저장 후 이동
         localStorage.setItem(TOKEN_KEY, res.accessToken);
         navigate('/', { replace: true });
       } catch (e) {
