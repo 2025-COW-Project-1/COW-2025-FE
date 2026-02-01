@@ -13,6 +13,8 @@ import SettlementsPage from './pages/site/SettlementsPage';
 import LoginPage from './pages/site/LoginPage';
 import OAuthCallbackPage from './pages/site/OAuthCallbackPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminProjectsListPage from './pages/admin/AdminProjectsListPage';
+import AdminProjectEditorPage from './pages/admin/AdminProjectEditorPage';
 import FloatingSns from './components/FloatingSns';
 
 export default function App() {
@@ -41,6 +43,12 @@ export default function App() {
         </Route>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/projects" element={<AdminProjectsListPage />} />
+          <Route path="/admin/projects/new" element={<AdminProjectEditorPage />} />
+          <Route
+            path="/admin/projects/:projectId/edit"
+            element={<AdminProjectEditorPage />}
+          />
         </Route>
       </Routes>
 

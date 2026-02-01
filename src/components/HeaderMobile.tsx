@@ -170,9 +170,9 @@ export default function HeaderMobile() {
 
                 {[
                   { label: 'ALL', href: '/projects' },
-                  { label: 'NOW OPEN', href: '/projects?status=active' },
-                  { label: 'COMING SOON', href: '/projects?status=upcoming' },
-                  { label: 'CLOSED', href: '/projects?status=closed' },
+                  { label: 'NOW OPEN', href: '/projects?status=OPEN' },
+                  { label: 'COMING SOON', href: '/projects?status=PREPARING' },
+                  { label: 'CLOSED', href: '/projects?status=CLOSED' },
                 ].map((item) => (
                   <Link
                     key={item.href}

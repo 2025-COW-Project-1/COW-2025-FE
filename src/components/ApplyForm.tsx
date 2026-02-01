@@ -38,7 +38,7 @@ type PaymentInfo = {
 };
 
 export default function ApplyForm({ project }: { project: Project }) {
-  const canApply = project.status === 'active';
+  const canApply = project.status === 'OPEN';
   const [step, setStep] = useState<Step>(1);
   const [submitted, setSubmitted] = useState(false);
 
@@ -146,7 +146,7 @@ export default function ApplyForm({ project }: { project: Project }) {
   if (!canApply) {
     return (
       <div className="mt-4 rounded-2xl bg-slate-100 p-4 text-sm font-bold text-slate-600">
-        {project.status === 'closed'
+        {project.status === 'CLOSED'
           ? '마감된 프로젝트입니다. 신청이 불가능해요.'
           : '아직 준비 중인 프로젝트에요.'}
       </div>
