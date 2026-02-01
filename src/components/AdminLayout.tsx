@@ -4,14 +4,14 @@ import { adminApi } from '../api/admin';
 const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
 
 const NAV_ITEMS = [
-  { label: '회원정보 수정', href: '/admin#edit' },
-  { label: '소개 수정', href: '/admin#about?tab=main' },
-  { label: '링크', href: '/admin#links' },
-  { label: '링크트리', href: '/admin#linktree' },
-  { label: '프로젝트', href: '/admin#projects' },
-  { label: '정산', href: '/admin#settlements' },
-  { label: '피드백 폼', href: '/admin#form' },
-  { label: '피드백 목록', href: '/admin#feedback' },
+  { key: 'edit', label: '회원정보 수정', href: '/admin#edit' },
+  { key: 'about', label: '소개 수정', href: '/admin#about?tab=main' },
+  { key: 'links', label: '링크', href: '/admin#links' },
+  { key: 'linktree', label: '링크트리', href: '/admin#linktree' },
+  { key: 'projects', label: '프로젝트', href: '/admin/projects' },
+  { key: 'settlements', label: '정산', href: '/admin#settlements' },
+  { key: 'form', label: '피드백 폼', href: '/admin#form' },
+  { key: 'feedback', label: '피드백 목록', href: '/admin#feedback' },
 ];
 
 export default function AdminLayout() {
@@ -23,6 +23,9 @@ export default function AdminLayout() {
     activePath === 'about-main' || activePath === 'about-detail'
       ? 'about'
       : activePath;
+  const activeKey = location.pathname.startsWith('/admin/projects')
+    ? 'projects'
+    : normalizedActive;
 
   return (
     <div className="min-h-screen bg-app-bg font-body text-slate-900">
@@ -37,12 +40,10 @@ export default function AdminLayout() {
           </Link>
           <nav className="flex flex-1 flex-wrap items-center gap-1">
             {NAV_ITEMS.map((item) => {
-              const hash = item.href.split('#')[1] ?? '';
-              const [hashPath = ''] = hash.split('?');
-              const isActive = normalizedActive === hashPath;
+              const isActive = activeKey === item.key;
               return (
                 <Link
-                  key={item.href}
+                  key={item.key}
                   to={item.href}
                   className={[
                     'rounded-full px-3 py-1 text-xs font-bold transition-colors',
