@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { clearAccessToken } from '../utils/auth';
+import { clearAuth } from '../utils/auth';
+import { showLogoutToast } from '../utils/LogoutToast';
 
 type MenuKey = 'projects' | null;
 
@@ -11,8 +12,14 @@ export default function HeaderDesktop() {
   const isProjectsOpen = open === 'projects';
 
   const { isLoggedIn, userName } = useAuth();
+  const greeting = `${userName || 'USER'}님, 안녕하세요!`;
 
-  const greeting = `${userName || '회원'}님, 안녕하세요!`;
+  const handleLogout = () => {
+    clearAuth();
+    showLogoutToast();
+    setOpen(null);
+    navigate('/', { replace: true });
+  };
 
   return (
     <nav className="hidden items-center gap-1 md:flex">
@@ -24,6 +31,7 @@ export default function HeaderDesktop() {
         ABOUT
       </Link>
 
+      {/* Projects Dropdown */}
       <div className="relative">
         <button
           type="button"
@@ -114,7 +122,6 @@ export default function HeaderDesktop() {
         type="button"
         onClick={() => {
           setOpen(null);
-
           if (!isLoggedIn) {
             alert('로그인 후 사용 가능합니다.');
             navigate('/login');
@@ -144,11 +151,7 @@ export default function HeaderDesktop() {
 
             <button
               type="button"
-              onClick={() => {
-                clearAccessToken();
-                setOpen(null);
-                navigate('/', { replace: true });
-              }}
+              onClick={handleLogout}
               className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
             >
               로그아웃
