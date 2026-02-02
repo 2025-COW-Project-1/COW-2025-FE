@@ -46,37 +46,56 @@ function Markdown({ value }: { value?: string }) {
   );
 }
 
-export default function IntroduceDetailView({ data, fallback, useReveal = true }: Props) {
+export default function IntroduceDetailView({
+  data,
+  fallback,
+  useReveal = true,
+}: Props) {
   const hasData = data !== null;
 
   const title = hasData
-    ? data?.intro?.title ?? data?.brand?.title ?? ''
-    : fallback?.introTitle ?? fallback?.brandTitle ?? '';
+    ? (data?.intro?.title ?? data?.brand?.title ?? '')
+    : (fallback?.introTitle ?? fallback?.brandTitle ?? '');
 
   const subtitle = hasData
-    ? data?.intro?.slogan ?? data?.brand?.subtitle ?? ''
-    : fallback?.introSlogan ?? fallback?.brandSubtitle ?? '';
+    ? (data?.intro?.slogan ?? data?.brand?.subtitle ?? '')
+    : (fallback?.introSlogan ?? fallback?.brandSubtitle ?? '');
 
-  const body = hasData ? data?.intro?.body ?? '' : fallback?.introBody ?? '';
+  const body = hasData
+    ? (data?.intro?.body ?? '')
+    : (fallback?.introBody ?? '');
 
-  const purposeTitle = hasData ? data?.purpose?.title ?? '' : fallback?.purposeTitle ?? '';
-  const purposeDesc = hasData ? data?.purpose?.description ?? '' : fallback?.purposeDescription ?? '';
+  const purposeTitle = hasData
+    ? (data?.purpose?.title ?? '')
+    : (fallback?.purposeTitle ?? '');
+  const purposeDesc = hasData
+    ? (data?.purpose?.description ?? '')
+    : (fallback?.purposeDescription ?? '');
 
-  const currentLogoTitle = hasData ? data?.currentLogo?.title ?? '' : fallback?.currentLogoTitle ?? '';
-  const currentLogoDesc = hasData ? data?.currentLogo?.description ?? '' : fallback?.currentLogoDescription ?? '';
+  const currentLogoTitle = hasData
+    ? (data?.currentLogo?.title ?? '')
+    : (fallback?.currentLogoTitle ?? '');
+  const currentLogoDesc = hasData
+    ? (data?.currentLogo?.description ?? '')
+    : (fallback?.currentLogoDescription ?? '');
 
   const currentLogoUrl = hasData
-    ? data?.currentLogo?.imageUrl ?? resolvePublicImageUrl(data?.currentLogo?.imageKey)
+    ? (data?.currentLogo?.imageUrl ??
+      resolvePublicImageUrl(data?.currentLogo?.imageKey))
     : resolvePublicImageUrl(fallback?.currentLogoImageKey);
 
-  const histories = hasData ? data?.logoHistories ?? [] : fallback?.logoHistories ?? [];
+  const histories = hasData
+    ? (data?.logoHistories ?? [])
+    : (fallback?.logoHistories ?? []);
 
   const Top = (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:items-stretch">
       <div className="flex flex-col gap-8 md:row-span-2 md:h-full">
         <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-7">
           <h1 className="font-heading text-2xl text-primary">{title}</h1>
-          {subtitle ? <p className="mt-2 text-sm text-slate-700">{subtitle}</p> : null}
+          {subtitle ? (
+            <p className="mt-2 text-sm text-slate-700">{subtitle}</p>
+          ) : null}
           {body ? (
             <div className="mt-5">
               <Markdown value={body} />
@@ -85,7 +104,9 @@ export default function IntroduceDetailView({ data, fallback, useReveal = true }
         </div>
 
         <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-7">
-          <h2 className="font-heading text-xl text-slate-900">{purposeTitle}</h2>
+          <h2 className="font-heading text-xl text-slate-900">
+            {purposeTitle}
+          </h2>
           {purposeDesc ? (
             <div className="mt-4">
               <Markdown value={purposeDesc} />
@@ -95,11 +116,13 @@ export default function IntroduceDetailView({ data, fallback, useReveal = true }
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-7 md:row-span-2 md:h-full">
-        <h2 className="font-heading text-lg text-slate-900">{currentLogoTitle}</h2>
+        <h2 className="font-heading text-lg text-slate-900">
+          {currentLogoTitle}
+        </h2>
 
         {currentLogoUrl ? (
           <div className="mt-4">
-            <div className="flex h-[320px] w-full items-center justify-center rounded-2xl bg-slate-50">
+            <div className="flex h-80 w-full items-center justify-center rounded-2xl bg-slate-50">
               <img
                 src={currentLogoUrl}
                 alt="로고"
@@ -128,7 +151,8 @@ export default function IntroduceDetailView({ data, fallback, useReveal = true }
       {histories.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {histories.map((history, idx) => {
-            const imageUrl = history.imageUrl ?? resolvePublicImageUrl(history.imageKey);
+            const imageUrl =
+              history.imageUrl ?? resolvePublicImageUrl(history.imageKey);
 
             return (
               <div
@@ -151,13 +175,24 @@ export default function IntroduceDetailView({ data, fallback, useReveal = true }
                 ) : null}
 
                 {history.year ? (
-                  <p className={imageUrl ? 'mt-3 text-sm font-bold text-primary' : 'text-sm font-bold text-primary'}>
+                  <p
+                    className={
+                      imageUrl
+                        ? 'mt-3 text-sm font-bold text-primary'
+                        : 'text-sm font-bold text-primary'
+                    }
+                  >
                     {history.year}
                   </p>
                 ) : null}
 
                 {history.description ? (
-                  <div className={(history.year || imageUrl ? 'mt-2 ' : '') + 'line-clamp-4 text-sm text-slate-700'}>
+                  <div
+                    className={
+                      (history.year || imageUrl ? 'mt-2 ' : '') +
+                      'line-clamp-4 text-sm text-slate-700'
+                    }
+                  >
                     <Markdown value={history.description} />
                   </div>
                 ) : null}
@@ -166,7 +201,9 @@ export default function IntroduceDetailView({ data, fallback, useReveal = true }
           })}
         </div>
       ) : (
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500">준비중</div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500">
+          준비중
+        </div>
       )}
     </div>
   );

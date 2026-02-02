@@ -1,4 +1,3 @@
-// src/App.tsx
 import { Route, Routes } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
 import AdminLayout from './components/AdminLayout';
@@ -6,6 +5,7 @@ import MainPage from './pages/site/MainPage';
 import AboutPage from './pages/site/AboutPage';
 import FormPage from './pages/site/FormPage';
 import ContactPage from './pages/site/ContactPage';
+import MyPage from './pages/site/MyPage';
 import ProjectsPage from './pages/site/ProjectsPage';
 import ProjectDetailPage from './pages/site/ProjectDetailPage';
 import ResourcesPage from './pages/site/ResourcesPage';
@@ -28,6 +28,7 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/forms" element={<FormPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
           <Route
