@@ -2,30 +2,25 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   AUTH_CHANGED_EVENT,
   getDisplayUserName,
-  isLoggedIn as checkLoggedIn,
+  isLoggedIn,
 } from '../utils/auth';
 
 export function useAuth() {
-  const [loggedIn, setLoggedIn] = useState<boolean>(() => checkLoggedIn());
+  const [loggedIn, setLoggedIn] = useState<boolean>(() => isLoggedIn());
   const [userName, setUserName] = useState<string>(() => getDisplayUserName());
 
   useEffect(() => {
     const sync = () => {
-      setLoggedIn(checkLoggedIn());
+      setLoggedIn(isLoggedIn());
       setUserName(getDisplayUserName());
     };
 
-    const onAuthChanged = () => sync();
-    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
-
-    const onStorage = () => {
-      sync();
-    };
-    window.addEventListener('storage', onStorage);
+    window.addEventListener(AUTH_CHANGED_EVENT, sync);
+    window.addEventListener('storage', sync);
 
     return () => {
-      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
-      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(AUTH_CHANGED_EVENT, sync);
+      window.removeEventListener('storage', sync);
     };
   }, []);
 
