@@ -1,12 +1,17 @@
+// src/pages/site/LoginPage.tsx
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { adminApi } from '../../api/admin';
+import {
+  setAccessToken,
+  setUserName,
+  notifyAuthChanged,
+} from '../../utils/auth';
 
 type Mode = 'user' | 'admin';
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
 
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
 const LOGIN_ID_KEY = 'admin_login_id';
 
 const KAKAO_AUTHORIZE_URL = import.meta.env.VITE_KAKAO_AUTHORIZE_URL as
@@ -16,9 +21,8 @@ const NAVER_AUTHORIZE_URL = import.meta.env.VITE_NAVER_AUTHORIZE_URL as
   | string
   | undefined;
 
-// 팝업 로그인 성공 메시지 타입(부모창에서 수신)
 type SocialAuthMessage =
-  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string }
+  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string; userName?: string }
   | { type: 'SOCIAL_AUTH_ERROR'; message?: string };
 
 export default function LoginPage() {
@@ -27,23 +31,18 @@ export default function LoginPage() {
 
   const initialMode: Mode = useMemo(() => {
     const q = searchParams.get('mode');
-    if (q === 'admin') return 'admin';
-    return 'user';
+    return q === 'admin' ? 'admin' : 'user';
   }, [searchParams]);
 
   const [mode, setMode] = useState<Mode>(initialMode);
 
-  // 관리자 로그인 폼 state
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
 
-  // 공통 상태
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const isSubmitting = status === 'submitting';
 
-  // 팝업 핸들 저장(팝업 닫기/폴링)
   const popupRef = useRef<Window | null>(null);
 
   useEffect(() => {
@@ -61,7 +60,6 @@ export default function LoginPage() {
     setMode(next);
     clearMessageIfNeeded();
 
-    // URL에 mode 유지(원하면 유지, 싫으면 이 부분 삭제해도 됨)
     const params = new URLSearchParams(searchParams);
     params.set('mode', next);
     navigate(
@@ -81,21 +79,18 @@ export default function LoginPage() {
       return;
     }
 
-    const popupUrl = `${url}${
-      url.includes('?') ? '&' : '?'
-    }provider=${provider}`;
+    const popupUrl = `${url}${url.includes('?') ? '&' : '?'}provider=${provider}`;
 
     const width = 520;
     const height = 720;
     const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
     const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
 
-const popup = window.open(
-  popupUrl,
-  'social-login',
-  `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
-);
-console.log('popup =', popup);
+    const popup = window.open(
+      popupUrl,
+      'social-login',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
+    );
 
     if (!popup) {
       setStatus('error');
@@ -111,18 +106,14 @@ console.log('popup =', popup);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      // 보안: 같은 origin만 허용(개발 중이면 localhost / 배포면 도메인에 맞게)
-      // 서버가 아직 닫혀있는 상태라 정확히 못 박기 어렵다면 일단 느슨하게 두고,
-      // 서버 켜지면 origin 체크를 강화하는 걸 추천.
-      // if (event.origin !== window.location.origin) return;
-
       const data = event.data as SocialAuthMessage;
       if (!data || typeof data !== 'object') return;
 
       if (data.type === 'SOCIAL_AUTH_SUCCESS') {
-        localStorage.setItem(TOKEN_KEY, data.accessToken);
+        setAccessToken(data.accessToken);
+        setUserName(data.userName ?? '회원님');
+        notifyAuthChanged();
 
-        // 팝업 닫기
         try {
           popupRef.current?.close();
         } catch {
@@ -131,8 +122,8 @@ console.log('popup =', popup);
           popupRef.current = null;
         }
 
-        // 메인으로 이동
         navigate('/', { replace: true });
+        return;
       }
 
       if (data.type === 'SOCIAL_AUTH_ERROR') {
@@ -187,8 +178,11 @@ console.log('popup =', popup);
         return;
       }
 
-      localStorage.setItem(TOKEN_KEY, result.accessToken);
-      if (result?.loginId) localStorage.setItem(LOGIN_ID_KEY, result.loginId);
+      setAccessToken(result.accessToken);
+      setUserName(result.loginId ?? userId.trim());
+      notifyAuthChanged();
+
+      if (result.loginId) localStorage.setItem(LOGIN_ID_KEY, result.loginId);
 
       setStatus('success');
       navigate('/admin', { replace: true });
@@ -201,7 +195,6 @@ console.log('popup =', popup);
     }
   };
 
-  // 스타일(기존 톤 유지)
   const shell = 'mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12';
   const panel =
     'mt-6 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100 sm:mt-10';
@@ -311,7 +304,7 @@ console.log('popup =', popup);
                     로그인 진행 시 서비스 이용약관 및 개인정보 처리방침에 동의한
                     것으로 간주됩니다.
                   </p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between gap-4 sm:justify-end">
                     <Link
                       to="/"
                       className="text-xs font-semibold text-slate-700 hover:underline"
@@ -423,4 +416,3 @@ console.log('popup =', popup);
     </div>
   );
 }
-

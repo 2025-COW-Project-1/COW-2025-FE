@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { loginWithKakao, loginWithNaver } from '../../api/oauth';
+import { setAccessToken, setUserName } from '../../utils/auth';
 
 type Provider = 'kakao' | 'naver';
 
@@ -10,10 +11,24 @@ type Props = {
 };
 
 type SocialAuthMessage =
-  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string }
+  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string; userName?: string }
   | { type: 'SOCIAL_AUTH_ERROR'; message?: string };
 
-const TOKEN_KEY = 'accessToken';
+function pickUserName(res: unknown): string {
+  if (!res || typeof res !== 'object') return 'USER님';
+  const r = res as Record<string, unknown>;
+
+  const loginId = typeof r.loginId === 'string' ? r.loginId.trim() : '';
+  if (loginId) return loginId;
+
+  const email = typeof r.email === 'string' ? r.email.trim() : '';
+  if (email) return email.includes('@') ? email.split('@')[0] : email;
+
+  const userName = typeof r.userName === 'string' ? r.userName.trim() : '';
+  if (userName) return userName;
+
+  return 'USER';
+}
 
 export default function OAuthCallbackPage({ provider }: Props) {
   const [params] = useSearchParams();
@@ -30,9 +45,27 @@ export default function OAuthCallbackPage({ provider }: Props) {
   }, [provider]);
 
   useEffect(() => {
+    const post = (payload: SocialAuthMessage) => {
+      try {
+        window.opener?.postMessage(payload, '*');
+      } catch {
+        // ignore
+      }
+    };
+
+    const close = () => {
+      try {
+        window.close();
+      } catch {
+        // ignore
+      }
+    };
+
     const run = async () => {
       if (!code) {
-        setError('인가 코드(code)가 없어요.');
+        const msg = '인가 코드(code)가 없어요.';
+        setError(msg);
+        post({ type: 'SOCIAL_AUTH_ERROR', message: msg });
         return;
       }
 
@@ -45,31 +78,29 @@ export default function OAuthCallbackPage({ provider }: Props) {
                 return loginWithNaver(code, state);
               })();
 
+        const name = pickUserName(res);
+
         if (window.opener && !window.opener.closed) {
-          const msg: SocialAuthMessage = {
+          post({
             type: 'SOCIAL_AUTH_SUCCESS',
             accessToken: res.accessToken,
-          };
-
-          window.opener.postMessage(msg, '*');
-          window.close();
+            userName: name,
+          });
+          close();
           return;
         }
 
-        localStorage.setItem(TOKEN_KEY, res.accessToken);
+        setAccessToken(res.accessToken);
+        setUserName(name);
+
         navigate('/', { replace: true });
       } catch (e) {
         const msg = e instanceof Error ? e.message : '로그인 처리 실패';
         setError(msg);
 
-        // 팝업인 경우 에러도 부모창에 알려주고 닫기(선택)
         if (window.opener && !window.opener.closed) {
-          const errMsg: SocialAuthMessage = {
-            type: 'SOCIAL_AUTH_ERROR',
-            message: msg,
-          };
-          window.opener.postMessage(errMsg, '*');
-          window.close();
+          post({ type: 'SOCIAL_AUTH_ERROR', message: msg });
+          close();
         }
       }
     };
