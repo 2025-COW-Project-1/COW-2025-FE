@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { clearAccessToken } from '../utils/auth';
+import { clearAuth } from '../utils/auth';
+import { showLogoutToast } from '../utils/LogoutToast';
 
 export default function HeaderMobile() {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ export default function HeaderMobile() {
   const [mobileProjectsOpen, setMobileProjectsOpen] = useState(false);
 
   const { isLoggedIn, userName } = useAuth();
+
   const displayName = isLoggedIn
     ? `${userName || 'USER'}님, 안녕하세요!`
     : '로그인 후 이용해주세요.';
@@ -19,7 +21,8 @@ export default function HeaderMobile() {
   };
 
   const handleLogout = () => {
-    clearAccessToken();
+    clearAuth();
+    showLogoutToast(); // ✅ 모바일도 동일 토스트
     closeAll();
     navigate('/', { replace: true });
   };
