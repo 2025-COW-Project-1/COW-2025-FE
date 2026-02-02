@@ -1,16 +1,16 @@
-// src/pages/site/LoginPage.tsx
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { adminApi } from '../../api/admin';
-import {
-  setAccessToken,
-  setUserName,
-  notifyAuthChanged,
-} from '../../utils/auth';
+import { setAuth } from '../../utils/auth';
 
 type Mode = 'user' | 'admin';
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
+
+type AdminLoginResponse = {
+  accessToken?: string;
+  loginId?: string;
+};
 
 const LOGIN_ID_KEY = 'admin_login_id';
 
@@ -22,7 +22,7 @@ const NAVER_AUTHORIZE_URL = import.meta.env.VITE_NAVER_AUTHORIZE_URL as
   | undefined;
 
 type SocialAuthMessage =
-  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string; userName?: string }
+  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string; userName: string }
   | { type: 'SOCIAL_AUTH_ERROR'; message?: string };
 
 export default function LoginPage() {
@@ -30,12 +30,12 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
 
   const initialMode: Mode = useMemo(() => {
-    const q = searchParams.get('mode');
-    return q === 'admin' ? 'admin' : 'user';
+    return searchParams.get('mode') === 'admin' ? 'admin' : 'user';
   }, [searchParams]);
 
   const [mode, setMode] = useState<Mode>(initialMode);
 
+  // admin form
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
 
@@ -49,7 +49,7 @@ export default function LoginPage() {
     setMode(initialMode);
   }, [initialMode]);
 
-  const clearMessageIfNeeded = () => {
+  const clearMessage = () => {
     if (status === 'error' || status === 'success') {
       setStatus('idle');
       setErrorMsg(null);
@@ -58,7 +58,7 @@ export default function LoginPage() {
 
   const onSelectMode = (next: Mode) => {
     setMode(next);
-    clearMessageIfNeeded();
+    clearMessage();
 
     const params = new URLSearchParams(searchParams);
     params.set('mode', next);
@@ -69,17 +69,18 @@ export default function LoginPage() {
   };
 
   const startSocialLogin = (provider: 'kakao' | 'naver') => {
-    clearMessageIfNeeded();
+    clearMessage();
 
-    const url =
+    const base =
       provider === 'kakao' ? KAKAO_AUTHORIZE_URL : NAVER_AUTHORIZE_URL;
-    if (!url) {
+    if (!base) {
       setStatus('error');
       setErrorMsg('소셜 로그인 URL이 설정되지 않았어요. (.env 확인)');
       return;
     }
 
-    const popupUrl = `${url}${url.includes('?') ? '&' : '?'}provider=${provider}`;
+    // ✅ 콜백 페이지에서 provider 판별용 query
+    const popupUrl = `${base}${base.includes('?') ? '&' : '?'}provider=${provider}`;
 
     const width = 520;
     const height = 720;
@@ -104,16 +105,16 @@ export default function LoginPage() {
     popup.focus();
   };
 
+  // ✅ 팝업 결과 받기
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       const data = event.data as SocialAuthMessage;
       if (!data || typeof data !== 'object') return;
 
       if (data.type === 'SOCIAL_AUTH_SUCCESS') {
-        setAccessToken(data.accessToken);
-        setUserName(data.userName ?? '회원님');
-        notifyAuthChanged();
+        setAuth({ accessToken: data.accessToken, userName: data.userName });
 
+        // 팝업 닫기
         try {
           popupRef.current?.close();
         } catch {
@@ -167,10 +168,10 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     try {
-      const result = await adminApi.login({
+      const result = (await adminApi.login({
         userId: userId.trim(),
         password: password.trim(),
-      });
+      })) as AdminLoginResponse;
 
       if (!result?.accessToken) {
         setStatus('error');
@@ -178,10 +179,10 @@ export default function LoginPage() {
         return;
       }
 
-      setAccessToken(result.accessToken);
-      setUserName(result.loginId ?? userId.trim());
-      notifyAuthChanged();
+      const name = (result.loginId ?? userId.trim()).trim() || 'USER';
+      setAuth({ accessToken: result.accessToken, userName: name });
 
+      // (기존 호환 유지)
       if (result.loginId) localStorage.setItem(LOGIN_ID_KEY, result.loginId);
 
       setStatus('success');
@@ -195,6 +196,7 @@ export default function LoginPage() {
     }
   };
 
+  // UI class
   const shell = 'mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12';
   const panel =
     'mt-6 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100 sm:mt-10';
@@ -203,7 +205,6 @@ export default function LoginPage() {
     'relative py-5 text-center text-base font-semibold transition sm:text-lg';
   const tabActive = 'text-slate-900';
   const tabInactive = 'text-slate-400 hover:text-slate-600';
-
   const body = 'p-6 sm:p-10';
 
   const input =
@@ -342,7 +343,7 @@ export default function LoginPage() {
                       value={userId}
                       onChange={(e) => {
                         setUserId(e.target.value);
-                        clearMessageIfNeeded();
+                        clearMessage();
                       }}
                       autoComplete="username"
                       className={input}
@@ -360,7 +361,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
-                        clearMessageIfNeeded();
+                        clearMessage();
                       }}
                       type="password"
                       autoComplete="current-password"
@@ -382,21 +383,6 @@ export default function LoginPage() {
                     >
                       {isSubmitting ? '로그인 중...' : '로그인'}
                     </button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <Link
-                      to="/"
-                      className="text-xs font-semibold text-slate-700 hover:underline"
-                    >
-                      메인으로
-                    </Link>
-                    <Link
-                      to="/contact"
-                      className="text-xs font-semibold text-primary hover:underline"
-                    >
-                      문의하기
-                    </Link>
                   </div>
                 </form>
               </div>
