@@ -18,7 +18,7 @@ export class ApiError extends Error {
   }
 }
 
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'accessToken';
 
 function getAccessToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
