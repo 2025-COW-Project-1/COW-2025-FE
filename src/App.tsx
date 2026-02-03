@@ -14,6 +14,7 @@ import LoginPage from './pages/site/LoginPage';
 import OAuthCallbackPage from './pages/site/OAuthCallbackPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import FloatingSns from './components/FloatingSns';
+import ToastHost from './components/ToastHost';
 
 export default function App() {
   return (
@@ -31,20 +32,14 @@ export default function App() {
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
-          <Route
-            path="/oauth/kakao/callback"
-            element={<OAuthCallbackPage provider="kakao" />}
-          />
-          <Route
-            path="/oauth/naver/callback"
-            element={<OAuthCallbackPage provider="naver" />}
-          />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
         </Route>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
         </Route>
       </Routes>
 
+      <ToastHost />
       <FloatingSns />
     </>
   );
