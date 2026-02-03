@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { loginWithKakao, loginWithNaver } from '../../api/oauth';
 import { setAuth } from '../../utils/auth';
@@ -12,10 +12,17 @@ type SocialAuthMessage =
 
 export default function OAuthCallbackPage() {
   const [params] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
-  const provider = (params.get('provider') ?? '') as Provider;
+  const providerFromPath = location.pathname.includes('/oauth/kakao/callback')
+    ? 'kakao'
+    : location.pathname.includes('/oauth/naver/callback')
+    ? 'naver'
+    : '';
+
+  const provider = (params.get('provider') ?? providerFromPath) as Provider;
   const code = params.get('code') ?? '';
   const state = params.get('state') ?? '';
 
@@ -42,32 +49,28 @@ export default function OAuthCallbackPage() {
       }
     };
 
+    const fail = (msg: string) => {
+      setError(msg);
+      postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
+    };
+
     const run = async () => {
-      // provider
-      if (provider !== 'kakao' && provider !== 'naver') {
-        const msg = 'provider 파라미터가 올바르지 않아요.';
-        setError(msg);
-        postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
-        return;
-      }
-
-      // code
-      if (!code) {
-        const msg = '인가 코드(code)가 없어요.';
-        setError(msg);
-        postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
-        return;
-      }
-
-      // naver state
-      if (provider === 'naver' && !state) {
-        const msg = 'state가 없어요.';
-        setError(msg);
-        postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
-        return;
-      }
-
       try {
+        if (provider !== 'kakao' && provider !== 'naver') {
+          fail('provider 파라미터가 올바르지 않아요.');
+          return;
+        }
+
+        if (!code) {
+          fail('인가 코드(code)가 없어요.');
+          return;
+        }
+
+        if (provider === 'naver' && !state) {
+          fail('state가 없어요.');
+          return;
+        }
+
         const res =
           provider === 'kakao'
             ? await loginWithKakao(code)
@@ -84,19 +87,19 @@ export default function OAuthCallbackPage() {
           accessToken: res.accessToken,
           userName: name,
         });
-
-        // ✅ 팝업 닫기
-        closePopup();
-
-        // 팝업이 아닌 경우 대비
-        if (!window.opener || window.opener.closed) {
-          navigate('/', { replace: true });
-        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : '로그인 처리 실패';
-        setError(msg);
-        postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
+        fail(msg);
+      } finally {
+        // ✅ 항상 팝업 닫기 시도
         closePopup();
+
+        // 팝업이 아닌 경우 / 닫기 실패 대비
+        setTimeout(() => {
+          if (!window.opener || window.opener.closed) {
+            navigate('/login', { replace: true });
+          }
+        }, 500);
       }
     };
 

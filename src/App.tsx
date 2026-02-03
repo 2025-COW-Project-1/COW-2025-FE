@@ -34,12 +34,16 @@ export default function App() {
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
-          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+          <Route path="/oauth/kakao/callback" element={<OAuthCallbackPage />} />
+          <Route path="/oauth/naver/callback" element={<OAuthCallbackPage />} />
         </Route>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/projects" element={<AdminProjectsListPage />} />
-          <Route path="/admin/projects/new" element={<AdminProjectEditorPage />} />
+          <Route
+            path="/admin/projects/new"
+            element={<AdminProjectEditorPage />}
+          />
           <Route
             path="/admin/projects/:projectId/edit"
             element={<AdminProjectEditorPage />}
