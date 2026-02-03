@@ -17,10 +17,10 @@ import AdminFeedbackListSection from './sections/AdminFeedbackListSection';
 import AdminLinktreeSection from './sections/AdminLinktreeSection';
 import AdminLinksSection from './sections/AdminLinksSection';
 import { saveLinksToApi } from './sections/linksSave';
-import AdminProjectsSection from './sections/AdminProjectsSection';
 import AdminSettlementsSection from './sections/AdminSettlementsSection';
 import AdminEditSection from './sections/AdminEditSection';
 import AdminIntroduceEditorPage from './sections/AdminIntroduceEditorPage';
+import AdminProjectsSection from './sections/AdminProjectsSection';
 
 // const LOCAL_SAVE_SECTIONS = new Set(['links', 'linktree', 'projects', 'form']);
 
@@ -183,9 +183,7 @@ export default function AdminDashboardPage() {
         <AdminLinktreeSection content={content} updateContent={updateContent} />
       )}
 
-      {section === 'projects' && (
-        <AdminProjectsSection content={content} updateContent={updateContent} />
-      )}
+      {section === 'projects' && <AdminProjectsSection />}
 
       {section === 'settlements' && (
         <AdminSettlementsSection

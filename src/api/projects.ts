@@ -1,78 +1,133 @@
-﻿import { api, withApiBase } from './client';
-
-export type ProjectStatus = 'upcoming' | 'active' | 'closed';
-
-export type ProjectOption = {
-  name: string;
-  values: string[];
-};
+import { api, withApiBase } from './client';
+import type { ApiResult } from './types';
+import { unwrapApiResult } from './types';
+export type ProjectStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
 
 export type Project = {
   id: string;
   title: string;
   summary: string;
   status: ProjectStatus;
-  startAt: string; // YYYY-MM-DD
-  endAt: string; // YYYY-MM-DD
-  price?: number;
-  options?: ProjectOption[];
+  startAt: string; // YYYY-MM-DD (UI placeholder)
+  endAt: string; // YYYY-MM-DD (deadlineDate)
+  deadlineDate?: string;
+  dDay?: number;
+  thumbnailUrl?: string;
+  thumbnailKey?: string;
   description?: string;
-  salesLink?: string;
-  thumbnailMediaId?: number | null;
-  imageMediaIds?: number[];
-  sortOrder?: number;
-  publishedAt?: string;
+  imageUrls?: string[];
+  imageKeys?: string[];
+  pinned?: boolean;
+  pinnedOrder?: number | null;
+  manualOrder?: number | null;
+  updatedAt?: string | DateArray | null;
 };
 
-type ProjectResponse = {
+type DateArray = [number, number, number];
+
+type ProjectListItemResponseDto = {
   id: number;
   title: string;
   summary: string;
-  description: string;
-  basePrice: number;
-  thumbnailMediaId: number | null;
-  salesLink: string;
-  sortOrder: number;
-  publishedAt: string;
-  imageMediaIds?: number[];
+  thumbnailUrl?: string | null;
+  status: ProjectStatus;
+  deadlineDate?: string | DateArray | null;
+  dDay?: number | null;
+  pinned?: boolean | null;
+  pinnedOrder?: number | null;
+  manualOrder?: number | null;
+  updatedAt?: string | DateArray | null;
 };
 
-function toProject(item: ProjectResponse): Project {
-  const publishedDate = item.publishedAt?.split('T')[0] ?? '';
+type ProjectDetailResponseDto = {
+  id: number;
+  title: string;
+  summary: string;
+  description?: string | null;
+  thumbnailUrl?: string | null;
+
+  thumbnailKey?: string | null;
+  imageKeys?: string[] | null;
+
+  imageUrls?: string[] | null;
+  status: ProjectStatus;
+  deadlineDate?: string | DateArray | null;
+  dDay?: number | null;
+  createdAt?: string | DateArray | null;
+  updatedAt?: string | DateArray | null;
+  pinnedOrder?: number | null;
+  manualOrder?: number | null;
+  pinned?: boolean | null;
+};
+
+function formatDateArray(input?: DateArray | null): string | undefined {
+  if (!input) return undefined;
+  const [year, month, day] = input;
+  if (!year || !month || !day) return undefined;
+  const mm = String(month).padStart(2, '0');
+  const dd = String(day).padStart(2, '0');
+  return `${year}-${mm}-${dd}`;
+}
+
+function normalizeDateValue(
+  value?: string | DateArray | null,
+): string | undefined {
+  if (!value) return undefined;
+  if (Array.isArray(value)) return formatDateArray(value);
+  return value;
+}
+
+function toProject(
+  item: ProjectListItemResponseDto | ProjectDetailResponseDto,
+): Project {
+  const deadlineDate = normalizeDateValue(item.deadlineDate);
   return {
     id: String(item.id),
     title: item.title,
     summary: item.summary,
-    description: item.description,
-    status: 'active',
-    startAt: publishedDate,
-    endAt: publishedDate,
-    price: item.basePrice,
-    salesLink: item.salesLink,
-    thumbnailMediaId: item.thumbnailMediaId,
-    imageMediaIds: item.imageMediaIds,
-    sortOrder: item.sortOrder,
-    publishedAt: item.publishedAt,
+    status: item.status,
+    startAt: '',
+    endAt: deadlineDate ?? '',
+    deadlineDate,
+    dDay: item.dDay ?? undefined,
+    thumbnailUrl: item.thumbnailUrl ?? undefined,
+
+    thumbnailKey:
+      'thumbnailKey' in item ? item.thumbnailKey ?? undefined : undefined,
+    imageKeys: 'imageKeys' in item ? item.imageKeys ?? undefined : undefined,
+
+    description: 'description' in item ? item.description ?? undefined : undefined,
+    imageUrls: 'imageUrls' in item ? item.imageUrls ?? undefined : undefined,
+    pinned: 'pinned' in item ? item.pinned ?? undefined : undefined,
+    pinnedOrder:
+      'pinnedOrder' in item ? item.pinnedOrder ?? undefined : undefined,
+    manualOrder:
+      'manualOrder' in item ? item.manualOrder ?? undefined : undefined,
+    updatedAt:
+      'updatedAt' in item ? normalizeDateValue(item.updatedAt) : undefined,
   };
 }
 
 export const projectsApi = {
   async list(): Promise<Project[]> {
-    const data = await api<ProjectResponse[] | { data: ProjectResponse[] }>(
-      withApiBase('/projects')
+    const data = await api<
+      ApiResult<ProjectListItemResponseDto[]> | ProjectListItemResponseDto[]
+    >(
+      withApiBase('/projects'),
     );
-    const items = Array.isArray(data)
-      ? data
-      : Array.isArray(data?.data)
-        ? data.data
-        : [];
-    return items.map(toProject);
+    const items = unwrapApiResult(data);
+    return Array.isArray(items) ? items.map(toProject) : [];
   },
 
   async getById(id: string): Promise<Project | undefined> {
     try {
-      const data = await api<ProjectResponse>(withApiBase(`/projects/${id}`));
-      return toProject(data);
+      const data = await api<
+        ApiResult<ProjectDetailResponseDto> | ProjectDetailResponseDto
+      >(
+        withApiBase(`/projects/${id}`),
+      );
+      const item = unwrapApiResult(data);
+      return item ? toProject(item) : undefined;
     } catch (e) {
       console.error(e);
       return undefined;

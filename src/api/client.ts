@@ -59,7 +59,13 @@ export async function api<T>(
   const data: unknown = text ? safeJsonParse(text) : null;
 
   if (!res.ok) {
-    const msg = extractErrorMessage(data);
+    let msg = extractErrorMessage(data);
+    if (!msg && data) {
+      msg =
+        typeof data === 'string'
+          ? data
+          : JSON.stringify(data, null, 2);
+    }
     throw new ApiError(res.status, data, msg);
   }
 
