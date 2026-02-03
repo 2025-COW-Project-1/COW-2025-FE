@@ -2,37 +2,68 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { loginWithKakao, loginWithNaver } from '../../api/oauth';
+import { setAuth } from '../../utils/auth';
 
 type Provider = 'kakao' | 'naver';
 
-type Props = {
-  provider: Provider;
-};
-
 type SocialAuthMessage =
-  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string }
-  | { type: 'SOCIAL_AUTH_ERROR'; message?: string };
+  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string; userName: string }
+  | { type: 'SOCIAL_AUTH_ERROR'; message: string };
 
-const TOKEN_KEY = 'accessToken';
-
-export default function OAuthCallbackPage({ provider }: Props) {
+export default function OAuthCallbackPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
+  const provider = (params.get('provider') ?? '') as Provider;
   const code = params.get('code') ?? '';
   const state = params.get('state') ?? '';
 
   const title = useMemo(() => {
-    return provider === 'kakao'
-      ? '카카오 로그인 처리 중...'
-      : '네이버 로그인 처리 중...';
+    if (provider === 'kakao') return '카카오 로그인 처리 중...';
+    if (provider === 'naver') return '네이버 로그인 처리 중...';
+    return '로그인 처리 중...';
   }, [provider]);
 
   useEffect(() => {
+    const postToOpener = (payload: SocialAuthMessage) => {
+      try {
+        window.opener?.postMessage(payload, '*');
+      } catch {
+        // ignore
+      }
+    };
+
+    const closePopup = () => {
+      try {
+        window.close();
+      } catch {
+        // ignore
+      }
+    };
+
     const run = async () => {
+      // provider
+      if (provider !== 'kakao' && provider !== 'naver') {
+        const msg = 'provider 파라미터가 올바르지 않아요.';
+        setError(msg);
+        postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
+        return;
+      }
+
+      // code
       if (!code) {
-        setError('인가 코드(code)가 없어요.');
+        const msg = '인가 코드(code)가 없어요.';
+        setError(msg);
+        postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
+        return;
+      }
+
+      // naver state
+      if (provider === 'naver' && !state) {
+        const msg = 'state가 없어요.';
+        setError(msg);
+        postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
         return;
       }
 
@@ -40,37 +71,32 @@ export default function OAuthCallbackPage({ provider }: Props) {
         const res =
           provider === 'kakao'
             ? await loginWithKakao(code)
-            : await (async () => {
-                if (!state) throw new Error('state가 없어요.');
-                return loginWithNaver(code, state);
-              })();
+            : await loginWithNaver(code, state);
 
-        if (window.opener && !window.opener.closed) {
-          const msg: SocialAuthMessage = {
-            type: 'SOCIAL_AUTH_SUCCESS',
-            accessToken: res.accessToken,
-          };
+        const name = (res.userName ?? '').trim() || 'USER';
 
-          window.opener.postMessage(msg, '*');
-          window.close();
-          return;
+        // ✅ 팝업에서도 저장
+        setAuth({ accessToken: res.accessToken, userName: name });
+
+        // ✅ 부모창에 전달
+        postToOpener({
+          type: 'SOCIAL_AUTH_SUCCESS',
+          accessToken: res.accessToken,
+          userName: name,
+        });
+
+        // ✅ 팝업 닫기
+        closePopup();
+
+        // 팝업이 아닌 경우 대비
+        if (!window.opener || window.opener.closed) {
+          navigate('/', { replace: true });
         }
-
-        localStorage.setItem(TOKEN_KEY, res.accessToken);
-        navigate('/', { replace: true });
       } catch (e) {
         const msg = e instanceof Error ? e.message : '로그인 처리 실패';
         setError(msg);
-
-        // 팝업인 경우 에러도 부모창에 알려주고 닫기(선택)
-        if (window.opener && !window.opener.closed) {
-          const errMsg: SocialAuthMessage = {
-            type: 'SOCIAL_AUTH_ERROR',
-            message: msg,
-          };
-          window.opener.postMessage(errMsg, '*');
-          window.close();
-        }
+        postToOpener({ type: 'SOCIAL_AUTH_ERROR', message: msg });
+        closePopup();
       }
     };
 
@@ -81,7 +107,9 @@ export default function OAuthCallbackPage({ provider }: Props) {
     <div className="mx-auto max-w-xl px-4 py-12">
       <Reveal>
         <h1 className="font-heading text-2xl text-primary">{title}</h1>
-        <p className="mt-2 text-sm text-slate-600">잠시만 기다려 주세요.</p>
+        <p className="mt-2 text-sm text-slate-600">
+          잠시만 기다려 주세요. 자동으로 진행됩니다.
+        </p>
 
         {error && (
           <div className="mt-6 rounded-2xl border border-rose-200 bg-white p-4 text-sm font-semibold text-rose-700">

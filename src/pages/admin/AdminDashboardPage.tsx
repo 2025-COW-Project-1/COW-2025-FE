@@ -20,6 +20,7 @@ import { saveLinksToApi } from './sections/linksSave';
 import AdminSettlementsSection from './sections/AdminSettlementsSection';
 import AdminEditSection from './sections/AdminEditSection';
 import AdminIntroduceEditorPage from './sections/AdminIntroduceEditorPage';
+import AdminProjectsSection from './sections/AdminProjectsSection';
 
 // const LOCAL_SAVE_SECTIONS = new Set(['links', 'linktree', 'projects', 'form']);
 
@@ -34,7 +35,9 @@ export default function AdminDashboardPage() {
   const tabParam = new URLSearchParams(hashQuery).get('tab');
   const aboutTab = tabParam === 'detail' ? 'detail' : 'main';
 
-  const [content, setContent] = useState<AdminContent>(() => loadAdminContent());
+  const [content, setContent] = useState<AdminContent>(() =>
+    loadAdminContent(),
+  );
   const [dirty, setDirty] = useState(false);
 
   const [entries, setEntries] = useState<FeedbackEntry[]>(() =>
@@ -147,16 +150,14 @@ export default function AdminDashboardPage() {
               {saving ? '저장 중...' : dirty ? '변경사항 저장' : '저장'}
             </button>
 
-            <div className="min-h-[18px]">
+            <div className="min-h-4.5">
               {saveMsg && saveMsgTone === 'success' && (
                 <p className="text-xs font-semibold text-emerald-600">
                   {saveMsg}
                 </p>
               )}
               {saveMsg && saveMsgTone === 'error' && (
-                <p className="text-xs font-semibold text-rose-600">
-                  {saveMsg}
-                </p>
+                <p className="text-xs font-semibold text-rose-600">{saveMsg}</p>
               )}
             </div>
           </div>
@@ -175,18 +176,14 @@ export default function AdminDashboardPage() {
       )}
 
       {section === 'links' && (
-        <AdminLinksSection
-          content={content}
-          updateContent={updateContent}
-        />
+        <AdminLinksSection content={content} updateContent={updateContent} />
       )}
 
       {section === 'linktree' && (
-        <AdminLinktreeSection
-          content={content}
-          updateContent={updateContent}
-        />
+        <AdminLinktreeSection content={content} updateContent={updateContent} />
       )}
+
+      {section === 'projects' && <AdminProjectsSection />}
 
       {section === 'settlements' && (
         <AdminSettlementsSection
@@ -206,10 +203,7 @@ export default function AdminDashboardPage() {
       )}
 
       {section === 'feedback' && (
-        <AdminFeedbackListSection
-          entries={entries}
-          setEntries={setEntries}
-        />
+        <AdminFeedbackListSection entries={entries} setEntries={setEntries} />
       )}
     </div>
   );

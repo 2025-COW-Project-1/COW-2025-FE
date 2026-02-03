@@ -1,4 +1,3 @@
-// src/App.tsx
 import { Route, Routes } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
 import AdminLayout from './components/AdminLayout';
@@ -6,6 +5,7 @@ import MainPage from './pages/site/MainPage';
 import AboutPage from './pages/site/AboutPage';
 import FormPage from './pages/site/FormPage';
 import ContactPage from './pages/site/ContactPage';
+import MyPage from './pages/site/MyPage';
 import ProjectsPage from './pages/site/ProjectsPage';
 import ProjectDetailPage from './pages/site/ProjectDetailPage';
 import ResourcesPage from './pages/site/ResourcesPage';
@@ -16,6 +16,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProjectsListPage from './pages/admin/AdminProjectsListPage';
 import AdminProjectEditorPage from './pages/admin/AdminProjectEditorPage';
 import FloatingSns from './components/FloatingSns';
+import ToastHost from './components/ToastHost';
 
 export default function App() {
   return (
@@ -30,16 +31,10 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/forms" element={<FormPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin/login" element={<LoginPage />} />
-          <Route
-            path="/oauth/kakao/callback"
-            element={<OAuthCallbackPage provider="kakao" />}
-          />
-          <Route
-            path="/oauth/naver/callback"
-            element={<OAuthCallbackPage provider="naver" />}
-          />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
         </Route>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
@@ -52,6 +47,7 @@ export default function App() {
         </Route>
       </Routes>
 
+      <ToastHost />
       <FloatingSns />
     </>
   );

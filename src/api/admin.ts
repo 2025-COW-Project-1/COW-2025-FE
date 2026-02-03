@@ -1,5 +1,4 @@
-﻿// src/api/admin.ts
-import { api, withApiBase } from './client';
+﻿import { api, withApiBase } from './client';
 
 export type AdminLoginBody = {
   userId: string;
