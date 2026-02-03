@@ -64,7 +64,7 @@ export default function LoginPage() {
     params.set('mode', next);
     navigate(
       { pathname: '/login', search: params.toString() },
-      { replace: true },
+      { replace: true }
     );
   };
 
@@ -79,8 +79,9 @@ export default function LoginPage() {
       return;
     }
 
-    // ✅ 콜백 페이지에서 provider 판별용 query
-    const popupUrl = `${base}${base.includes('?') ? '&' : '?'}provider=${provider}`;
+    const popupUrl = `${base}${
+      base.includes('?') ? '&' : '?'
+    }provider=${provider}`;
 
     const width = 520;
     const height = 720;
@@ -90,13 +91,13 @@ export default function LoginPage() {
     const popup = window.open(
       popupUrl,
       'social-login',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
     );
 
     if (!popup) {
       setStatus('error');
       setErrorMsg(
-        '팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요.',
+        '팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요.'
       );
       return;
     }
@@ -105,7 +106,6 @@ export default function LoginPage() {
     popup.focus();
   };
 
-  // ✅ 팝업 결과 받기
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       const data = event.data as SocialAuthMessage;
@@ -114,7 +114,6 @@ export default function LoginPage() {
       if (data.type === 'SOCIAL_AUTH_SUCCESS') {
         setAuth({ accessToken: data.accessToken, userName: data.userName });
 
-        // 팝업 닫기
         try {
           popupRef.current?.close();
         } catch {
@@ -138,7 +137,7 @@ export default function LoginPage() {
 
         setStatus('error');
         setErrorMsg(
-          data.message || '소셜 로그인에 실패했어요. 다시 시도해 주세요.',
+          data.message || '소셜 로그인에 실패했어요. 다시 시도해 주세요.'
         );
       }
     };
@@ -182,7 +181,6 @@ export default function LoginPage() {
       const name = (result.loginId ?? userId.trim()).trim() || 'USER';
       setAuth({ accessToken: result.accessToken, userName: name });
 
-      // (기존 호환 유지)
       if (result.loginId) localStorage.setItem(LOGIN_ID_KEY, result.loginId);
 
       setStatus('success');
@@ -196,10 +194,9 @@ export default function LoginPage() {
     }
   };
 
-  // UI class
   const shell = 'mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12';
   const panel =
-    'mt-6 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100 sm:mt-10';
+    'mx-auto mt-6 w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100 sm:mt-10';
   const tabBar = 'grid grid-cols-2 border-b border-slate-100 bg-white';
   const tabBtnBase =
     'relative py-5 text-center text-base font-semibold transition sm:text-lg';
@@ -214,11 +211,11 @@ export default function LoginPage() {
   const primaryBtn =
     'inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white shadow-sm ' +
     'transition hover:opacity-95 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-primary/20 ' +
-    'disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto';
+    'disabled:cursor-not-allowed disabled:opacity-60 sm:w-40';
 
   const socialBtnBase =
-    'group flex h-14 w-full items-center justify-center rounded-2xl text-base font-semibold transition ' +
-    'hover:-translate-y-0.5 hover:shadow-sm active:scale-[0.99] disabled:opacity-60';
+    'group flex h-12 w-full items-center justify-center rounded-2xl text-base font-semibold transition ' +
+    'hover:-translate-y-0.5 hover:shadow-sm active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60';
 
   const showIndicatorLeft = mode === 'user';
 
