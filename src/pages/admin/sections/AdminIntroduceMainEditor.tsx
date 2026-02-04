@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Reveal from '../../../components/Reveal';
 import { ApiError } from '../../../api/client';
 import { adminIntroduceApi } from '../../../api/adminIntroduce';
-import { loadAdminContent, type AdminContent } from '../../../utils/adminContent';
-import IntroduceMainView from '../../../features/introduce/IntroduceMainView';
-import type { IntroduceMainSummary } from '../../../api/intro';
+import MarkdownEditor from '../../../components/MarkdownEditor';
 
 type HeroLogoItem = {
   key: string;
@@ -67,23 +65,7 @@ function normalizeMain(payload: any): AdminIntroduceMainEditorState {
   };
 }
 
-function toIntroduceMainSummary(state: AdminIntroduceMainEditorState): IntroduceMainSummary {
-  return {
-    title: state.title ?? '',
-    subtitle: state.subtitle ?? '',
-    summary: state.summary ?? '',
-    heroLogos: (state.heroLogos ?? [])
-      .map((l) => ({
-        key: (l.key ?? '').trim(),
-        imageUrl: l.imageUrl || l.localPreviewUrl || undefined,
-      }))
-      .filter((l) => (l.key ?? '').length > 0),
-  };
-}
-
 export default function AdminIntroduceMainEditor() {
-  const [content] = useState<AdminContent>(() => loadAdminContent());
-
   const [main, setMain] = useState<AdminIntroduceMainEditorState>(DEFAULT_MAIN);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -195,15 +177,6 @@ export default function AdminIntroduceMainEditor() {
     }
   };
 
-  const fallback = useMemo(
-    () => ({
-      title: content.about.headline,
-      subtitle: content.about.subheadline,
-      summary: content.about.intro.join('\n'),
-    }),
-    [content]
-  );
-
   if (loading) {
     return (
       <Reveal id="about-main" delayMs={80} className="mt-8 rounded-3xl bg-white p-8">
@@ -214,7 +187,7 @@ export default function AdminIntroduceMainEditor() {
   }
 
   return (
-    <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+    <div className="mt-8 grid grid-cols-1 gap-6">
       <Reveal id="about-main" delayMs={80} className="rounded-3xl bg-white p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -254,17 +227,14 @@ export default function AdminIntroduceMainEditor() {
             />
           </label>
 
-          <div className="block">
-            <div className="text-sm font-bold text-slate-700">요약</div>
-
-            <textarea
+          <div>
+            <MarkdownEditor
               value={main.summary}
-              onChange={(e) => setMain((prev) => ({ ...prev, summary: e.target.value }))}
-              rows={8}
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
-              placeholder={`예)
-**굵게**
-줄바꿈은 엔터`}
+              onChange={(next) => setMain((prev) => ({ ...prev, summary: next }))}
+              leftLabel="요약"
+              rightLabel="미리보기"
+              placeholder={`예)\n**굵게**\n줄바꿈은 엔터`}
+              minHeightClassName="min-h-[240px] md:h-[360px]"
             />
           </div>
         </div>
@@ -358,18 +328,6 @@ export default function AdminIntroduceMainEditor() {
         </div>
       </Reveal>
 
-      <Reveal delayMs={120} className="rounded-3xl bg-white p-6">
-        <h3 className="text-sm font-bold text-slate-700">미리보기</h3>
-        <div className="mt-4">
-          <IntroduceMainView
-            data={toIntroduceMainSummary(main)}
-            fallback={fallback}
-            useReveal={false}
-            variant="preview"
-            linkToAbout={false}
-          />
-        </div>
-      </Reveal>
     </div>
   );
 }
