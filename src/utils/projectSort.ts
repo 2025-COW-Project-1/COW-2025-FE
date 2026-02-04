@@ -3,6 +3,7 @@ import { parseDateLike } from './date';
 export type ProjectSortFields = {
   id: string | number;
   pinned?: boolean | null;
+  pinnedOrder?: number | null;
   manualOrder?: number | null;
   deadlineDate?: string | number[] | null;
   updatedAt?: string | number[] | null;
@@ -26,6 +27,10 @@ export function sortProjects<T extends ProjectSortFields>(projects: T[]): T[] {
     if (aPinned !== bPinned) return aPinned ? -1 : 1;
 
     if (aPinned) {
+      const aOrder = a.project.pinnedOrder ?? Number.POSITIVE_INFINITY;
+      const bOrder = b.project.pinnedOrder ?? Number.POSITIVE_INFINITY;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+
       const aUpdated = parseDateLike(a.project.updatedAt)?.getTime();
       const bUpdated = parseDateLike(b.project.updatedAt)?.getTime();
       const aUpdatedValue = aUpdated ?? Number.NEGATIVE_INFINITY;
@@ -43,8 +48,7 @@ export function sortProjects<T extends ProjectSortFields>(projects: T[]): T[] {
       const bDeadline = parseDateLike(b.project.deadlineDate)?.getTime();
       const aDeadlineValue = aDeadline ?? Number.POSITIVE_INFINITY;
       const bDeadlineValue = bDeadline ?? Number.POSITIVE_INFINITY;
-      if (aDeadlineValue !== bDeadlineValue)
-        return aDeadlineValue - bDeadlineValue;
+      if (aDeadlineValue !== bDeadlineValue) return aDeadlineValue - bDeadlineValue;
 
       const idCompare = compareIdsDesc(a.project.id, b.project.id);
       if (idCompare !== 0) return idCompare;

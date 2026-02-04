@@ -2,11 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { adminApi } from '../../api/admin';
+import { setAuth } from '../../utils/auth';
 
 type Mode = 'user' | 'admin';
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
 
-const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
+type AdminLoginResponse = {
+  accessToken?: string;
+  loginId?: string;
+};
+
 const LOGIN_ID_KEY = 'admin_login_id';
 
 const KAKAO_AUTHORIZE_URL = import.meta.env.VITE_KAKAO_AUTHORIZE_URL as
@@ -16,9 +21,8 @@ const NAVER_AUTHORIZE_URL = import.meta.env.VITE_NAVER_AUTHORIZE_URL as
   | string
   | undefined;
 
-// 팝업 로그인 성공 메시지 타입(부모창에서 수신)
 type SocialAuthMessage =
-  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string }
+  | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string; userName: string }
   | { type: 'SOCIAL_AUTH_ERROR'; message?: string };
 
 export default function LoginPage() {
@@ -26,31 +30,26 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
 
   const initialMode: Mode = useMemo(() => {
-    const q = searchParams.get('mode');
-    if (q === 'admin') return 'admin';
-    return 'user';
+    return searchParams.get('mode') === 'admin' ? 'admin' : 'user';
   }, [searchParams]);
 
   const [mode, setMode] = useState<Mode>(initialMode);
 
-  // 관리자 로그인 폼 state
+  // admin form
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
 
-  // 공통 상태
   const [status, setStatus] = useState<SubmitStatus>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const isSubmitting = status === 'submitting';
 
-  // 팝업 핸들 저장(팝업 닫기/폴링)
   const popupRef = useRef<Window | null>(null);
 
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
 
-  const clearMessageIfNeeded = () => {
+  const clearMessage = () => {
     if (status === 'error' || status === 'success') {
       setStatus('idle');
       setErrorMsg(null);
@@ -59,30 +58,29 @@ export default function LoginPage() {
 
   const onSelectMode = (next: Mode) => {
     setMode(next);
-    clearMessageIfNeeded();
+    clearMessage();
 
-    // URL에 mode 유지(원하면 유지, 싫으면 이 부분 삭제해도 됨)
     const params = new URLSearchParams(searchParams);
     params.set('mode', next);
     navigate(
       { pathname: '/login', search: params.toString() },
-      { replace: true },
+      { replace: true }
     );
   };
 
   const startSocialLogin = (provider: 'kakao' | 'naver') => {
-    clearMessageIfNeeded();
+    clearMessage();
 
-    const url =
+    const base =
       provider === 'kakao' ? KAKAO_AUTHORIZE_URL : NAVER_AUTHORIZE_URL;
-    if (!url) {
+    if (!base) {
       setStatus('error');
       setErrorMsg('소셜 로그인 URL이 설정되지 않았어요. (.env 확인)');
       return;
     }
 
-    const popupUrl = `${url}${
-      url.includes('?') ? '&' : '?'
+    const popupUrl = `${base}${
+      base.includes('?') ? '&' : '?'
     }provider=${provider}`;
 
     const width = 520;
@@ -90,17 +88,16 @@ export default function LoginPage() {
     const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
     const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
 
-const popup = window.open(
-  popupUrl,
-  'social-login',
-  `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
-);
-console.log('popup =', popup);
+    const popup = window.open(
+      popupUrl,
+      'social-login',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
 
     if (!popup) {
       setStatus('error');
       setErrorMsg(
-        '팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요.',
+        '팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요.'
       );
       return;
     }
@@ -111,18 +108,12 @@ console.log('popup =', popup);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      // 보안: 같은 origin만 허용(개발 중이면 localhost / 배포면 도메인에 맞게)
-      // 서버가 아직 닫혀있는 상태라 정확히 못 박기 어렵다면 일단 느슨하게 두고,
-      // 서버 켜지면 origin 체크를 강화하는 걸 추천.
-      // if (event.origin !== window.location.origin) return;
-
       const data = event.data as SocialAuthMessage;
       if (!data || typeof data !== 'object') return;
 
       if (data.type === 'SOCIAL_AUTH_SUCCESS') {
-        localStorage.setItem(TOKEN_KEY, data.accessToken);
+        setAuth({ accessToken: data.accessToken, userName: data.userName });
 
-        // 팝업 닫기
         try {
           popupRef.current?.close();
         } catch {
@@ -131,8 +122,8 @@ console.log('popup =', popup);
           popupRef.current = null;
         }
 
-        // 메인으로 이동
         navigate('/', { replace: true });
+        return;
       }
 
       if (data.type === 'SOCIAL_AUTH_ERROR') {
@@ -146,7 +137,7 @@ console.log('popup =', popup);
 
         setStatus('error');
         setErrorMsg(
-          data.message || '소셜 로그인에 실패했어요. 다시 시도해 주세요.',
+          data.message || '소셜 로그인에 실패했어요. 다시 시도해 주세요.'
         );
       }
     };
@@ -176,10 +167,10 @@ console.log('popup =', popup);
     setErrorMsg(null);
 
     try {
-      const result = await adminApi.login({
+      const result = (await adminApi.login({
         userId: userId.trim(),
         password: password.trim(),
-      });
+      })) as AdminLoginResponse;
 
       if (!result?.accessToken) {
         setStatus('error');
@@ -187,8 +178,10 @@ console.log('popup =', popup);
         return;
       }
 
-      localStorage.setItem(TOKEN_KEY, result.accessToken);
-      if (result?.loginId) localStorage.setItem(LOGIN_ID_KEY, result.loginId);
+      const name = (result.loginId ?? userId.trim()).trim() || 'USER';
+      setAuth({ accessToken: result.accessToken, userName: name });
+
+      if (result.loginId) localStorage.setItem(LOGIN_ID_KEY, result.loginId);
 
       setStatus('success');
       navigate('/admin', { replace: true });
@@ -201,16 +194,14 @@ console.log('popup =', popup);
     }
   };
 
-  // 스타일(기존 톤 유지)
   const shell = 'mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12';
   const panel =
-    'mt-6 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100 sm:mt-10';
+    'mx-auto mt-6 w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-100 sm:mt-10';
   const tabBar = 'grid grid-cols-2 border-b border-slate-100 bg-white';
   const tabBtnBase =
     'relative py-5 text-center text-base font-semibold transition sm:text-lg';
   const tabActive = 'text-slate-900';
   const tabInactive = 'text-slate-400 hover:text-slate-600';
-
   const body = 'p-6 sm:p-10';
 
   const input =
@@ -220,11 +211,11 @@ console.log('popup =', popup);
   const primaryBtn =
     'inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white shadow-sm ' +
     'transition hover:opacity-95 active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-primary/20 ' +
-    'disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto';
+    'disabled:cursor-not-allowed disabled:opacity-60 sm:w-40';
 
   const socialBtnBase =
-    'group flex h-14 w-full items-center justify-center rounded-2xl text-base font-semibold transition ' +
-    'hover:-translate-y-0.5 hover:shadow-sm active:scale-[0.99] disabled:opacity-60';
+    'group flex h-12 w-full items-center justify-center rounded-2xl text-base font-semibold transition ' +
+    'hover:-translate-y-0.5 hover:shadow-sm active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60';
 
   const showIndicatorLeft = mode === 'user';
 
@@ -311,7 +302,7 @@ console.log('popup =', popup);
                     로그인 진행 시 서비스 이용약관 및 개인정보 처리방침에 동의한
                     것으로 간주됩니다.
                   </p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between gap-4 sm:justify-end">
                     <Link
                       to="/"
                       className="text-xs font-semibold text-slate-700 hover:underline"
@@ -349,7 +340,7 @@ console.log('popup =', popup);
                       value={userId}
                       onChange={(e) => {
                         setUserId(e.target.value);
-                        clearMessageIfNeeded();
+                        clearMessage();
                       }}
                       autoComplete="username"
                       className={input}
@@ -367,7 +358,7 @@ console.log('popup =', popup);
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
-                        clearMessageIfNeeded();
+                        clearMessage();
                       }}
                       type="password"
                       autoComplete="current-password"
@@ -390,21 +381,6 @@ console.log('popup =', popup);
                       {isSubmitting ? '로그인 중...' : '로그인'}
                     </button>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <Link
-                      to="/"
-                      className="text-xs font-semibold text-slate-700 hover:underline"
-                    >
-                      메인으로
-                    </Link>
-                    <Link
-                      to="/contact"
-                      className="text-xs font-semibold text-primary hover:underline"
-                    >
-                      문의하기
-                    </Link>
-                  </div>
                 </form>
               </div>
             </Reveal>
@@ -423,4 +399,3 @@ console.log('popup =', popup);
     </div>
   );
 }
-
