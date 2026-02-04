@@ -3,19 +3,45 @@ import { Link, useParams } from 'react-router-dom';
 import { Calendar, Clock } from 'lucide-react';
 import Reveal from '../../components/Reveal';
 import StatusBadge from '../../components/StatusBadge';
-import ApplyForm from '../../components/ApplyForm';
 import { projectsApi } from '../../api/projects';
 import type { Project } from '../../api/projects';
+import { itemsApi } from '../../api/items';
+import type { ItemResponse } from '../../api/items';
+import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
+
+const STATUS_LABELS: Record<string, string> = {
+  PREPARING: '준비중',
+  OPEN: '진행중',
+  CLOSED: '마감',
+};
+
+const SALETYPE_LABELS: Record<string, string> = {
+  NORMAL: '일반',
+  GROUPBUY: '공구',
+};
+
+function formatMoney(value?: number | null) {
+  if (value === null || value === undefined) return '-';
+  return value.toLocaleString();
+}
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
   const [project, setProject] = useState<Project | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [items, setItems] = useState<ItemResponse[]>([]);
+  const [itemsLoading, setItemsLoading] = useState(false);
+  const [itemsError, setItemsError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     setNotFound(false);
     setProject(null);
+    setItems([]);
+    setItemsError(null);
+    setItemsLoading(false);
 
     if (!projectId) {
       setNotFound(true);
@@ -24,18 +50,42 @@ export default function ProjectDetailPage() {
       };
     }
 
-    projectsApi
-      .getById(projectId)
-      .then((p) => {
+    (async () => {
+      try {
+        const p = await projectsApi.getById(projectId);
         if (!active) return;
-        if (!p) setNotFound(true);
-        else setProject(p);
-      })
-      .catch((err) => {
+        if (!p) {
+          setNotFound(true);
+          return;
+        }
+        setProject(p);
+
+        const itemsFromProject = (p as Project & { items?: ItemResponse[] })
+          .items;
+        if (Array.isArray(itemsFromProject)) {
+          setItems(itemsFromProject);
+          return;
+        }
+
+        setItemsLoading(true);
+        try {
+          const list = await itemsApi.listByProject(projectId);
+          if (!active) return;
+          setItems(Array.isArray(list) ? list : []);
+        } catch (err) {
+          if (!active) return;
+          setItemsError(
+            err instanceof Error ? err.message : '상품을 불러오지 못했어요.',
+          );
+        } finally {
+          if (active) setItemsLoading(false);
+        }
+      } catch (err) {
         if (!active) return;
         console.error(err);
         setNotFound(true);
-      });
+      }
+    })();
 
     return () => {
       active = false;
@@ -75,6 +125,14 @@ export default function ProjectDetailPage() {
         ? `D-${project.dDay}`
         : `D+${Math.abs(project.dDay)}`
       : null;
+
+  const emptyItemsMessage = itemsLoading
+    ? '불러오는 중...'
+    : itemsError
+    ? itemsError
+    : items.length === 0
+    ? '등록된 상품이 없어요'
+    : null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -156,9 +214,83 @@ export default function ProjectDetailPage() {
         <div className="rounded-3xl border border-slate-200 bg-white p-6">
           <h2 className="font-heading text-xl text-slate-900">상세 설명</h2>
           {project.description && project.description.trim().length > 0 ? (
-            <p className="mt-2 text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-              {project.description}
-            </p>
+            <div className="mt-3 text-sm text-slate-700">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkBreaks]}
+                components={{
+                  h1: ({ ...props }) => (
+                    <h2
+                      className="mt-6 text-lg font-heading text-slate-900 first:mt-0"
+                      {...props}
+                    />
+                  ),
+                  h2: ({ ...props }) => (
+                    <h3
+                      className="mt-5 text-base font-heading text-slate-900 first:mt-0"
+                      {...props}
+                    />
+                  ),
+                  h3: ({ ...props }) => (
+                    <h4
+                      className="mt-4 text-sm font-heading text-slate-900 first:mt-0"
+                      {...props}
+                    />
+                  ),
+                  p: ({ ...props }) => (
+                    <p className="mt-3 leading-relaxed first:mt-0" {...props} />
+                  ),
+                  ul: ({ ...props }) => (
+                    <ul
+                      className="mt-3 list-disc space-y-2 pl-5 first:mt-0"
+                      {...props}
+                    />
+                  ),
+                  ol: ({ ...props }) => (
+                    <ol
+                      className="mt-3 list-decimal space-y-2 pl-5 first:mt-0"
+                      {...props}
+                    />
+                  ),
+                  li: ({ ...props }) => (
+                    <li className="leading-relaxed" {...props} />
+                  ),
+                  hr: ({ ...props }) => (
+                    <hr className="my-5 border-slate-200" {...props} />
+                  ),
+                  strong: ({ ...props }) => (
+                    <strong className="font-semibold text-slate-900" {...props} />
+                  ),
+                  em: ({ ...props }) => (
+                    <em className="italic text-slate-700" {...props} />
+                  ),
+                  code: ({ className, ...props }) => {
+                    const isBlock = Boolean(className);
+                    if (isBlock) {
+                      return (
+                        <code
+                          className="block whitespace-pre-wrap break-words"
+                          {...props}
+                        />
+                      );
+                    }
+                    return (
+                      <code
+                        className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-mono text-slate-700"
+                        {...props}
+                      />
+                    );
+                  },
+                  pre: ({ ...props }) => (
+                    <pre
+                      className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700"
+                      {...props}
+                    />
+                  ),
+                }}
+              >
+                {project.description}
+              </ReactMarkdown>
+            </div>
           ) : (
             <p className="mt-2 text-sm font-semibold text-slate-400">
               등록된 상세 설명이 없어요
@@ -190,11 +322,94 @@ export default function ProjectDetailPage() {
 
       <div id="apply" className="mt-10">
         <Reveal className="rounded-3xl border border-slate-200 bg-white p-6">
-          <h2 className="font-heading text-xl text-slate-900">신청</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            프로젝트 신청 정보를 입력해 주세요.
-          </p>
-          <ApplyForm project={project} />
+          <h2 className="font-heading text-xl text-slate-900">상품 목록</h2>
+
+          {emptyItemsMessage ? (
+            <p
+              className={[
+                'mt-6 text-sm font-semibold',
+                itemsError ? 'text-rose-600' : 'text-slate-500',
+              ].join(' ')}
+            >
+              {emptyItemsMessage}
+            </p>
+          ) : (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((item) => {
+                const saleTypeLabel =
+                  SALETYPE_LABELS[item.saleType] ?? item.saleType;
+                const statusLabel = STATUS_LABELS[item.status] ?? item.status;
+                const isMuted = item.status !== 'OPEN';
+                const isGroupbuy = item.saleType === 'GROUPBUY';
+
+                return (
+                  <Link
+                    key={item.id}
+                    to={`/projects/${project.id}/items/${item.id}`}
+                    className={[
+                      'group overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-primary/40 hover:shadow-sm',
+                      isMuted ? 'opacity-75' : '',
+                    ].join(' ')}
+                  >
+                    <div className="h-40 w-full overflow-hidden bg-slate-100">
+                      {item.thumbnailUrl ? (
+                        <img
+                          src={item.thumbnailUrl}
+                          alt={item.name}
+                          className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.02]"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400">
+                          대표 이미지 없음
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-1 flex-col gap-2 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">
+                            {item.name}
+                          </p>
+                          {item.summary && (
+                            <p className="text-xs text-slate-500">
+                              {item.summary}
+                            </p>
+                          )}
+                          <p className="text-xs text-slate-500">
+                            {formatMoney(item.price)}원
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span
+                            className={[
+                              'inline-flex rounded-full px-2 py-1 text-[10px] font-bold',
+                              isGroupbuy
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-slate-100 text-slate-600',
+                            ].join(' ')}
+                          >
+                            {saleTypeLabel}
+                          </span>
+                          <span
+                            className={[
+                              'inline-flex rounded-full px-2 py-1 text-[10px] font-bold',
+                              item.status === 'OPEN'
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : item.status === 'PREPARING'
+                                ? 'bg-slate-100 text-slate-600'
+                                : 'bg-rose-50 text-rose-600',
+                            ].join(' ')}
+                          >
+                            {statusLabel}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </Reveal>
       </div>
     </div>

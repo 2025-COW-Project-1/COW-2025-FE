@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { key: 'about', label: '소개 수정', href: '/admin#about?tab=main' },
   { key: 'links', label: '링크', href: '/admin#links' },
   { key: 'linktree', label: '링크트리', href: '/admin#linktree' },
-  { key: 'projects', label: '프로젝트', href: '/admin/projects' },
+  { key: 'projects', label: '프로젝트 및 상품', href: '/admin/projects' },
   { key: 'settlements', label: '정산', href: '/admin#settlements' },
   { key: 'form', label: '피드백 폼', href: '/admin#form' },
   { key: 'feedback', label: '피드백 목록', href: '/admin#feedback' },
@@ -23,7 +23,9 @@ export default function AdminLayout() {
     activePath === 'about-main' || activePath === 'about-detail'
       ? 'about'
       : activePath;
-  const activeKey = location.pathname.startsWith('/admin/projects')
+  const activeKey =
+    location.pathname.startsWith('/admin/projects') ||
+    location.pathname.startsWith('/admin/items')
     ? 'projects'
     : normalizedActive;
 
