@@ -46,7 +46,7 @@ export default function MyPageForm({
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-5xl px-6 py-10 sm:px-6 sm:py-14">
       <Reveal>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
@@ -85,27 +85,31 @@ export default function MyPageForm({
       </Reveal>
 
       <form className="mt-8 space-y-8">
-        <MyPageProfileSection
-          form={form}
-          loading={loading}
-          profileSavedAt={profileSavedAt}
-          profileDirty={profileDirty}
-          profileError={profileError}
-          onSaveProfile={onSaveProfile}
-          updateField={updateField}
-        />
+        <Reveal delayMs={80}>
+          <MyPageProfileSection
+            form={form}
+            loading={loading}
+            profileSavedAt={profileSavedAt}
+            profileDirty={profileDirty}
+            profileError={profileError}
+            onSaveProfile={onSaveProfile}
+            updateField={updateField}
+          />
+        </Reveal>
 
-        <MyPageAddressSection
-          form={form}
-          loading={loading}
-          addressSavedAt={addressSavedAt}
-          addressDirty={addressDirty}
-          addressExists={addressExists}
-          addressError={addressError}
-          onSaveAddress={onSaveAddress}
-          onDeleteAddress={onDeleteAddress}
-          updateAddress={updateAddress}
-        />
+        <Reveal delayMs={120}>
+          <MyPageAddressSection
+            form={form}
+            loading={loading}
+            addressSavedAt={addressSavedAt}
+            addressDirty={addressDirty}
+            addressExists={addressExists}
+            addressError={addressError}
+            onSaveAddress={onSaveAddress}
+            onDeleteAddress={onDeleteAddress}
+            updateAddress={updateAddress}
+          />
+        </Reveal>
       </form>
     </div>
   );
