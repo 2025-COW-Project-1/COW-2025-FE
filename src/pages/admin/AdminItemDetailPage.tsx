@@ -984,7 +984,7 @@ export default function AdminItemDetailPage() {
             <div className="mt-2">
               <MarkdownEditor
                 value={item.description}
-                onChange={(next) =>
+                onChange={(next: string) =>
                   updateItem({ description: next, validationError: null })
                 }
                 placeholder="상세 설명을 입력해주세요. (마크다운 지원: # 제목, - 목록, 굵게, 링크 등)"

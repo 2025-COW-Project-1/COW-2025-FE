@@ -879,7 +879,7 @@ export default function AdminProjectEditorPage() {
           >
             <MarkdownEditor
               value={project.description}
-              onChange={(next) => updateProject({ description: next, validationError: null })}
+              onChange={(next: string) => updateProject({ description: next, validationError: null })}
               leftLabel="상세 설명"
               rightLabel="미리보기"
               placeholder="상세 설명을 입력해주세요. (마크다운 지원: # 제목, - 목록, 굵게, 링크 등)"
