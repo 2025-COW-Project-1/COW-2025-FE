@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Reveal from '../../../components/Reveal';
+import MarkdownEditor from '../../../components/MarkdownEditor';
 import { ApiError } from '../../../api/client';
 import {
   adminIntroduceApi,
   type AdminIntroduceDetailResponse,
   type AdminIntroduceDetailUpdateRequest,
 } from '../../../api/adminIntroduce';
-import { loadAdminContent, type AdminContent } from '../../../utils/adminContent';
-import IntroduceDetailView from '../../../features/introduce/IntroduceDetailView';
-import type { IntroduceDetailPayload } from '../../../api/intro';
 
 type UploadTarget = 'current' | `history:${number}` | null;
 
@@ -121,20 +119,6 @@ function sanitizeDetail(payload: AdminIntroduceDetailResponse): AdminIntroduceDe
   };
 }
 
-function MarkdownGuide() {
-  return (
-    <div className="mt-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
-      <p className="font-semibold text-slate-600">입력 가이드</p>
-      <ul className="mt-1 list-disc pl-5 space-y-1">
-        <li>
-          굵게: <span className="font-mono">**텍스트**</span>
-        </li>
-        <li>문단 나누기: 엔터 두 번 (빈 줄 1개)</li>
-      </ul>
-    </div>
-  );
-}
-
 function UploadBox({
   disabled,
   onFiles,
@@ -189,7 +173,6 @@ function UploadBox({
 }
 
 export default function AdminIntroduceDetailEditor() {
-  const [content] = useState<AdminContent>(() => loadAdminContent());
   const [detail, setDetail] = useState<AdminIntroduceDetailResponse>(DEFAULT_DETAIL);
 
   const [loading, setLoading] = useState(true);
@@ -325,41 +308,6 @@ export default function AdminIntroduceDetailEditor() {
     }
   };
 
-  const fallback = useMemo(
-    () => ({
-      introTitle: content.about.headline,
-      introSlogan: content.about.subheadline,
-      introBody: content.about.intro.join('\n\n'),
-      purposeTitle: content.about.purposeTitle,
-      purposeDescription: content.about.purposeBody.join('\n\n'),
-      currentLogoTitle: content.about.logoTitle,
-      currentLogoDescription: content.about.logoBody.join('\n\n'),
-      logoHistories: [],
-    }),
-    [content]
-  );
-
-  const detailForPreview: IntroduceDetailPayload = {
-    intro: detail.intro
-      ? { title: detail.intro.title ?? '', slogan: detail.intro.slogan ?? '', body: detail.intro.body ?? '' }
-      : undefined,
-    purpose: detail.purpose ? { title: detail.purpose.title ?? '', description: detail.purpose.description ?? '' } : undefined,
-    currentLogo: detail.currentLogo
-      ? {
-          title: detail.currentLogo.title ?? '',
-          imageKey: detail.currentLogo.imageKey ?? undefined,
-          imageUrl: (detail.currentLogo.imageUrl ?? undefined) as any,
-          description: detail.currentLogo.description ?? '',
-        }
-      : undefined,
-    logoHistories: (detail.logoHistories ?? []).map((h) => ({
-      year: h.year ?? '',
-      imageKey: h.imageKey ?? undefined,
-      imageUrl: (h.imageUrl ?? undefined) as any,
-      description: h.description ?? '',
-    })),
-  };
-
   if (loading) {
     return (
       <Reveal id="about-detail" delayMs={80} className="mt-8 rounded-3xl bg-white p-8">
@@ -370,7 +318,7 @@ export default function AdminIntroduceDetailEditor() {
   }
 
   return (
-    <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+    <div className="mt-8 grid grid-cols-1 gap-6">
       <Reveal id="about-detail" delayMs={80} className="rounded-3xl bg-white p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -422,21 +370,20 @@ export default function AdminIntroduceDetailEditor() {
                 />
               </label>
 
-              <label className="block">
-                <div className="text-xs font-semibold text-slate-600">본문</div>
-                <textarea
+              <div>
+                <MarkdownEditor
                   value={detail.intro?.body ?? ''}
-                  onChange={(e) =>
+                  onChange={(next) =>
                     setDetail((prev) => ({
                       ...prev,
-                      intro: { ...(prev.intro ?? { title: '', slogan: '', body: '' }), body: e.target.value },
+                      intro: { ...(prev.intro ?? { title: '', slogan: '', body: '' }), body: next },
                     }))
                   }
-                  rows={5}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
+                  leftLabel="본문"
+                  rightLabel="미리보기"
+                  minHeightClassName="min-h-[220px] md:h-[300px]"
                 />
-                <MarkdownGuide />
-              </label>
+              </div>
             </div>
           </section>
 
@@ -458,21 +405,20 @@ export default function AdminIntroduceDetailEditor() {
                 />
               </label>
 
-              <label className="block">
-                <div className="text-xs font-semibold text-slate-600">설명</div>
-                <textarea
+              <div>
+                <MarkdownEditor
                   value={detail.purpose?.description ?? ''}
-                  onChange={(e) =>
+                  onChange={(next) =>
                     setDetail((prev) => ({
                       ...prev,
-                      purpose: { ...(prev.purpose ?? { title: '', description: '' }), description: e.target.value },
+                      purpose: { ...(prev.purpose ?? { title: '', description: '' }), description: next },
                     }))
                   }
-                  rows={5}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
+                  leftLabel="설명"
+                  rightLabel="미리보기"
+                  minHeightClassName="min-h-[220px] md:h-[300px]"
                 />
-                <MarkdownGuide />
-              </label>
+              </div>
             </div>
           </section>
 
@@ -497,24 +443,23 @@ export default function AdminIntroduceDetailEditor() {
                 />
               </label>
 
-              <label className="block">
-                <div className="text-xs font-semibold text-slate-600">설명</div>
-                <textarea
+              <div>
+                <MarkdownEditor
                   value={detail.currentLogo?.description ?? ''}
-                  onChange={(e) =>
+                  onChange={(next) =>
                     setDetail((prev) => ({
                       ...prev,
                       currentLogo: {
                         ...(prev.currentLogo ?? { title: '', imageKey: '', imageUrl: null, description: '' }),
-                        description: e.target.value,
+                        description: next,
                       },
                     }))
                   }
-                  rows={4}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
+                  leftLabel="설명"
+                  rightLabel="미리보기"
+                  minHeightClassName="min-h-[200px] md:h-[260px]"
                 />
-                <MarkdownGuide />
-              </label>
+              </div>
             </div>
 
             <UploadBox disabled={uploading === 'current'} onFiles={handleUploadCurrentLogo} />
@@ -616,22 +561,21 @@ export default function AdminIntroduceDetailEditor() {
                         />
                       </label>
 
-                      <label className="block md:col-span-2">
-                        <div className="text-xs font-semibold text-slate-600">설명</div>
-                        <textarea
+                      <div className="md:col-span-2">
+                        <MarkdownEditor
                           value={history.description ?? ''}
-                          onChange={(e) =>
+                          onChange={(next) =>
                             setDetail((prev) => {
-                              const next = [...(prev.logoHistories ?? [])];
-                              next[idx] = { ...history, description: e.target.value };
-                              return { ...prev, logoHistories: next };
+                              const updated = [...(prev.logoHistories ?? [])];
+                              updated[idx] = { ...history, description: next };
+                              return { ...prev, logoHistories: updated };
                             })
                           }
-                          rows={3}
-                          className="mt-2 w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
+                          leftLabel="설명"
+                          rightLabel="미리보기"
+                          minHeightClassName="min-h-[200px] md:h-[260px]"
                         />
-                        <MarkdownGuide />
-                      </label>
+                      </div>
                     </div>
 
                     <UploadBox disabled={isUploading} onFiles={(files) => handleUploadHistoryImage(files, idx)} />
@@ -673,12 +617,6 @@ export default function AdminIntroduceDetailEditor() {
         </div>
       </Reveal>
 
-      <Reveal delayMs={120} className="rounded-3xl bg-white p-6">
-        <h3 className="text-sm font-bold text-slate-700">미리보기</h3>
-        <div className="mt-4">
-          <IntroduceDetailView data={detailForPreview} fallback={fallback} useReveal={false} />
-        </div>
-      </Reveal>
     </div>
   );
 }
