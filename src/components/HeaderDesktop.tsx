@@ -11,8 +11,7 @@ export default function HeaderDesktop() {
   const [open, setOpen] = useState<MenuKey>(null);
   const isProjectsOpen = open === 'projects';
 
-  const { isLoggedIn, userName } = useAuth();
-  const greeting = `${userName || 'USER'}님, 안녕하세요!`;
+  const { isLoggedIn } = useAuth();
 
   const handleLogout = () => {
     clearAuth();
@@ -63,12 +62,12 @@ export default function HeaderDesktop() {
           role="menu"
         >
           <div className="py-2">
-              {[
-                { label: 'ALL', href: '/projects' },
-                { label: 'NOW OPEN', href: '/projects?status=OPEN' },
-                { label: 'COMING SOON', href: '/projects?status=PREPARING' },
-                { label: 'CLOSED', href: '/projects?status=CLOSED' },
-              ].map((x) => (
+            {[
+              { label: 'ALL', href: '/projects' },
+              { label: 'NOW OPEN', href: '/projects?status=OPEN' },
+              { label: 'COMING SOON', href: '/projects?status=PREPARING' },
+              { label: 'CLOSED', href: '/projects?status=CLOSED' },
+            ].map((x) => (
               <button
                 key={x.href}
                 type="button"
@@ -136,27 +135,13 @@ export default function HeaderDesktop() {
 
       <div className="ml-2 flex items-center gap-2">
         {isLoggedIn ? (
-          <>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(null);
-                navigate('/mypage');
-              }}
-              className="rounded-xl bg-primary/10 px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/15"
-              aria-label="마이페이지로 이동"
-            >
-              {greeting}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-            >
-              로그아웃
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+          >
+            로그아웃
+          </button>
         ) : (
           <Link
             to="/login"

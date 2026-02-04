@@ -1,14 +1,40 @@
-import Reveal from '../../components/Reveal';
+import MyPageForm from '../../features/mypage/MyPageForm';
+import useMyPage from '../../features/mypage/useMyPage';
 
 export default function MyPage() {
+  const {
+    form,
+    loading,
+    profileSavedAt,
+    addressSavedAt,
+    profileDirty,
+    addressDirty,
+    addressExists,
+    profileError,
+    addressError,
+    updateField,
+    updateAddress,
+    saveProfile,
+    saveAddress,
+    deleteAddress,
+  } = useMyPage();
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <Reveal>
-        <h1 className="font-heading text-2xl text-primary">MYPAGE</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          마이페이지는 추후 구현 예정입니다.
-        </p>
-      </Reveal>
-    </div>
+    <MyPageForm
+      form={form}
+      loading={loading}
+      profileSavedAt={profileSavedAt}
+      addressSavedAt={addressSavedAt}
+      profileDirty={profileDirty}
+      addressDirty={addressDirty}
+      addressExists={addressExists}
+      profileError={profileError}
+      addressError={addressError}
+      updateField={updateField}
+      updateAddress={updateAddress}
+      onSaveProfile={saveProfile}
+      onSaveAddress={saveAddress}
+      onDeleteAddress={deleteAddress}
+    />
   );
 }
