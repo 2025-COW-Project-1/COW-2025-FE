@@ -42,11 +42,11 @@ export default function App() {
           <Route path="/admin/login" element={<LoginPage />} />
           <Route
             path="/oauth/kakao/callback"
-            element={<OAuthCallbackPage provider="kakao" />}
+            element={<OAuthCallbackPage />}
           />
           <Route
             path="/oauth/naver/callback"
-            element={<OAuthCallbackPage provider="naver" />}
+            element={<OAuthCallbackPage />}
           />
         </Route>
         <Route element={<AdminLayout />}>
