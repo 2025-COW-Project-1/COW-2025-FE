@@ -29,7 +29,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import Reveal from '../../components/Reveal';
-import ConfirmModal from '../../components/ConfirmModal';
+import { useConfirm } from '../../components/confirm/useConfirm';
+import { useToast } from '../../components/toast/useToast';
 import {
   adminProjectsApi,
   type AdminProjectOrderItem,
@@ -48,6 +49,7 @@ type SortableRowProps = {
   project: AdminProjectResponse;
   onPinToggle: (project: AdminProjectResponse) => void;
   onDelete: (project: AdminProjectResponse) => void;
+  deleting?: boolean;
 };
 
 type PinIconProps = {
@@ -78,6 +80,7 @@ type RowViewProps = {
   project: AdminProjectResponse;
   onPinToggle?: (project: AdminProjectResponse) => void;
   onDelete?: (project: AdminProjectResponse) => void;
+  deleting?: boolean;
   dragHandleProps?: HTMLAttributes<HTMLButtonElement>;
   rowStyle?: CSSProperties;
   rowRef?: (node: HTMLTableRowElement | null) => void;
@@ -91,6 +94,7 @@ function RowView({
   project,
   onPinToggle,
   onDelete,
+  deleting = false,
   dragHandleProps,
   rowStyle,
   rowRef,
@@ -176,10 +180,16 @@ function RowView({
 
       <td className="px-4 py-3 text-right">
         {showActions && (
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-nowrap justify-end gap-2">
+            <Link
+              to={`/admin/projects/${project.id}/items`}
+              className="whitespace-nowrap rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
+            >
+              상품 관리
+            </Link>
             <Link
               to={`/admin/projects/${project.id}/edit`}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+              className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
             >
               수정
             </Link>
@@ -187,9 +197,10 @@ function RowView({
             <button
               type="button"
               onClick={() => void onDelete?.(project)}
-              className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50"
+              disabled={deleting}
+              className="whitespace-nowrap rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50"
             >
-              삭제
+              {deleting ? '삭제 중...' : '삭제'}
             </button>
           </div>
         )}
@@ -198,7 +209,7 @@ function RowView({
   );
 }
 
-function SortableRow({ project, onPinToggle, onDelete }: SortableRowProps) {
+function SortableRow({ project, onPinToggle, onDelete, deleting = false }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
     useSortable({ id: String(project.id) });
 
@@ -212,6 +223,7 @@ function SortableRow({ project, onPinToggle, onDelete }: SortableRowProps) {
       project={project}
       onPinToggle={onPinToggle}
       onDelete={onDelete}
+      deleting={deleting}
       dragHandleProps={{ ...attributes, ...listeners }}
       rowRef={setNodeRef}
       rowStyle={style}
@@ -257,13 +269,12 @@ function buildUnpinnedOrderItems(list: AdminProjectResponse[]): AdminProjectOrde
 
 export default function AdminProjectsListPage() {
   const navigate = useNavigate();
+  const confirm = useConfirm();
+  const toast = useToast();
   const [projects, setProjects] = useState<AdminProjectResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmTarget, setConfirmTarget] = useState<AdminProjectResponse | null>(null);
-  const [confirmMessage, setConfirmMessage] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
   const tableRef = useRef<HTMLTableElement | null>(null);
@@ -329,67 +340,81 @@ export default function AdminProjectsListPage() {
     }
   }, [loadProjects, savingOrder]);
 
-  const persistOrderAndRefresh = useCallback(async (items: AdminProjectOrderItem[]) => {
-    if (savingOrder) return;
-    setSavingOrder(true);
-    try {
-      await adminProjectsApi.updateOrder({ items });
-      await loadProjects();
-    } catch (err) {
-      console.error(err);
-      setError('순서 저장에 실패했어요. 잠시 후 다시 시도해 주세요.');
-    } finally {
-      setSavingOrder(false);
-    }
-  }, [loadProjects, savingOrder]);
-
   const handleDelete = useCallback(
     async (project: AdminProjectResponse) => {
-      if (!project.id) return;
-      const message =
-        projects.length === 1
-          ? '마지막 프로젝트예요. 삭제하면 목록이 비게 됩니다. 그래도 삭제할까요?'
-          : '이 프로젝트를 삭제할까요? 삭제 후 복구할 수 없어요.';
-      setConfirmTarget(project);
-      setConfirmMessage(message);
-      setConfirmOpen(true);
-    },
-    [projects],
-  );
+      if (!project.id || deleting) return;
+      const message = '프로젝트를 삭제할까요? 삭제 후 재등록 해야 해요.';
 
-  const confirmDelete = useCallback(async () => {
-    if (!confirmTarget?.id || deleting) return;
-    const prev = projects;
-    const targetId = confirmTarget.id;
-    setDeleting(true);
-    setConfirmOpen(false);
+      const ok = await confirm.open({
+        title: '프로젝트 삭제',
+        description: message,
+        danger: true,
+        confirmText: '삭제',
+      });
+      if (!ok) return;
+
+      const prev = projects;
+      const targetId = project.id;
+      setDeleting(true);
 
       try {
         await adminProjectsApi.deleteProject(String(targetId));
         const remaining = prev.filter((item) => item.id !== targetId);
         setProjects(remaining);
         await loadProjects();
+        toast.success('프로젝트가 삭제됐어요');
       } catch (err) {
         console.error(err);
         setError('삭제에 실패했어요. 잠시 후 다시 시도해 주세요.');
+        toast.error('삭제에 실패했어요');
       } finally {
-      setDeleting(false);
-      setConfirmTarget(null);
-      setConfirmMessage('');
-    }
-  }, [confirmTarget, deleting, loadProjects, projects]);
+        setDeleting(false);
+      }
+    },
+    [confirm, deleting, loadProjects, projects, toast],
+  );
 
   const handlePinToggle = useCallback(
     async (project: AdminProjectResponse) => {
       if (savingOrder) return;
+      const prev = projects;
+      const targetId = project.id;
+      if (!targetId) return;
+
+      let nextPinned = pinnedProjects;
+      let nextUnpinned = unpinnedProjects;
+
       if (project.pinned) {
-        await persistOrderAndRefresh([{ projectId: project.id, pinned: false }]);
-        return;
+        nextPinned = pinnedProjects.filter((item) => item.id !== targetId);
+        nextUnpinned = [
+          ...unpinnedProjects,
+          { ...project, pinned: false, pinnedOrder: null },
+        ];
+      } else {
+        nextUnpinned = unpinnedProjects.filter((item) => item.id !== targetId);
+        nextPinned = [
+          ...pinnedProjects,
+          { ...project, pinned: true, manualOrder: null },
+        ];
       }
 
-      await persistOrderAndRefresh([{ projectId: project.id, pinned: true }]);
+      const next = applyOrdering(nextPinned, nextUnpinned);
+      setSavingOrder(true);
+      setProjects(next);
+
+      try {
+        await adminProjectsApi.updateOrder({
+          items: [{ projectId: targetId, pinned: !project.pinned }],
+        });
+      } catch (err) {
+        console.error(err);
+        setProjects(prev);
+        setError('순서 저장에 실패했어요. 잠시 후 다시 시도해 주세요.');
+      } finally {
+        setSavingOrder(false);
+      }
     },
-    [persistOrderAndRefresh, savingOrder],
+    [pinnedProjects, projects, savingOrder, unpinnedProjects],
   );
 
   const handleDragEnd = useCallback(
@@ -424,7 +449,7 @@ export default function AdminProjectsListPage() {
         ? buildPinnedOrderItems(nextGroup)
         : buildUnpinnedOrderItems(nextGroup);
 
-      void persistOrderOptimistic(next, prev, items, Boolean(activeProject.pinned));
+      void persistOrderOptimistic(next, prev, items, false);
     },
     [pinnedProjects, persistOrderOptimistic, projects, savingOrder, unpinnedProjects],
   );
@@ -452,7 +477,7 @@ export default function AdminProjectsListPage() {
           <div>
             <h1 className="font-heading text-3xl text-primary">프로젝트 관리</h1>
             <p className="mt-2 text-sm text-slate-600">
-              프로젝트 목록을 관리하고 상세 편집으로 이동할 수 있어요.
+              프로젝트 목록 및 상품을 관리하고 상세 편집으로 이동할 수 있어요
             </p>
           </div>
 
@@ -528,6 +553,7 @@ export default function AdminProjectsListPage() {
                         project={project}
                         onPinToggle={handlePinToggle}
                         onDelete={handleDelete}
+                        deleting={deleting}
                       />
                     ))}
                   </SortableContext>
@@ -548,6 +574,7 @@ export default function AdminProjectsListPage() {
                         project={project}
                         onPinToggle={handlePinToggle}
                         onDelete={handleDelete}
+                        deleting={deleting}
                       />
                     ))}
                   </SortableContext>
@@ -578,21 +605,6 @@ export default function AdminProjectsListPage() {
         )}
       </Reveal>
 
-      <ConfirmModal
-        open={confirmOpen}
-        title="프로젝트 삭제"
-        description={confirmMessage}
-        confirmText={deleting ? '삭제 중...' : '삭제'}
-        cancelText="취소"
-        danger
-        confirmDisabled={deleting}
-        onClose={() => {
-          setConfirmOpen(false);
-          setConfirmTarget(null);
-          setConfirmMessage('');
-        }}
-        onConfirm={confirmDelete}
-      />
     </div>
   );
 }

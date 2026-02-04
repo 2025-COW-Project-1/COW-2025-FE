@@ -16,6 +16,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import Reveal from '../../components/Reveal';
+import BackArrowIcon from '../../components/BackArrowIcon';
+import MarkdownEditor from '../../components/MarkdownEditor';
+import { useConfirm } from '../../components/confirm/useConfirm';
+import { useToast } from '../../components/toast/useToast';
 import {
   adminProjectsApi,
   uploadToPresignedUrl,
@@ -69,6 +73,7 @@ const STATUS_OPTIONS: { label: string; value: AdminProjectStatus }[] = [
 
 const INPUT_CLASS =
   'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10';
+const FORM_LABEL_CLASS = 'text-sm font-bold text-slate-700';
 
 function toIsoDate(value: unknown): string {
   if (typeof value === 'string') {
@@ -193,9 +198,10 @@ function matchPresignItems(files: File[], items: PresignPutItem[]): PresignPutIt
 type SortableImageProps = {
   item: ImageItem;
   onRemove: (id: string) => void;
+  isDeleting?: boolean;
 };
 
-function SortableImageCard({ item, onRemove }: SortableImageProps) {
+function SortableImageCard({ item, onRemove, isDeleting = false }: SortableImageProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
     useSortable({ id: item.id });
 
@@ -227,7 +233,11 @@ function SortableImageCard({ item, onRemove }: SortableImageProps) {
       <button
         type="button"
         onClick={() => onRemove(item.id)}
-        className="absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100"
+        disabled={isDeleting}
+        className={[
+          'absolute right-1 top-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100',
+          isDeleting ? 'cursor-not-allowed opacity-60' : '',
+        ].join(' ')}
       >
         ✕
       </button>
@@ -261,12 +271,16 @@ export default function AdminProjectEditorPage() {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const isEditMode = Boolean(projectId);
+  const confirm = useConfirm();
+  const toast = useToast();
 
   const [project, setProject] = useState<AdminProjectForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [thumbnailDeleting, setThumbnailDeleting] = useState(false);
+  const [deletingImageIds, setDeletingImageIds] = useState<string[]>([]);
+  const initialProjectRef = useRef<AdminProjectForm | null>(null);
 
   const objectUrlsRef = useRef<string[]>([]);
 
@@ -303,6 +317,7 @@ export default function AdminProjectEditorPage() {
 
   useEffect(() => {
     let active = true;
+    initialProjectRef.current = null;
 
     async function load() {
       setLoading(true);
@@ -310,7 +325,13 @@ export default function AdminProjectEditorPage() {
 
       try {
         if (!projectId) {
-          if (active) setProject(createEmptyProject());
+          if (active) {
+            const empty = createEmptyProject();
+            setProject(empty);
+            if (!initialProjectRef.current) {
+              initialProjectRef.current = { ...empty, images: [] };
+            }
+          }
           return;
         }
 
@@ -321,7 +342,11 @@ export default function AdminProjectEditorPage() {
           setProject(null);
           return;
         }
-        setProject(mapProjectToForm(detail));
+        const mapped = mapProjectToForm(detail);
+        setProject(mapped);
+        if (!initialProjectRef.current) {
+          initialProjectRef.current = { ...mapped, images: mapped.images.map((image) => ({ ...image })) };
+        }
       } catch (err) {
         if (!active) return;
         setError(err instanceof Error ? err.message : '로드에 실패했어요');
@@ -354,6 +379,29 @@ export default function AdminProjectEditorPage() {
       return { ...prev, images, isDirty: true };
     });
   }, []);
+
+  const snapshotProject = useCallback((value: AdminProjectForm | null) => {
+    if (!value) return null;
+    return {
+      id: value.id ?? null,
+      title: value.title.trim(),
+      summary: value.summary.trim(),
+      description: value.description.trim(),
+      status: value.status,
+      deadlineDate: value.deadlineDate.trim(),
+      thumbnailKey: value.thumbnailKey ?? null,
+      imageKeys: value.images.map((image) => image.key ?? null),
+    };
+  }, []);
+
+  const isDirtyBySnapshot = useCallback(
+    (current: AdminProjectForm | null) => {
+      const initial = snapshotProject(initialProjectRef.current);
+      const now = snapshotProject(current);
+      return JSON.stringify(initial) !== JSON.stringify(now);
+    },
+    [snapshotProject],
+  );
 
   const getValidation = useCallback(
     (item: AdminProjectForm): ValidationResult | null => {
@@ -423,19 +471,35 @@ export default function AdminProjectEditorPage() {
         });
         if (prev.thumbnailPreviewUrl) revokePreviewUrl(prev.thumbnailPreviewUrl);
 
-        return mergeServerProject(prev, saved);
+        const merged = mergeServerProject(prev, saved);
+        initialProjectRef.current = { ...merged, images: merged.images.map((image) => ({ ...image })) };
+        return merged;
       });
 
-      setToast('저장했어요');
-      window.setTimeout(() => {
-        navigate('/admin/projects');
-      }, 700);
+      toast.success('저장했어요');
+      if (!isEditMode) {
+        window.setTimeout(() => {
+          navigate('/admin/projects');
+        }, 700);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '저장에 실패했어요');
+      const message = err instanceof Error ? err.message : '저장에 실패했어요';
+      setError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
-  }, [buildPayload, getValidation, isEditMode, navigate, project, projectId, revokePreviewUrl, updateProject]);
+  }, [
+    buildPayload,
+    getValidation,
+    isEditMode,
+    navigate,
+    project,
+    projectId,
+    revokePreviewUrl,
+    toast,
+    updateProject,
+  ]);
 
   const handleThumbnailUpload = useCallback(
     async (files: File[]) => {
@@ -546,10 +610,17 @@ export default function AdminProjectEditorPage() {
     [createPreviewUrl, project, updateImageItem, updateProject],
   );
 
-  const handleThumbnailClear = useCallback(() => {
-    const confirmed = window.confirm('대표 이미지를 삭제할까요?');
-    if (!confirmed) return;
+  const handleThumbnailClear = useCallback(async () => {
+    if (thumbnailDeleting) return;
+    const ok = await confirm.open({
+      title: '대표 이미지 삭제',
+      description: '대표 이미지를 삭제할까요? 삭제 후 재등록 해야 해요.',
+      danger: true,
+      confirmText: '삭제',
+    });
+    if (!ok) return;
 
+    setThumbnailDeleting(true);
     if (project?.thumbnailPreviewUrl) revokePreviewUrl(project.thumbnailPreviewUrl);
 
     updateProject({
@@ -558,10 +629,23 @@ export default function AdminProjectEditorPage() {
       thumbnailPreviewUrl: undefined,
       isDirty: true,
     });
-  }, [project?.thumbnailPreviewUrl, revokePreviewUrl, updateProject]);
+    // TODO: 서버 삭제 API가 생기면 여기서 호출로 교체
+    toast.success('삭제했어요. 저장하면 반영돼요');
+    setThumbnailDeleting(false);
+  }, [confirm, project?.thumbnailPreviewUrl, revokePreviewUrl, thumbnailDeleting, toast, updateProject]);
 
   const handleImageRemove = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      if (deletingImageIds.includes(id)) return;
+      const ok = await confirm.open({
+        title: '이미지 삭제',
+        description: '이 이미지를 삭제할까요? 삭제 후 재등록 해야 해요.',
+        danger: true,
+        confirmText: '삭제',
+      });
+      if (!ok) return;
+
+      setDeletingImageIds((prev) => [...prev, id]);
       setProject((prev) => {
         if (!prev) return prev;
         const target = prev.images.find((item) => item.id === id);
@@ -569,8 +653,10 @@ export default function AdminProjectEditorPage() {
         const images = prev.images.filter((item) => item.id !== id);
         return { ...prev, images, isDirty: true };
       });
+      toast.success('이미지를 목록에서 제거했어요! 저장하면 반영돼요');
+      setDeletingImageIds((prev) => prev.filter((imageId) => imageId !== id));
     },
-    [revokePreviewUrl],
+    [confirm, deletingImageIds, revokePreviewUrl, toast],
   );
 
   const handleImageRetry = useCallback(
@@ -620,16 +706,26 @@ export default function AdminProjectEditorPage() {
     });
   }, []);
 
-  const toastView = toast ? (
-    <div className="fixed right-6 top-6 z-50 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-lg">
-      {toast}
-    </div>
-  ) : null;
+  const handleBack = useCallback(async () => {
+    if (!isDirtyBySnapshot(project)) {
+      navigate('/admin/projects');
+      return;
+    }
+
+    const ok = await confirm.open({
+      title: '변경사항이 있어요',
+      description: '저장하지 않고 나갈까요?',
+      confirmText: '나가기',
+      cancelText: '계속 편집',
+    });
+    if (ok) {
+      navigate('/admin/projects');
+    }
+  }, [confirm, isDirtyBySnapshot, navigate, project]);
 
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
-        {toastView}
         <p className="text-sm text-slate-500">불러오는 중...</p>
       </div>
     );
@@ -638,7 +734,6 @@ export default function AdminProjectEditorPage() {
   if (error && !project) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
-        {toastView}
         <p className="text-sm text-rose-600">{error}</p>
       </div>
     );
@@ -650,15 +745,22 @@ export default function AdminProjectEditorPage() {
   const thumbnailSrc = project.thumbnailPreviewUrl ?? project.thumbnailUrl;
 
   const isUploading = project.isUploadingThumbnail || project.images.some((img) => img.isUploading);
+  const hasChanges = isDirtyBySnapshot(project);
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-12 pt-12">
-      {toastView}
-
       <Reveal>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-heading text-3xl text-primary">{isEditMode ? '프로젝트 수정' : '프로젝트 추가'}</h1>
+            <button
+              type="button"
+              onClick={handleBack}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-700"
+            >
+              <BackArrowIcon className="h-5 w-5" />
+              프로젝트 목록
+            </button>
+            <h1 className="mt-2 font-heading text-3xl text-primary">{isEditMode ? '프로젝트 관리' : '프로젝트 추가'}</h1>
             <p className="mt-2 text-sm text-slate-600">
               {isEditMode ? '프로젝트 정보를 편집할 수 있어요' : '새 프로젝트를 등록할 수 있어요'}
             </p>
@@ -667,18 +769,11 @@ export default function AdminProjectEditorPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => navigate('/admin/projects')}
-              className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50"
-            >
-              취소
-            </button>
-            <button
-              type="button"
               onClick={() => void handleSave()}
-              disabled={saving || isUploading}
+              disabled={saving || isUploading || !hasChanges}
               className={[
                 'rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg transition',
-                saving || isUploading ? 'opacity-60' : 'hover:opacity-95',
+                saving || isUploading || !hasChanges ? 'opacity-60' : 'hover:opacity-95',
               ].join(' ')}
             >
               {saving ? '저장 중...' : isUploading ? '업로드 중...' : '저장'}
@@ -698,7 +793,7 @@ export default function AdminProjectEditorPage() {
               <span className="inline-flex h-4 w-32 rounded-full bg-slate-200/80" />
             )}
 
-            {project.isDirty && (
+            {hasChanges && (
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">
                 변경됨
               </span>
@@ -730,7 +825,7 @@ export default function AdminProjectEditorPage() {
               }}
               className="space-y-2"
             >
-              <p className="text-xs font-semibold text-slate-500">프로젝트 명</p>
+              <label className={FORM_LABEL_CLASS}>프로젝트 명</label>
               <input
                 value={project.title}
                 onChange={(e) => updateProject({ title: e.target.value, validationError: null })}
@@ -745,7 +840,7 @@ export default function AdminProjectEditorPage() {
               }}
               className="space-y-2"
             >
-              <p className="text-xs font-semibold text-slate-500">마감일 (YYYY-MM-DD)</p>
+              <label className={FORM_LABEL_CLASS}>마감일 (YYYY-MM-DD)</label>
               <input
                 value={project.deadlineDate}
                 onChange={(e) =>
@@ -768,7 +863,7 @@ export default function AdminProjectEditorPage() {
             }}
             className="space-y-2"
           >
-            <p className="text-xs font-semibold text-slate-500">한 줄 설명</p>
+            <label className={FORM_LABEL_CLASS}>한 줄 설명</label>
             <input
               value={project.summary}
               onChange={(e) => updateProject({ summary: e.target.value, validationError: null })}
@@ -781,15 +876,14 @@ export default function AdminProjectEditorPage() {
             ref={(node) => {
               fieldRefs.current.description = node;
             }}
-            className="space-y-2"
           >
-            <p className="text-xs font-semibold text-slate-500">상세 설명</p>
-            <textarea
+            <MarkdownEditor
               value={project.description}
-              onChange={(e) => updateProject({ description: e.target.value, validationError: null })}
-              rows={4}
-              placeholder="상세 설명을 입력해주세요"
-              className={INPUT_CLASS}
+              onChange={(next: string) => updateProject({ description: next, validationError: null })}
+              leftLabel="상세 설명"
+              rightLabel="미리보기"
+              placeholder="상세 설명을 입력해주세요. (마크다운 지원: # 제목, - 목록, 굵게, 링크 등)"
+              minHeightClassName="min-h-[240px] md:h-[360px]"
             />
           </div>
         </div>
@@ -839,6 +933,12 @@ export default function AdminProjectEditorPage() {
               </label>
             )}
 
+            {!thumbnailSrc && (
+              <div className="mt-3 flex h-28 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white/60 text-xs font-semibold text-slate-400">
+                업로드된 이미지가 없어요
+              </div>
+            )}
+
             {project.thumbnailUploadError && (
               <p className="mt-2 text-xs text-rose-600">{project.thumbnailUploadError}</p>
             )}
@@ -863,9 +963,10 @@ export default function AdminProjectEditorPage() {
                   <button
                     type="button"
                     onClick={handleThumbnailClear}
-                    className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                    disabled={thumbnailDeleting}
+                    className="rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    삭제
+                    {thumbnailDeleting ? '삭제 중...' : '삭제'}
                   </button>
                 </div>
               </div>
@@ -889,7 +990,7 @@ export default function AdminProjectEditorPage() {
                 const files = Array.from(e.dataTransfer.files ?? []);
                 if (files.length) void handleImagesUpload(files);
               }}
-              className="mt-3 flex min-h-[110px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 px-4 py-4 text-center text-xs font-semibold text-slate-500 transition hover:border-primary/60 hover:text-primary"
+              className="mt-3 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 px-4 py-4 text-center text-xs font-semibold text-slate-500 transition hover:border-primary/60 hover:text-primary"
             >
               <input
                 type="file"
@@ -913,7 +1014,11 @@ export default function AdminProjectEditorPage() {
                   {project.images.length > 0 ? (
                     project.images.map((item) => (
                       <div key={item.id} className="relative">
-                        <SortableImageCard item={item} onRemove={handleImageRemove} />
+                        <SortableImageCard
+                          item={item}
+                          onRemove={handleImageRemove}
+                          isDeleting={deletingImageIds.includes(item.id)}
+                        />
                         {item.error && item.file && (
                           <button
                             type="button"
