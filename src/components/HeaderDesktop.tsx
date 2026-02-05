@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { clearAuth } from '../utils/auth';
-import { showLogoutToast } from '../utils/LogoutToast';
 
 type MenuKey = 'projects' | null;
 
@@ -10,18 +8,10 @@ export default function HeaderDesktop() {
   const navigate = useNavigate();
   const [open, setOpen] = useState<MenuKey>(null);
   const isProjectsOpen = open === 'projects';
-
   const { isLoggedIn } = useAuth();
 
-  const handleLogout = () => {
-    clearAuth();
-    showLogoutToast();
-    setOpen(null);
-    navigate('/', { replace: true });
-  };
-
   return (
-    <nav className="hidden items-center gap-1 md:flex">
+    <nav className="hidden items-center gap-1 md:flex justify-self-center">
       <Link
         to="/about"
         onClick={() => setOpen(null)}
@@ -30,7 +20,6 @@ export default function HeaderDesktop() {
         ABOUT
       </Link>
 
-      {/* Projects Dropdown */}
       <div className="relative">
         <button
           type="button"
@@ -132,26 +121,6 @@ export default function HeaderDesktop() {
       >
         MYPAGE
       </button>
-
-      <div className="ml-2 flex items-center gap-2">
-        {isLoggedIn ? (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-          >
-            로그아웃
-          </button>
-        ) : (
-          <Link
-            to="/login"
-            onClick={() => setOpen(null)}
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            LOGIN
-          </Link>
-        )}
-      </div>
     </nav>
   );
 }

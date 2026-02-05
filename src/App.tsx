@@ -1,4 +1,3 @@
-// src/App.tsx
 import { Route, Routes } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
 import AdminLayout from './components/AdminLayout';
@@ -6,6 +5,7 @@ import MainPage from './pages/site/MainPage';
 import AboutPage from './pages/site/AboutPage';
 import FormPage from './pages/site/FormPage';
 import ContactPage from './pages/site/ContactPage';
+import MyPage from './pages/site/MyPage';
 import ProjectsPage from './pages/site/ProjectsPage';
 import ProjectDetailPage from './pages/site/ProjectDetailPage';
 import ProjectItemDetailPage from './pages/site/ProjectItemDetailPage';
@@ -38,21 +38,18 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/forms" element={<FormPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin/login" element={<LoginPage />} />
-          <Route
-            path="/oauth/kakao/callback"
-            element={<OAuthCallbackPage />}
-          />
-          <Route
-            path="/oauth/naver/callback"
-            element={<OAuthCallbackPage />}
-          />
+          <Route path="/oauth/kakao/callback" element={<OAuthCallbackPage />} />
+          <Route path="/oauth/naver/callback" element={<OAuthCallbackPage />} />
         </Route>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/projects" element={<AdminProjectsListPage />} />
-          <Route path="/admin/projects/new" element={<AdminProjectEditorPage />} />
+          <Route
+            path="/admin/projects/new"
+            element={<AdminProjectEditorPage />}
+          />
           <Route
             path="/admin/projects/:projectId/edit"
             element={<AdminProjectEditorPage />}
@@ -65,7 +62,10 @@ export default function App() {
             path="/admin/projects/:projectId/items/new"
             element={<AdminProjectItemCreatePage />}
           />
-          <Route path="/admin/items/:itemId" element={<AdminItemDetailPage />} />
+          <Route
+            path="/admin/items/:itemId"
+            element={<AdminItemDetailPage />}
+          />
         </Route>
       </Routes>
 

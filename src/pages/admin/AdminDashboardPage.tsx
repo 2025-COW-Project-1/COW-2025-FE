@@ -14,7 +14,6 @@ import { loadAdminSettlements } from '../../utils/adminSettlements';
 import type { SettlementReport } from '../../types/settlements';
 import AdminFeedbackFormSection from './sections/AdminFeedbackFormSection';
 import AdminFeedbackListSection from './sections/AdminFeedbackListSection';
-import AdminLinktreeSection from './sections/AdminLinktreeSection';
 import AdminLinksSection from './sections/AdminLinksSection';
 import { saveLinksToApi } from './sections/linksSave';
 import AdminSettlementsSection from './sections/AdminSettlementsSection';
@@ -36,23 +35,23 @@ export default function AdminDashboardPage() {
   const aboutTab = tabParam === 'detail' ? 'detail' : 'main';
 
   const [content, setContent] = useState<AdminContent>(() =>
-    loadAdminContent(),
+    loadAdminContent()
   );
   const [dirty, setDirty] = useState(false);
 
   const [entries, setEntries] = useState<FeedbackEntry[]>(() =>
-    loadFeedbackEntries(),
+    loadFeedbackEntries()
   );
 
   const [settlements, setSettlements] = useState<SettlementReport[]>(() =>
-    loadAdminSettlements(),
+    loadAdminSettlements()
   );
   const [settlementsDirty, setSettlementsDirty] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveMsgTone, setSaveMsgTone] = useState<'success' | 'error' | null>(
-    null,
+    null
   );
 
   useEffect(() => {
@@ -177,10 +176,6 @@ export default function AdminDashboardPage() {
 
       {section === 'links' && (
         <AdminLinksSection content={content} updateContent={updateContent} />
-      )}
-
-      {section === 'linktree' && (
-        <AdminLinktreeSection content={content} updateContent={updateContent} />
       )}
 
       {section === 'projects' && <AdminProjectsSection />}
