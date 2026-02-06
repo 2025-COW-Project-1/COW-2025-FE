@@ -90,17 +90,13 @@ function toIsoDate(value: unknown): string {
   if (Array.isArray(value) && value.length >= 3) {
     const [year, month, day] = value as number[];
     if (!year || !month || !day) return '';
-    return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return `${String(year).padStart(4, '0')}-${String(month).padStart(
+      2,
+      '0'
+    )}-${String(day).padStart(2, '0')}`;
   }
 
   return '';
-}
-
-function formatDateInput(value: string) {
-  const digits = value.replace(/\D/g, '').slice(0, 8);
-  if (digits.length <= 4) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
-  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
 }
 
 function createEmptyProject(): AdminProjectForm {
@@ -126,7 +122,7 @@ function resolveContentType(file: File): string {
 
 function buildImageItems(
   keys?: string[] | null,
-  urls?: string[] | null,
+  urls?: string[] | null
 ): ImageItem[] {
   const safeKeys = keys ?? [];
   const safeUrls = urls ?? [];
@@ -155,7 +151,7 @@ function mapProjectToForm(project: AdminProjectResponse): AdminProjectForm {
 
 function mergeServerProject(
   form: AdminProjectForm,
-  saved: AdminProjectResponse | null,
+  saved: AdminProjectResponse | null
 ): AdminProjectForm {
   if (!saved) return { ...form, isDirty: false };
 
@@ -180,7 +176,10 @@ function mergeServerProject(
   };
 }
 
-function matchPresignItems(files: File[], items: PresignPutItem[]): PresignPutItem[] {
+function matchPresignItems(
+  files: File[],
+  items: PresignPutItem[]
+): PresignPutItem[] {
   const map = new Map<string, PresignPutItem[]>();
   items.forEach((item) => {
     const list = map.get(item.fileName) ?? [];
@@ -201,9 +200,20 @@ type SortableImageProps = {
   isDeleting?: boolean;
 };
 
-function SortableImageCard({ item, onRemove, isDeleting = false }: SortableImageProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
-    useSortable({ id: item.id });
+function SortableImageCard({
+  item,
+  onRemove,
+  isDeleting = false,
+}: SortableImageProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({ id: item.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -223,7 +233,11 @@ function SortableImageCard({ item, onRemove, isDeleting = false }: SortableImage
       ].join(' ')}
     >
       {src ? (
-        <img src={src} alt="상세 이미지 미리보기" className="h-28 w-full object-cover" />
+        <img
+          src={src}
+          alt="상세 이미지 미리보기"
+          className="h-28 w-full object-cover"
+        />
       ) : (
         <div className="flex h-28 items-center justify-center text-[10px] font-semibold text-slate-400">
           이미지가 없어요
@@ -293,7 +307,7 @@ export default function AdminProjectEditorPage() {
   });
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
   const createPreviewUrl = useCallback((file: File) => {
@@ -305,7 +319,9 @@ export default function AdminProjectEditorPage() {
   const revokePreviewUrl = useCallback((url?: string) => {
     if (!url) return;
     URL.revokeObjectURL(url);
-    objectUrlsRef.current = objectUrlsRef.current.filter((item) => item !== url);
+    objectUrlsRef.current = objectUrlsRef.current.filter(
+      (item) => item !== url
+    );
   }, []);
 
   useEffect(() => {
@@ -345,7 +361,10 @@ export default function AdminProjectEditorPage() {
         const mapped = mapProjectToForm(detail);
         setProject(mapped);
         if (!initialProjectRef.current) {
-          initialProjectRef.current = { ...mapped, images: mapped.images.map((image) => ({ ...image })) };
+          initialProjectRef.current = {
+            ...mapped,
+            images: mapped.images.map((image) => ({ ...image })),
+          };
         }
       } catch (err) {
         if (!active) return;
@@ -372,13 +391,18 @@ export default function AdminProjectEditorPage() {
     });
   }, []);
 
-  const updateImageItem = useCallback((id: string, patch: Partial<ImageItem>) => {
-    setProject((prev) => {
-      if (!prev) return prev;
-      const images = prev.images.map((item) => (item.id === id ? { ...item, ...patch } : item));
-      return { ...prev, images, isDirty: true };
-    });
-  }, []);
+  const updateImageItem = useCallback(
+    (id: string, patch: Partial<ImageItem>) => {
+      setProject((prev) => {
+        if (!prev) return prev;
+        const images = prev.images.map((item) =>
+          item.id === id ? { ...item, ...patch } : item
+        );
+        return { ...prev, images, isDirty: true };
+      });
+    },
+    []
+  );
 
   const snapshotProject = useCallback((value: AdminProjectForm | null) => {
     if (!value) return null;
@@ -400,22 +424,27 @@ export default function AdminProjectEditorPage() {
       const now = snapshotProject(current);
       return JSON.stringify(initial) !== JSON.stringify(now);
     },
-    [snapshotProject],
+    [snapshotProject]
   );
 
   const getValidation = useCallback(
     (item: AdminProjectForm): ValidationResult | null => {
-      if (!item.title.trim()) return { field: 'title', message: '프로젝트 명을 입력해주세요' };
-      if (!item.deadlineDate.trim()) return { field: 'deadline', message: '마감일을 입력해주세요' };
-      if (!item.summary.trim()) return { field: 'summary', message: '한 줄 설명을 입력해주세요' };
-      if (!item.description.trim()) return { field: 'description', message: '상세 설명을 입력해주세요' };
+      if (!item.title.trim())
+        return { field: 'title', message: '프로젝트 명을 입력해주세요' };
+      if (!item.deadlineDate.trim())
+        return { field: 'deadline', message: '마감일을 입력해주세요' };
+      if (!item.summary.trim())
+        return { field: 'summary', message: '한 줄 설명을 입력해주세요' };
+      if (!item.description.trim())
+        return { field: 'description', message: '상세 설명을 입력해주세요' };
       if (!isEditMode && !item.thumbnailKey?.trim()) {
         return { field: 'thumbnail', message: '대표 이미지를 업로드해주세요' };
       }
-      if (!item.status) return { field: 'title', message: '상태를 선택해주세요' };
+      if (!item.status)
+        return { field: 'title', message: '상태를 선택해주세요' };
       return null;
     },
-    [isEditMode],
+    [isEditMode]
   );
 
   const buildPayload = useCallback((item: AdminProjectForm) => {
@@ -437,7 +466,9 @@ export default function AdminProjectEditorPage() {
   const handleSave = useCallback(async () => {
     if (!project) return;
 
-    const isUploading = project.isUploadingThumbnail || project.images.some((img) => img.isUploading);
+    const isUploading =
+      project.isUploadingThumbnail ||
+      project.images.some((img) => img.isUploading);
     if (isUploading) {
       setError('이미지 업로드가 완료된 후 저장할 수 있어요');
       return;
@@ -469,10 +500,14 @@ export default function AdminProjectEditorPage() {
         prev.images.forEach((img) => {
           if (img.previewUrl) revokePreviewUrl(img.previewUrl);
         });
-        if (prev.thumbnailPreviewUrl) revokePreviewUrl(prev.thumbnailPreviewUrl);
+        if (prev.thumbnailPreviewUrl)
+          revokePreviewUrl(prev.thumbnailPreviewUrl);
 
         const merged = mergeServerProject(prev, saved);
-        initialProjectRef.current = { ...merged, images: merged.images.map((image) => ({ ...image })) };
+        initialProjectRef.current = {
+          ...merged,
+          images: merged.images.map((image) => ({ ...image })),
+        };
         return merged;
       });
 
@@ -508,7 +543,8 @@ export default function AdminProjectEditorPage() {
       const contentType = resolveContentType(file);
 
       // 새 프리뷰 만들기 전에 기존 프리뷰 있으면 정리
-      if (project.thumbnailPreviewUrl) revokePreviewUrl(project.thumbnailPreviewUrl);
+      if (project.thumbnailPreviewUrl)
+        revokePreviewUrl(project.thumbnailPreviewUrl);
 
       const previewUrl = createPreviewUrl(file);
       updateProject({
@@ -534,13 +570,14 @@ export default function AdminProjectEditorPage() {
         });
       } catch (err) {
         updateProject({
-          thumbnailUploadError: err instanceof Error ? err.message : '업로드에 실패했어요',
+          thumbnailUploadError:
+            err instanceof Error ? err.message : '업로드에 실패했어요',
         });
       } finally {
         updateProject({ isUploadingThumbnail: false, isDirty: true });
       }
     },
-    [createPreviewUrl, project, revokePreviewUrl, updateProject],
+    [createPreviewUrl, project, revokePreviewUrl, updateProject]
   );
 
   const handleImagesUpload = useCallback(
@@ -577,15 +614,24 @@ export default function AdminProjectEditorPage() {
       }));
 
       try {
-        const res = await adminProjectsApi.presignImages({ files: payloadFiles });
+        const res = await adminProjectsApi.presignImages({
+          files: payloadFiles,
+        });
         const items = res.items ?? [];
-        const matched = matchPresignItems(uploadItems.map((i) => i.file), items);
+        const matched = matchPresignItems(
+          uploadItems.map((i) => i.file),
+          items
+        );
 
         await Promise.all(
           matched.map(async (target, idx) => {
             const uploadItem = uploadItems[idx];
             try {
-              await uploadToPresignedUrl(target.uploadUrl, uploadItem.file, payloadFiles[idx].contentType);
+              await uploadToPresignedUrl(
+                target.uploadUrl,
+                uploadItem.file,
+                payloadFiles[idx].contentType
+              );
               updateImageItem(uploadItem.id, {
                 key: target.key,
                 isUploading: false,
@@ -595,19 +641,26 @@ export default function AdminProjectEditorPage() {
             } catch (err) {
               updateImageItem(uploadItem.id, {
                 isUploading: false,
-                error: err instanceof Error ? err.message : '업로드에 실패했어요',
+                error:
+                  err instanceof Error ? err.message : '업로드에 실패했어요',
               });
             }
-          }),
+          })
         );
       } catch (err) {
-        updateProject({ imageUploadError: err instanceof Error ? err.message : '업로드에 실패했어요' });
+        updateProject({
+          imageUploadError:
+            err instanceof Error ? err.message : '업로드에 실패했어요',
+        });
         uploadItems.forEach((item) => {
-          updateImageItem(item.id, { isUploading: false, error: '업로드에 실패했어요' });
+          updateImageItem(item.id, {
+            isUploading: false,
+            error: '업로드에 실패했어요',
+          });
         });
       }
     },
-    [createPreviewUrl, project, updateImageItem, updateProject],
+    [createPreviewUrl, project, updateImageItem, updateProject]
   );
 
   const handleThumbnailClear = useCallback(async () => {
@@ -621,7 +674,8 @@ export default function AdminProjectEditorPage() {
     if (!ok) return;
 
     setThumbnailDeleting(true);
-    if (project?.thumbnailPreviewUrl) revokePreviewUrl(project.thumbnailPreviewUrl);
+    if (project?.thumbnailPreviewUrl)
+      revokePreviewUrl(project.thumbnailPreviewUrl);
 
     updateProject({
       thumbnailKey: '',
@@ -632,7 +686,14 @@ export default function AdminProjectEditorPage() {
     // TODO: 서버 삭제 API가 생기면 여기서 호출로 교체
     toast.success('삭제했어요. 저장하면 반영돼요');
     setThumbnailDeleting(false);
-  }, [confirm, project?.thumbnailPreviewUrl, revokePreviewUrl, thumbnailDeleting, toast, updateProject]);
+  }, [
+    confirm,
+    project?.thumbnailPreviewUrl,
+    revokePreviewUrl,
+    thumbnailDeleting,
+    toast,
+    updateProject,
+  ]);
 
   const handleImageRemove = useCallback(
     async (id: string) => {
@@ -656,7 +717,7 @@ export default function AdminProjectEditorPage() {
       toast.success('이미지를 목록에서 제거했어요! 저장하면 반영돼요');
       setDeletingImageIds((prev) => prev.filter((imageId) => imageId !== id));
     },
-    [confirm, deletingImageIds, revokePreviewUrl, toast],
+    [confirm, deletingImageIds, revokePreviewUrl, toast]
   );
 
   const handleImageRetry = useCallback(
@@ -689,7 +750,7 @@ export default function AdminProjectEditorPage() {
         });
       }
     },
-    [updateImageItem],
+    [updateImageItem]
   );
 
   const handleImageDragEnd = useCallback((event: DragEndEvent) => {
@@ -744,7 +805,9 @@ export default function AdminProjectEditorPage() {
   const titleLabel = project.title.trim();
   const thumbnailSrc = project.thumbnailPreviewUrl ?? project.thumbnailUrl;
 
-  const isUploading = project.isUploadingThumbnail || project.images.some((img) => img.isUploading);
+  const isUploading =
+    project.isUploadingThumbnail ||
+    project.images.some((img) => img.isUploading);
   const hasChanges = isDirtyBySnapshot(project);
 
   return (
@@ -760,9 +823,13 @@ export default function AdminProjectEditorPage() {
               <BackArrowIcon className="h-5 w-5" />
               프로젝트 목록
             </button>
-            <h1 className="mt-2 font-heading text-3xl text-primary">{isEditMode ? '프로젝트 관리' : '프로젝트 추가'}</h1>
+            <h1 className="mt-2 font-heading text-3xl text-primary">
+              {isEditMode ? '프로젝트 관리' : '프로젝트 추가'}
+            </h1>
             <p className="mt-2 text-sm text-slate-600">
-              {isEditMode ? '프로젝트 정보를 편집할 수 있어요' : '새 프로젝트를 등록할 수 있어요'}
+              {isEditMode
+                ? '프로젝트 정보를 편집할 수 있어요'
+                : '새 프로젝트를 등록할 수 있어요'}
             </p>
           </div>
 
@@ -773,7 +840,9 @@ export default function AdminProjectEditorPage() {
               disabled={saving || isUploading || !hasChanges}
               className={[
                 'rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg transition',
-                saving || isUploading || !hasChanges ? 'opacity-60' : 'hover:opacity-95',
+                saving || isUploading || !hasChanges
+                  ? 'opacity-60'
+                  : 'hover:opacity-95',
               ].join(' ')}
             >
               {saving ? '저장 중...' : isUploading ? '업로드 중...' : '저장'}
@@ -782,13 +851,20 @@ export default function AdminProjectEditorPage() {
         </div>
       </Reveal>
 
-      {error && <p className="mt-4 text-sm font-semibold text-rose-600">{error}</p>}
+      {error && (
+        <p className="mt-4 text-sm font-semibold text-rose-600">{error}</p>
+      )}
 
-      <Reveal delayMs={120} className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <Reveal
+        delayMs={120}
+        className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {titleLabel ? (
-              <span className="text-base font-bold text-slate-900">{titleLabel}</span>
+              <span className="text-base font-bold text-slate-900">
+                {titleLabel}
+              </span>
             ) : (
               <span className="inline-flex h-4 w-32 rounded-full bg-slate-200/80" />
             )}
@@ -802,7 +878,9 @@ export default function AdminProjectEditorPage() {
 
           <select
             value={project.status}
-            onChange={(e) => updateProject({ status: e.target.value as AdminProjectStatus })}
+            onChange={(e) =>
+              updateProject({ status: e.target.value as AdminProjectStatus })
+            }
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
           >
             {STATUS_OPTIONS.map((option) => (
@@ -814,7 +892,9 @@ export default function AdminProjectEditorPage() {
         </div>
 
         {project.validationError && (
-          <p className="mt-3 text-xs font-semibold text-rose-600">{project.validationError}</p>
+          <p className="mt-3 text-xs font-semibold text-rose-600">
+            {project.validationError}
+          </p>
         )}
 
         <div className="mt-5 space-y-4">
@@ -828,7 +908,12 @@ export default function AdminProjectEditorPage() {
               <label className={FORM_LABEL_CLASS}>프로젝트 명</label>
               <input
                 value={project.title}
-                onChange={(e) => updateProject({ title: e.target.value, validationError: null })}
+                onChange={(e) =>
+                  updateProject({
+                    title: e.target.value,
+                    validationError: null,
+                  })
+                }
                 placeholder="프로젝트 명을 입력해주세요"
                 className={INPUT_CLASS}
               />
@@ -840,18 +925,16 @@ export default function AdminProjectEditorPage() {
               }}
               className="space-y-2"
             >
-              <label className={FORM_LABEL_CLASS}>마감일 (YYYY-MM-DD)</label>
+              <label className={FORM_LABEL_CLASS}>마감일</label>
               <input
+                type="date"
                 value={project.deadlineDate}
                 onChange={(e) =>
                   updateProject({
-                    deadlineDate: formatDateInput(e.target.value),
+                    deadlineDate: e.target.value,
                     validationError: null,
                   })
                 }
-                placeholder="예: 2026-12-13"
-                inputMode="numeric"
-                pattern="\d*"
                 className={INPUT_CLASS}
               />
             </div>
@@ -866,7 +949,12 @@ export default function AdminProjectEditorPage() {
             <label className={FORM_LABEL_CLASS}>한 줄 설명</label>
             <input
               value={project.summary}
-              onChange={(e) => updateProject({ summary: e.target.value, validationError: null })}
+              onChange={(e) =>
+                updateProject({
+                  summary: e.target.value,
+                  validationError: null,
+                })
+              }
               placeholder="한 줄 설명을 입력해주세요"
               className={INPUT_CLASS}
             />
@@ -879,7 +967,9 @@ export default function AdminProjectEditorPage() {
           >
             <MarkdownEditor
               value={project.description}
-              onChange={(next: string) => updateProject({ description: next, validationError: null })}
+              onChange={(next: string) =>
+                updateProject({ description: next, validationError: null })
+              }
               leftLabel="상세 설명"
               rightLabel="미리보기"
               placeholder="상세 설명을 입력해주세요. (마크다운 지원: # 제목, - 목록, 굵게, 링크 등)"
@@ -896,13 +986,19 @@ export default function AdminProjectEditorPage() {
             className="rounded-2xl bg-slate-50/70 p-4"
           >
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-500">대표 이미지</p>
+              <p className="text-xs font-semibold text-slate-500">
+                대표 이미지
+              </p>
               {project.isUploadingThumbnail && (
-                <span className="text-xs font-semibold text-slate-400">업로드 중...</span>
+                <span className="text-xs font-semibold text-slate-400">
+                  업로드 중...
+                </span>
               )}
             </div>
 
-            <p className="mt-1 text-[11px] text-slate-400">대표 이미지는 1개만 등록할 수 있어요</p>
+            <p className="mt-1 text-[11px] text-slate-400">
+              대표 이미지는 1개만 등록할 수 있어요
+            </p>
 
             {!thumbnailSrc && (
               <label
@@ -929,7 +1025,9 @@ export default function AdminProjectEditorPage() {
                   }}
                   className="hidden"
                 />
-                {project.isUploadingThumbnail ? '업로드 중...' : '드래그 & 드롭하거나 클릭해서 업로드해주세요'}
+                {project.isUploadingThumbnail
+                  ? '업로드 중...'
+                  : '드래그 & 드롭하거나 클릭해서 업로드해주세요'}
               </label>
             )}
 
@@ -940,12 +1038,18 @@ export default function AdminProjectEditorPage() {
             )}
 
             {project.thumbnailUploadError && (
-              <p className="mt-2 text-xs text-rose-600">{project.thumbnailUploadError}</p>
+              <p className="mt-2 text-xs text-rose-600">
+                {project.thumbnailUploadError}
+              </p>
             )}
 
             {thumbnailSrc && (
               <div className="mt-3 overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
-                <img src={thumbnailSrc} alt="대표 이미지 미리보기" className="h-56 w-full object-cover" />
+                <img
+                  src={thumbnailSrc}
+                  alt="대표 이미지 미리보기"
+                  className="h-56 w-full object-cover"
+                />
                 <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 bg-white px-4 py-3">
                   <label className="cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
                     교체
@@ -954,7 +1058,8 @@ export default function AdminProjectEditorPage() {
                       accept="image/*"
                       onChange={(e) => {
                         const files = Array.from(e.target.files ?? []);
-                        if (files.length) void handleThumbnailUpload([files[0]]);
+                        if (files.length)
+                          void handleThumbnailUpload([files[0]]);
                         e.currentTarget.value = '';
                       }}
                       className="hidden"
@@ -975,13 +1080,17 @@ export default function AdminProjectEditorPage() {
 
           <div className="rounded-2xl bg-slate-50/70 p-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-500">상세 이미지</p>
+              <p className="text-xs font-semibold text-slate-500">
+                상세 이미지
+              </p>
               <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-slate-500">
                 현재 {project.images.length}장 업로드됨
               </span>
             </div>
 
-            <p className="mt-1 text-[11px] text-slate-400">상세 이미지는 여러 장 등록할 수 있어요</p>
+            <p className="mt-1 text-[11px] text-slate-400">
+              상세 이미지는 여러 장 등록할 수 있어요
+            </p>
 
             <label
               onDragOver={(e) => e.preventDefault()}
@@ -1003,13 +1112,26 @@ export default function AdminProjectEditorPage() {
                 }}
                 className="hidden"
               />
-              {isUploading ? '업로드 중...' : '드래그 & 드롭하거나 클릭해서 업로드해주세요'}
+              {isUploading
+                ? '업로드 중...'
+                : '드래그 & 드롭하거나 클릭해서 업로드해주세요'}
             </label>
 
-            {project.imageUploadError && <p className="mt-2 text-xs text-rose-600">{project.imageUploadError}</p>}
+            {project.imageUploadError && (
+              <p className="mt-2 text-xs text-rose-600">
+                {project.imageUploadError}
+              </p>
+            )}
 
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleImageDragEnd}>
-              <SortableContext items={project.images.map((item) => item.id)} strategy={rectSortingStrategy}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleImageDragEnd}
+            >
+              <SortableContext
+                items={project.images.map((item) => item.id)}
+                strategy={rectSortingStrategy}
+              >
                 <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
                   {project.images.length > 0 ? (
                     project.images.map((item) => (
@@ -1041,7 +1163,6 @@ export default function AdminProjectEditorPage() {
           </div>
         </div>
       </Reveal>
-
     </div>
   );
 }
