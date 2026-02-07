@@ -4,6 +4,7 @@ import type { ApiResult } from './types';
 
 export type AdminItemSaleType = 'NORMAL' | 'GROUPBUY';
 export type AdminItemStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
+export type AdminItemType = 'PHYSICAL' | 'DIGITAL_JOURNAL';
 
 export type AdminItemImage = {
   id: number | string;
@@ -16,6 +17,7 @@ export type AdminItemImage = {
 export type AdminItemResponse = {
   id: number;
   projectId?: number | null;
+  itemType?: AdminItemType | null;
   name: string;
   summary?: string | null;
   description: string;
@@ -26,6 +28,7 @@ export type AdminItemResponse = {
   thumbnailUrl?: string | null;
   targetQty?: number | null;
   fundedQty?: number | null;
+  journalFileKey?: string | null;
   achievementRate?: number | null;
   remainingQty?: number | null;
   createdAt?: string | number[] | null;
@@ -34,15 +37,17 @@ export type AdminItemResponse = {
 };
 
 export type AdminItemUpsertRequest = {
+  itemType?: AdminItemType;
   name: string;
   summary?: string | null;
   description: string;
   price: number;
   saleType: AdminItemSaleType;
   status: AdminItemStatus;
+  journalFileKey?: string | null;
   thumbnailKey?: string;
-  targetQty?: number;
-  fundedQty?: number;
+  targetQty?: number | null;
+  fundedQty?: number | null;
 };
 
 export type PresignPutRequest = {
@@ -65,6 +70,11 @@ export type PresignPutResponse = {
 
 export type AdminItemImageOrderRequest = {
   imageIds: Array<number | string>;
+};
+
+export type JournalPresignGetResponse = {
+  downloadUrl: string;
+  expiresInSeconds?: number;
 };
 
 export const adminItemsApi = {
@@ -154,6 +164,18 @@ export const adminItemsApi = {
 
   deleteImage(itemId: string, imageId: number | string) {
     return api<void>(withApiBase(`/admin/items/${itemId}/images/${imageId}`), {
+      method: 'DELETE',
+    });
+  },
+
+  getJournalDownloadUrl(itemId: string) {
+    return api<ApiResult<JournalPresignGetResponse> | JournalPresignGetResponse>(
+      withApiBase(`/admin/items/${itemId}/journal/presign-get`),
+    ).then((res) => unwrapApiResult(res));
+  },
+
+  deleteJournal(itemId: string) {
+    return api<void>(withApiBase(`/admin/items/${itemId}/journal`), {
       method: 'DELETE',
     });
   },
