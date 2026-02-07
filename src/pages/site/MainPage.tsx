@@ -160,7 +160,7 @@ export default function MainPage() {
                     className="shrink-0 snap-start w-[280px] max-w-[380px] sm:w-[320px] md:w-[360px] lg:w-[380px]"
                   >
                     <Reveal delayMs={index * 80}>
-                      <ProjectCard project={project} />
+                      <ProjectCard project={project} showApplyAction={false} />
                     </Reveal>
                   </div>
                 ))}

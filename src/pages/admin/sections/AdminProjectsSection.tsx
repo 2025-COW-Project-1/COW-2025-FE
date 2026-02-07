@@ -7,6 +7,7 @@ import {
 } from '../../../api/adminProjects';
 import type { Project } from '../../../api/projects';
 import type {
+  AdminProjectCategory,
   AdminProjectResponse,
   AdminProjectStatus,
   PresignPutItem,
@@ -24,6 +25,7 @@ type AdminProjectForm = {
   summary: string;
   description: string;
   status: AdminProjectStatus;
+  category: AdminProjectCategory;
   deadlineDate: string;
   thumbnailKey?: string;
   imageKeys: string[];
@@ -87,6 +89,7 @@ function createEmptyProject(): AdminProjectForm {
     summary: '',
     description: '',
     status: 'PREPARING',
+    category: 'GOODS',
     deadlineDate: '',
     imageKeys: [],
     isDirty: true,
@@ -110,6 +113,7 @@ function mapProjectToForm(project: Project): AdminProjectForm {
     summary: project.summary ?? '',
     description: project.description ?? '',
     status: project.status,
+    category: 'GOODS',
     deadlineDate: toIsoDate(project.deadlineDate ?? project.endAt ?? ''),
     thumbnailKey: project.thumbnailKey ?? '',
     thumbnailUrl: project.thumbnailUrl ?? undefined,
@@ -136,6 +140,7 @@ function mergeServerProject(
     summary: saved.summary ?? form.summary,
     description: saved.description ?? form.description,
     status: saved.status ?? form.status,
+    category: saved.category ?? form.category,
     deadlineDate: toIsoDate(saved.deadlineDate ?? form.deadlineDate),
     thumbnailKey: saved.thumbnailKey ?? form.thumbnailKey,
     imageKeys: saved.imageKeys ?? form.imageKeys,
@@ -263,6 +268,7 @@ export default function AdminProjectsSection({
       summary: item.summary.trim(),
       description: item.description.trim(),
       status: item.status,
+      category: item.category,
       deadlineDate: item.deadlineDate.trim(),
       thumbnailKey: item.thumbnailKey?.trim() ?? '',
       imageKeys: item.imageKeys.length ? item.imageKeys : undefined,

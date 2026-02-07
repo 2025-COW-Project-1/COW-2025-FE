@@ -168,6 +168,7 @@ export default function AdminProjectItemsListPage() {
               const saleTypeLabel = SALETYPE_LABELS[item.saleType] ?? item.saleType;
               const statusLabel = STATUS_LABELS[item.status] ?? item.status;
               const isGroupbuy = item.saleType === 'GROUPBUY';
+              const isJournal = item.itemType === 'DIGITAL_JOURNAL';
 
               return (
                 <div
@@ -199,7 +200,9 @@ export default function AdminProjectItemsListPage() {
                           {item.summary && (
                             <p className="text-xs text-slate-500">{item.summary}</p>
                           )}
-                          <p className="text-xs text-slate-500">{formatMoney(item.price)}원</p>
+                          {!isJournal && (
+                            <p className="text-xs text-slate-500">{formatMoney(item.price)}원</p>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-1">
                           <span

@@ -4,7 +4,15 @@ import { Calendar, Pin } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import type { Project } from '../api/projects';
 
-export default function ProjectCard({ project }: { project: Project }) {
+type ProjectCardProps = {
+  project: Project;
+  showApplyAction?: boolean;
+};
+
+export default function ProjectCard({
+  project,
+  showApplyAction = true,
+}: ProjectCardProps) {
   const canApply = project.status === 'OPEN';
   const deadlineText = project.endAt || '';
 
@@ -48,31 +56,33 @@ export default function ProjectCard({ project }: { project: Project }) {
         <div className="mt-3 flex flex-1 flex-col">
           <div className="text-lg font-bold text-slate-900">{project.title}</div>
           <p className="mt-2 text-sm text-slate-600">{project.summary}</p>
+          <div className="h-4" />
         </div>
 
-        <div className="mt-4 flex gap-2 mt-auto">
+        <div className="mt-auto flex gap-2">
           <Link
             to={`/projects/${project.id}`}
-            className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-center text-sm font-bold text-slate-800 hover:bg-slate-50"
+            className="w-full flex-1 rounded-xl border border-slate-200 px-4 py-2 text-center text-sm font-bold text-slate-800 hover:bg-slate-50"
           >
             상세 보기
           </Link>
 
-          {canApply ? (
-            <Link
-              to={`/projects/${project.id}#apply`}
-              className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
-            >
-              신청하기
-            </Link>
-          ) : (
-            <button
-              disabled
-              className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-bold text-slate-500"
-            >
-              {project.status === 'CLOSED' ? '마감' : '준비중'}
-            </button>
-          )}
+          {showApplyAction &&
+            (canApply ? (
+              <Link
+                to={`/projects/${project.id}#apply`}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
+              >
+                신청하기
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-bold text-slate-500"
+              >
+                {project.status === 'CLOSED' ? '마감' : '준비중'}
+              </button>
+            ))}
         </div>
       </div>
     </div>

@@ -1,15 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Calendar, Clock } from 'lucide-react';
 import Reveal from '../../components/Reveal';
 import StatusBadge from '../../components/StatusBadge';
+import { useToast } from '../../components/toast/useToast';
 import { projectsApi } from '../../api/projects';
 import type { Project } from '../../api/projects';
 import { itemsApi } from '../../api/items';
 import type { ItemResponse } from '../../api/items';
-import ReactMarkdown from 'react-markdown';
-import remarkBreaks from 'remark-breaks';
-import remarkGfm from 'remark-gfm';
 
 const STATUS_LABELS: Record<string, string> = {
   PREPARING: '준비중',
@@ -29,11 +27,13 @@ function formatMoney(value?: number | null) {
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
+  const toast = useToast();
   const [project, setProject] = useState<Project | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [items, setItems] = useState<ItemResponse[]>([]);
   const [itemsLoading, setItemsLoading] = useState(false);
   const [itemsError, setItemsError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -91,6 +91,27 @@ export default function ProjectDetailPage() {
       active = false;
     };
   }, [projectId]);
+
+  const handleJournalDownload = useCallback(
+    async (target: ItemResponse) => {
+      if (!target.id) return;
+      if (downloadingId === target.id) return;
+
+      setDownloadingId(target.id);
+      try {
+        const data = await itemsApi.getJournalDownloadUrl(String(target.id));
+        if (!data.downloadUrl) throw new Error('다운로드 URL이 없어요');
+        window.open(data.downloadUrl, '_blank', 'noopener,noreferrer');
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : '파일 다운로드에 실패했어요.';
+        toast.error(message);
+      } finally {
+        setDownloadingId(null);
+      }
+    },
+    [downloadingId, toast],
+  );
 
   if (notFound) {
     return (
@@ -210,94 +231,7 @@ export default function ProjectDetailPage() {
         </div>
       </Reveal>
 
-      <div className="mt-8 space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6">
-          <h2 className="font-heading text-xl text-slate-900">상세 설명</h2>
-          {project.description && project.description.trim().length > 0 ? (
-            <div className="mt-3 text-sm text-slate-700">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkBreaks]}
-                components={{
-                  h1: ({ ...props }) => (
-                    <h2
-                      className="mt-6 text-lg font-heading text-slate-900 first:mt-0"
-                      {...props}
-                    />
-                  ),
-                  h2: ({ ...props }) => (
-                    <h3
-                      className="mt-5 text-base font-heading text-slate-900 first:mt-0"
-                      {...props}
-                    />
-                  ),
-                  h3: ({ ...props }) => (
-                    <h4
-                      className="mt-4 text-sm font-heading text-slate-900 first:mt-0"
-                      {...props}
-                    />
-                  ),
-                  p: ({ ...props }) => (
-                    <p className="mt-3 leading-relaxed first:mt-0" {...props} />
-                  ),
-                  ul: ({ ...props }) => (
-                    <ul
-                      className="mt-3 list-disc space-y-2 pl-5 first:mt-0"
-                      {...props}
-                    />
-                  ),
-                  ol: ({ ...props }) => (
-                    <ol
-                      className="mt-3 list-decimal space-y-2 pl-5 first:mt-0"
-                      {...props}
-                    />
-                  ),
-                  li: ({ ...props }) => (
-                    <li className="leading-relaxed" {...props} />
-                  ),
-                  hr: ({ ...props }) => (
-                    <hr className="my-5 border-slate-200" {...props} />
-                  ),
-                  strong: ({ ...props }) => (
-                    <strong className="font-semibold text-slate-900" {...props} />
-                  ),
-                  em: ({ ...props }) => (
-                    <em className="italic text-slate-700" {...props} />
-                  ),
-                  code: ({ className, ...props }) => {
-                    const isBlock = Boolean(className);
-                    if (isBlock) {
-                      return (
-                        <code
-                          className="block whitespace-pre-wrap break-words"
-                          {...props}
-                        />
-                      );
-                    }
-                    return (
-                      <code
-                        className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-mono text-slate-700"
-                        {...props}
-                      />
-                    );
-                  },
-                  pre: ({ ...props }) => (
-                    <pre
-                      className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700"
-                      {...props}
-                    />
-                  ),
-                }}
-              >
-                {project.description}
-              </ReactMarkdown>
-            </div>
-          ) : (
-            <p className="mt-2 text-sm font-semibold text-slate-400">
-              등록된 상세 설명이 없어요
-            </p>
-          )}
-        </div>
-
+      <div className="mt-8">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {project.imageUrls && project.imageUrls.length > 0 ? (
             project.imageUrls.map((url, idx) => (
@@ -341,6 +275,97 @@ export default function ProjectDetailPage() {
                 const statusLabel = STATUS_LABELS[item.status] ?? item.status;
                 const isMuted = item.status !== 'OPEN';
                 const isGroupbuy = item.saleType === 'GROUPBUY';
+                const isJournal = item.itemType === 'DIGITAL_JOURNAL';
+                const isJournalDownloadable = isJournal && item.status === 'OPEN';
+
+                if (isJournal) {
+                  return (
+                    <div
+                      key={item.id}
+                      className={[
+                        'group overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-primary/40 hover:shadow-sm',
+                        isMuted ? 'opacity-75' : '',
+                      ].join(' ')}
+                    >
+                      <div className="h-40 w-full overflow-hidden bg-slate-100">
+                        {item.thumbnailUrl ? (
+                          <img
+                            src={item.thumbnailUrl}
+                            alt={item.name}
+                            className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.02]"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400">
+                            대표 이미지 없음
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-1 flex-col gap-2 p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">
+                              {item.name}
+                            </p>
+                            {item.summary && (
+                              <p className="text-xs text-slate-500">
+                                {item.summary}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span
+                              className={[
+                                'inline-flex rounded-full px-2 py-1 text-[10px] font-bold',
+                                isGroupbuy
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-slate-100 text-slate-600',
+                              ].join(' ')}
+                            >
+                              {saleTypeLabel}
+                            </span>
+                            <span
+                              className={[
+                                'inline-flex rounded-full px-2 py-1 text-[10px] font-bold',
+                                item.status === 'OPEN'
+                                  ? 'bg-emerald-50 text-emerald-600'
+                                  : item.status === 'PREPARING'
+                                  ? 'bg-slate-100 text-slate-600'
+                                  : 'bg-rose-50 text-rose-600',
+                              ].join(' ')}
+                            >
+                              {statusLabel}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (isJournalDownloadable) {
+                                void handleJournalDownload(item);
+                              }
+                            }}
+                            disabled={
+                              downloadingId === item.id || !isJournalDownloadable
+                            }
+                            title={
+                              isJournalDownloadable
+                                ? undefined
+                                : '진행중일 때만 다운로드 가능'
+                            }
+                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {downloadingId === item.id
+                              ? '다운로드 중...'
+                              : '다운로드'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <Link

@@ -23,6 +23,7 @@ import { useToast } from '../../components/toast/useToast';
 import {
   adminProjectsApi,
   uploadToPresignedUrl,
+  type AdminProjectCategory,
   type AdminProjectResponse,
   type AdminProjectStatus,
   type PresignPutItem,
@@ -53,6 +54,7 @@ type AdminProjectForm = {
   summary: string;
   description: string;
   status: AdminProjectStatus;
+  category: AdminProjectCategory;
   deadlineDate: string;
   thumbnailKey?: string;
   thumbnailUrl?: string;
@@ -109,6 +111,7 @@ function createEmptyProject(): AdminProjectForm {
     summary: '',
     description: '',
     status: 'PREPARING',
+    category: 'GOODS',
     deadlineDate: '',
     images: [],
     isDirty: true,
@@ -145,6 +148,7 @@ function mapProjectToForm(project: AdminProjectResponse): AdminProjectForm {
     summary: project.summary ?? '',
     description: project.description ?? '',
     status: project.status,
+    category: project.category ?? 'GOODS',
     deadlineDate: toIsoDate(project.deadlineDate ?? ''),
     thumbnailKey: project.thumbnailKey ?? '',
     thumbnailUrl: project.thumbnailUrl ?? undefined,
@@ -168,6 +172,7 @@ function mergeServerProject(
     summary: saved.summary ?? form.summary,
     description: saved.description ?? form.description,
     status: saved.status ?? form.status,
+    category: saved.category ?? form.category,
     deadlineDate: toIsoDate(saved.deadlineDate ?? form.deadlineDate),
     thumbnailKey: saved.thumbnailKey ?? form.thumbnailKey,
     thumbnailUrl: saved.thumbnailUrl ?? form.thumbnailUrl,
@@ -388,6 +393,7 @@ export default function AdminProjectEditorPage() {
       summary: value.summary.trim(),
       description: value.description.trim(),
       status: value.status,
+      category: value.category,
       deadlineDate: value.deadlineDate.trim(),
       thumbnailKey: value.thumbnailKey ?? null,
       imageKeys: value.images.map((image) => image.key ?? null),
@@ -428,6 +434,7 @@ export default function AdminProjectEditorPage() {
       summary: item.summary.trim(),
       description: item.description.trim(),
       status: item.status,
+      category: item.category,
       deadlineDate: item.deadlineDate.trim(),
       thumbnailKey: item.thumbnailKey?.trim() ?? '',
       imageKeys: imageKeys.length ? imageKeys : undefined,
@@ -750,7 +757,7 @@ export default function AdminProjectEditorPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pb-12 pt-12">
       <Reveal>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <button
               type="button"
@@ -800,17 +807,19 @@ export default function AdminProjectEditorPage() {
             )}
           </div>
 
-          <select
-            value={project.status}
-            onChange={(e) => updateProject({ status: e.target.value as AdminProjectStatus })}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <select
+              value={project.status}
+              onChange={(e) => updateProject({ status: e.target.value as AdminProjectStatus })}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {project.validationError && (
