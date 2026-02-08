@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+﻿import { Route, Routes } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
 import AdminLayout from './components/AdminLayout';
 import MainPage from './pages/site/MainPage';
@@ -19,6 +19,9 @@ import AdminProjectEditorPage from './pages/admin/AdminProjectEditorPage';
 import AdminProjectItemsListPage from './pages/admin/AdminProjectItemsListPage';
 import AdminProjectItemCreatePage from './pages/admin/AdminProjectItemCreatePage';
 import AdminItemDetailPage from './pages/admin/AdminItemDetailPage';
+import AdminNoticesListPage from './pages/admin/AdminNoticesListPage';
+import AdminNoticeEditorPage from './pages/admin/AdminNoticeEditorPage';
+import AdminNoticeDetailPage from './pages/admin/AdminNoticeDetailPage';
 import FloatingSns from './components/FloatingSns';
 
 export default function App() {
@@ -66,6 +69,16 @@ export default function App() {
             path="/admin/items/:itemId"
             element={<AdminItemDetailPage />}
           />
+          <Route path="/admin/notices" element={<AdminNoticesListPage />} />
+          <Route path="/admin/notices/new" element={<AdminNoticeEditorPage />} />
+          <Route
+            path="/admin/notices/:noticeId"
+            element={<AdminNoticeDetailPage />}
+          />
+          <Route
+            path="/admin/notices/:noticeId/edit"
+            element={<AdminNoticeEditorPage />}
+          />
         </Route>
       </Routes>
 
@@ -73,3 +86,5 @@ export default function App() {
     </>
   );
 }
+
+
