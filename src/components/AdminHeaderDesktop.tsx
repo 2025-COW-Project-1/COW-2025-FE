@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+﻿import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { adminApi } from '../api/admin';
 
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { key: 'about', label: '소개', href: '/admin#about?tab=main' },
   { key: 'links', label: '링크', href: '/admin#links' },
   { key: 'projects', label: '프로젝트/상품', href: '/admin/projects' },
+  { key: 'notices', label: '공지사항', href: '/admin/notices' },
   { key: 'settlements', label: '정산', href: '/admin#settlements' },
   { key: 'feedback', label: '피드백', href: '/admin#feedback' },
 ];
@@ -28,6 +29,8 @@ export default function AdminHeaderDesktop() {
     location.pathname.startsWith('/admin/projects') ||
     location.pathname.startsWith('/admin/items')
       ? 'projects'
+      : location.pathname.startsWith('/admin/notices')
+      ? 'notices'
       : normalizedActive;
 
   return (
@@ -139,3 +142,6 @@ export default function AdminHeaderDesktop() {
     </div>
   );
 }
+
+
+

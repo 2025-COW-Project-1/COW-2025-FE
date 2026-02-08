@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -124,7 +124,7 @@ export default function MarkdownEditor({
                 </ReactMarkdown>
               ) : (
                 <div className="text-sm font-semibold text-slate-400">
-                  상세 설명을 입력하면 여기에 미리보기가 표시돼요.
+                  상세 설명을 입력하면 오른쪽에 미리보기가 표시돼요.
                 </div>
               )}
             </div>
@@ -146,7 +146,7 @@ export default function MarkdownEditor({
               showCheatSheet ? 'rotate-180' : 'rotate-0',
             ].join(' ')}
           >
-            ▼
+            ▾
           </span>
         </button>
 
@@ -160,9 +160,9 @@ export default function MarkdownEditor({
                 </span>
               </div>
               <div className="grid grid-cols-[80px_1fr] items-center gap-2">
-                <span className="text-slate-500">굵게</span>
+                <span className="text-slate-500">강조</span>
                 <span className="rounded-md border border-slate-200 bg-white px-2 py-1 font-mono overflow-x-auto">
-                  **굵게**
+                  **강조**
                 </span>
               </div>
               <div className="grid grid-cols-[80px_1fr] items-center gap-2">
@@ -186,7 +186,7 @@ export default function MarkdownEditor({
               <div className="grid grid-cols-[80px_1fr] items-center gap-2">
                 <span className="text-slate-500">줄바꿈</span>
                 <span className="rounded-md border border-slate-200 bg-white px-2 py-1 font-mono overflow-x-auto">
-                  엔터
+                  &lt;br&gt;
                 </span>
               </div>
             </div>
