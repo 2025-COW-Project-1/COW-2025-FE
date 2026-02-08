@@ -18,6 +18,11 @@ export type ItemResponse = {
   status: ItemStatus;
   thumbnailUrl?: string | null;
   thumbnailKey?: string | null;
+  targetQty?: number | null;
+  fundedQty?: number | null;
+  stockQty?: number | null;
+  remainingQty?: number | null;
+  achievementRate?: number | null;
 };
 
 export type ItemJournalDownloadResponse = {
