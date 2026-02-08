@@ -182,6 +182,14 @@ export default function HeaderMobile() {
               </div>
             </div>
 
+            <Link
+              to="/notices"
+              onClick={closeAll}
+              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+            >
+              NOTICES
+            </Link>
+
             {[
               { label: 'FREE RESOURCES', href: '/resources' },
               { label: 'APPLY', href: '/forms' },
