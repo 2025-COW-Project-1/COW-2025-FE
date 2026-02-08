@@ -7,18 +7,22 @@ import type { Project } from '../api/projects';
 type ProjectCardProps = {
   project: Project;
   showApplyAction?: boolean;
+  size?: 'default' | 'large' | 'main';
 };
 
 export default function ProjectCard({
   project,
   showApplyAction = true,
+  size = 'default',
 }: ProjectCardProps) {
   const canApply = project.status === 'OPEN';
   const deadlineText = project.endAt || '';
+  const isLarge = size === 'large';
+  const isMain = size === 'main';
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white">
-      <div className="relative h-40 bg-slate-100">
+      <div className={`relative bg-slate-100 ${isMain ? 'h-56' : isLarge ? 'h-48' : 'h-40'}`}>
         {project.thumbnailUrl ? (
           <img
             src={project.thumbnailUrl}

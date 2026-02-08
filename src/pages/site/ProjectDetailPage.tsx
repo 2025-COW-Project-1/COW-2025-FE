@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Calendar, Clock } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
 import Reveal from '../../components/Reveal';
 import StatusBadge from '../../components/StatusBadge';
 import { useToast } from '../../components/toast/useToast';
@@ -229,6 +232,66 @@ export default function ProjectDetailPage() {
             </div>
           </div>
         </div>
+      </Reveal>
+
+      <Reveal className="mt-8 rounded-3xl border border-slate-200 bg-white p-6">
+        <h2 className="font-heading text-xl text-slate-900">상세 설명</h2>
+        {project.description && project.description.trim().length > 0 ? (
+          <div className="mt-4 text-sm text-slate-700">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+              components={{
+                h1: ({ ...props }) => (
+                  <h3 className="mt-5 text-lg font-heading text-slate-900 first:mt-0" {...props} />
+                ),
+                h2: ({ ...props }) => (
+                  <h4 className="mt-4 text-base font-heading text-slate-900 first:mt-0" {...props} />
+                ),
+                p: ({ ...props }) => (
+                  <p className="mt-3 whitespace-normal break-words leading-relaxed first:mt-0" {...props} />
+                ),
+                ul: ({ ...props }) => (
+                  <ul className="mt-3 list-disc space-y-1 pl-5 first:mt-0" {...props} />
+                ),
+                ol: ({ ...props }) => (
+                  <ol className="mt-3 list-decimal space-y-1 pl-5 first:mt-0" {...props} />
+                ),
+                a: ({ ...props }) => (
+                  <a
+                    className="text-primary underline decoration-slate-300 underline-offset-4 break-words"
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    {...props}
+                  />
+                ),
+                code: ({ className, ...props }) => {
+                  const isBlock = Boolean(className);
+                  if (isBlock) {
+                    return <code className="block whitespace-pre-wrap break-words" {...props} />;
+                  }
+                  return (
+                    <code
+                      className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-mono text-slate-700"
+                      {...props}
+                    />
+                  );
+                },
+                pre: ({ ...props }) => (
+                  <pre
+                    className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700"
+                    {...props}
+                  />
+                ),
+              }}
+            >
+              {project.description}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm font-semibold text-slate-400">
+            등록된 상세 설명이 없어요
+          </p>
+        )}
       </Reveal>
 
       <div className="mt-8">
