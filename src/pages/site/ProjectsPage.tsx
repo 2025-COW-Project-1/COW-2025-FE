@@ -14,6 +14,7 @@ const TABS: { label: string; value: TabValue }[] = [
   { label: '준비중', value: 'PREPARING' },
   { label: '마감', value: 'CLOSED' },
 ];
+const PROJECT_CARD_WRAP_CLASS = 'mx-auto w-full max-w-[460px]';
 
 function isProjectStatus(v: string): v is ProjectStatus {
   return v === 'OPEN' || v === 'PREPARING' || v === 'CLOSED';
@@ -83,7 +84,7 @@ export default function ProjectsPage() {
   }, [filtered]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-12">
       <Reveal>
         <h1 className="font-heading text-3xl text-primary">프로젝트</h1>
         <p className="mt-2 text-slate-600">
@@ -116,10 +117,12 @@ export default function ProjectsPage() {
       </Reveal>
 
       {pinnedProjects.length > 0 && (
-        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {pinnedProjects.map((p, i) => (
             <Reveal key={p.id} delayMs={i * 40}>
-              <ProjectCard project={p} />
+              <div className={PROJECT_CARD_WRAP_CLASS}>
+                <ProjectCard project={p} size="large" showApplyAction={false} />
+              </div>
             </Reveal>
           ))}
         </div>
@@ -131,10 +134,12 @@ export default function ProjectsPage() {
             {year}
           </div>
           <div className="mt-4 border-t border-slate-200" />
-          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             {items.map((p, i) => (
               <Reveal key={p.id} delayMs={(sectionIndex + i) * 40}>
-                <ProjectCard project={p} />
+                <div className={PROJECT_CARD_WRAP_CLASS}>
+                  <ProjectCard project={p} size="large" showApplyAction={false} />
+                </div>
               </Reveal>
             ))}
           </div>

@@ -124,7 +124,7 @@ export default function MainPage() {
     <div>
       <IntroduceMainView data={introMain} loading={introLoading} variant="public" linkToAbout />
 
-      <section className="mx-auto max-w-6xl px-4 py-14">
+      <section className="mx-auto max-w-7xl px-4 py-14">
         <Reveal>
           <div className="flex items-end justify-between gap-4">
             <div>
@@ -157,10 +157,10 @@ export default function MainPage() {
                   <div
                     key={project.id}
                     data-card
-                    className="shrink-0 snap-start w-[280px] max-w-[380px] sm:w-[320px] md:w-[360px] lg:w-[380px]"
+                    className="shrink-0 snap-start w-[290px] sm:w-[330px] md:w-[370px] lg:w-[calc((100%-2rem)/3)]"
                   >
                     <Reveal delayMs={index * 80}>
-                      <ProjectCard project={project} showApplyAction={false} />
+                      <ProjectCard project={project} showApplyAction={false} size="main" />
                     </Reveal>
                   </div>
                 ))}
