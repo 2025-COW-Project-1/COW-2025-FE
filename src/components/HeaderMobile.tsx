@@ -8,6 +8,7 @@ export default function HeaderMobile() {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileProjectsOpen, setMobileProjectsOpen] = useState(false);
+  const [mobileOrderOpen, setMobileOrderOpen] = useState(false);
 
   const { isLoggedIn, userName } = useAuth();
 
@@ -28,6 +29,7 @@ export default function HeaderMobile() {
   const closeAll = () => {
     setMobileOpen(false);
     setMobileProjectsOpen(false);
+    setMobileOrderOpen(false);
   };
 
   const handleLogout = () => {
@@ -54,6 +56,7 @@ export default function HeaderMobile() {
           onClick={() => {
             setMobileOpen((v) => !v);
             setMobileProjectsOpen(false);
+            setMobileOrderOpen(false);
           }}
           className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm"
           aria-label="Open menu"
@@ -169,6 +172,53 @@ export default function HeaderMobile() {
                   { label: 'NOW OPEN', href: '/projects?status=OPEN' },
                   { label: 'COMING SOON', href: '/projects?status=PREPARING' },
                   { label: 'CLOSED', href: '/projects?status=CLOSED' },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    onClick={closeAll}
+                    className="block rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-white"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              aria-expanded={mobileOrderOpen}
+              onClick={() => setMobileOrderOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+            >
+              ORDER
+              <span
+                className={[
+                  'text-slate-400 transition-transform',
+                  mobileOrderOpen ? 'rotate-90' : 'rotate-0',
+                ].join(' ')}
+              >
+                ›
+              </span>
+            </button>
+
+            <div
+              className={[
+                'ml-2 overflow-hidden transition-all duration-200',
+                mobileOrderOpen ? 'mt-2 max-h-28' : 'mt-0 max-h-0',
+              ].join(' ')}
+            >
+              <div
+                className={[
+                  'space-y-1 rounded-xl border bg-slate-50',
+                  mobileOrderOpen
+                    ? 'border-slate-200 p-2 opacity-100'
+                    : 'border-transparent p-0 opacity-0',
+                ].join(' ')}
+              >
+                {[
+                  { label: 'CART', href: '/cart' },
+                  { label: 'ORDER LOOKUP', href: '/orders/lookup' },
                 ].map((item) => (
                   <Link
                     key={item.href}

@@ -1,11 +1,13 @@
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import StatusBadge from '../../components/StatusBadge';
+import { useToast } from '../../components/toast/useToast';
 import { itemsApi } from '../../api/items';
 import type { ItemResponse, ItemSaleType } from '../../api/items';
 import type { ProjectStatus } from '../../api/projects';
+import { addCartItem } from '../../utils/cart';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -35,6 +37,12 @@ type PurchaseCardProps = {
   item: ItemResponse;
   saleTypeLabel: string;
   isPurchasable: boolean;
+  isSoldOut: boolean;
+  stockSummary: string | null;
+  groupBuySummary: string | null;
+  onAddToCart: () => void;
+  onBuyNow: () => void;
+  showCartNotice: boolean;
 };
 
 type DetailImagesViewerProps = {
@@ -121,7 +129,17 @@ function ProductGallery({
   );
 }
 
-function PurchaseCard({ item, saleTypeLabel, isPurchasable }: PurchaseCardProps) {
+function PurchaseCard({
+  item,
+  saleTypeLabel,
+  isPurchasable,
+  isSoldOut,
+  stockSummary,
+  groupBuySummary,
+  onAddToCart,
+  onBuyNow,
+  showCartNotice,
+}: PurchaseCardProps) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:sticky md:top-24">
       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
@@ -144,23 +162,69 @@ function PurchaseCard({ item, saleTypeLabel, isPurchasable }: PurchaseCardProps)
 
       <div className="mt-6 px-1">
         <p className="text-2xl font-bold text-slate-900">{formatMoney(item.price)}원</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {item.saleType === 'NORMAL' && stockSummary && (
+            <span
+              className={[
+                'inline-flex items-center rounded-full px-3.5 py-1.5 text-sm font-semibold leading-none',
+                isSoldOut
+                  ? 'bg-rose-50 text-rose-600'
+                  : 'bg-emerald-50 text-emerald-600',
+              ].join(' ')}
+            >
+              {stockSummary}
+            </span>
+          )}
+          {item.saleType === 'GROUPBUY' && groupBuySummary && (
+            <span className="inline-flex items-center rounded-full bg-sky-50 px-3.5 py-1.5 text-sm font-semibold leading-none text-sky-700">
+              {groupBuySummary}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
-          onClick={() => alert('장바구니 기능은 준비 중이에요.')}
-          className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:flex-1"
-        >
-          장바구니 담기
-        </button>
-
-        {item.status === 'OPEN' ? (
+        {isPurchasable ? (
           <button
             type="button"
+            onClick={onAddToCart}
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:flex-1"
+          >
+            장바구니 담기
+          </button>
+        ) : isSoldOut ? (
+          <button
+            type="button"
+            disabled
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-6 text-sm font-semibold text-rose-500 sm:flex-1"
+          >
+            재고 소진
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-6 text-sm font-semibold text-slate-400 sm:flex-1"
+          >
+            진행중 상품만 담을 수 있어요
+          </button>
+        )}
+
+        {isPurchasable ? (
+          <button
+            type="button"
+            onClick={onBuyNow}
             className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-primary px-6 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 sm:flex-1"
           >
             구매하기
+          </button>
+        ) : isSoldOut ? (
+          <button
+            type="button"
+            disabled
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-6 text-sm font-semibold text-rose-500 sm:flex-1"
+          >
+            재고 소진
           </button>
         ) : item.status === 'PREPARING' ? (
           <button
@@ -181,9 +245,20 @@ function PurchaseCard({ item, saleTypeLabel, isPurchasable }: PurchaseCardProps)
         )}
       </div>
 
+      {showCartNotice && (
+        <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-slate-700">
+          장바구니에 상품을 담았어요{' '}
+          <Link to="/cart" className="font-bold text-primary hover:underline">
+            바로가기 &gt;
+          </Link>
+        </div>
+      )}
+
       {!isPurchasable && (
         <p className="mt-3 text-xs text-slate-500">
-          현재는 구매가 어려운 상태예요. 준비가 완료되면 구매가 가능해요.
+          {isSoldOut
+            ? '현재 재고가 소진되어 구매가 어려워요.'
+            : '현재는 구매가 어려운 상태예요. 준비가 완료되면 구매가 가능해요.'}
         </p>
       )}
 
@@ -259,6 +334,8 @@ function DetailImagesViewer({
 
 export default function ProjectItemDetailPage() {
   const { projectId, itemId } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
   const [item, setItem] = useState<ItemResponse | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -266,6 +343,16 @@ export default function ProjectItemDetailPage() {
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [detailIndex, setDetailIndex] = useState(0);
+  const [showCartNotice, setShowCartNotice] = useState(false);
+
+  const parseCount = (value: unknown): number | null => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return null;
+  };
 
   const detailImages = useMemo(() => {
     if (!item) return [];
@@ -332,6 +419,26 @@ export default function ProjectItemDetailPage() {
     setDetailIndex(0);
   }, [detailImages.length]);
 
+  useEffect(() => {
+    setShowCartNotice(false);
+  }, [itemId]);
+
+  const pushToCart = (target: ItemResponse) => {
+    if (!projectId) return false;
+
+    addCartItem({
+      itemId: target.id,
+      projectId,
+      name: target.name,
+      price: target.price,
+      thumbnailUrl: target.thumbnailUrl,
+      status: target.status,
+      saleType: target.saleType,
+      quantity: 1,
+    });
+    return true;
+  };
+
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">로딩 중...</div>
@@ -372,7 +479,83 @@ export default function ProjectItemDetailPage() {
   }
 
   const saleTypeLabel = SALETYPE_LABELS[item.saleType] ?? item.saleType;
-  const isPurchasable = item.status === 'OPEN';
+  const stockQty = parseCount(item.stockQty);
+  const remainingQty = parseCount(item.remainingQty);
+  const fundedQty = parseCount(item.fundedQty);
+  const targetQty = parseCount(item.targetQty);
+  const achievementRate = parseCount(item.achievementRate);
+  const availableStock = remainingQty ?? stockQty;
+  const isSoldOut =
+    item.saleType === 'NORMAL' &&
+    availableStock !== null &&
+    availableStock <= 0;
+  const isPurchasable = item.status === 'OPEN' && !isSoldOut;
+  const stockSummary =
+    item.saleType === 'NORMAL'
+      ? availableStock !== null
+        ? availableStock > 0
+          ? `재고 ${availableStock.toLocaleString()}개`
+          : '재고 소진'
+        : '재고 정보 확인 중'
+      : null;
+  const groupBuySummary =
+    item.saleType === 'GROUPBUY'
+      ? targetQty !== null && fundedQty !== null
+        ? `모집 ${fundedQty.toLocaleString()} / ${targetQty.toLocaleString()}`
+        : achievementRate !== null
+          ? `달성률 ${achievementRate}%`
+          : null
+      : null;
+
+  const handleAddToCart = () => {
+    if (isSoldOut) {
+      toast.error('재고가 소진되어 장바구니에 담을 수 없어요.');
+      return;
+    }
+    if (item.status !== 'OPEN') {
+      toast.info('진행중인 상품만 장바구니에 담을 수 있어요.');
+      return;
+    }
+    const ok = pushToCart(item);
+    if (!ok) {
+      toast.error('프로젝트 정보를 찾을 수 없어요.');
+      return;
+    }
+    setShowCartNotice(true);
+    toast.success('장바구니에 상품을 담았어요.');
+  };
+  const handleBuyNow = () => {
+    if (isSoldOut) {
+      toast.error('재고가 소진되어 구매할 수 없어요.');
+      return;
+    }
+    if (item.status !== 'OPEN') {
+      toast.info('진행중인 상품만 주문할 수 있어요.');
+      return;
+    }
+    if (!projectId) {
+      toast.error('프로젝트 정보를 찾을 수 없어요.');
+      return;
+    }
+
+    navigate('/order', {
+      state: {
+        source: 'direct',
+        items: [
+          {
+            itemId: String(item.id),
+            projectId: String(projectId),
+            name: item.name,
+            price: item.price,
+            thumbnailUrl: item.thumbnailUrl ?? null,
+            status: item.status,
+            saleType: item.saleType,
+            quantity: 1,
+          },
+        ],
+      },
+    });
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -395,7 +578,17 @@ export default function ProjectItemDetailPage() {
               fallbackLabel="대표 이미지가 없어요"
             />
 
-            <PurchaseCard item={item} saleTypeLabel={saleTypeLabel} isPurchasable={isPurchasable} />
+            <PurchaseCard
+              item={item}
+              saleTypeLabel={saleTypeLabel}
+              isPurchasable={isPurchasable}
+              isSoldOut={isSoldOut}
+              stockSummary={stockSummary}
+              groupBuySummary={groupBuySummary}
+              onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
+              showCartNotice={showCartNotice}
+            />
           </div>
 
           <div className="mt-10 space-y-8">

@@ -1,4 +1,4 @@
-﻿import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { adminApi } from '../api/admin';
 
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { key: 'about', label: '소개', href: '/admin#about?tab=main' },
   { key: 'links', label: '링크', href: '/admin#links' },
   { key: 'projects', label: '프로젝트/상품', href: '/admin/projects' },
+  { key: 'orders', label: '주문', href: '/admin/orders' },
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
   { key: 'settlements', label: '정산', href: '/admin#settlements' },
 ];
@@ -149,5 +150,3 @@ export default function AdminHeaderMobile() {
     </>
   );
 }
-
-
