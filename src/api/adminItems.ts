@@ -28,6 +28,7 @@ export type AdminItemResponse = {
   thumbnailUrl?: string | null;
   targetQty?: number | null;
   fundedQty?: number | null;
+  stockQty?: number | null;
   journalFileKey?: string | null;
   achievementRate?: number | null;
   remainingQty?: number | null;
@@ -48,6 +49,7 @@ export type AdminItemUpsertRequest = {
   thumbnailKey?: string;
   targetQty?: number | null;
   fundedQty?: number | null;
+  stockQty?: number | null;
 };
 
 export type PresignPutRequest = {

@@ -56,6 +56,7 @@ type AdminItemForm = {
   status: AdminItemStatus;
   targetQty?: number;
   fundedQty: number;
+  stockQty?: number;
   thumbnailKey?: string;
   thumbnailUrl?: string;
   thumbnailPreviewUrl?: string;
@@ -79,6 +80,7 @@ type AdminItemUpdatePayload = {
   thumbnailKey?: string;
   targetQty?: number | null;
   fundedQty?: number | null;
+  stockQty?: number | null;
 };
 
 const STATUS_OPTIONS: { label: string; value: AdminItemStatus }[] = [
@@ -139,6 +141,7 @@ function mapItemToForm(item: AdminItemResponse): AdminItemForm {
     status: item.status ?? 'PREPARING',
     targetQty: item.targetQty ?? undefined,
     fundedQty: item.fundedQty ?? 0,
+    stockQty: item.stockQty ?? undefined,
     thumbnailKey: item.thumbnailKey ?? undefined,
     thumbnailUrl: item.thumbnailUrl ?? undefined,
     journalFileKey: item.journalFileKey ?? undefined,
@@ -290,8 +293,10 @@ export default function AdminItemDetailPage() {
   const [deletingImageIds, setDeletingImageIds] = useState<string[]>([]);
   const [priceInput, setPriceInput] = useState('');
   const [fundedQtyInput, setFundedQtyInput] = useState('');
+  const [stockQtyInput, setStockQtyInput] = useState('');
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [isEditingFundedQty, setIsEditingFundedQty] = useState(false);
+  const [isEditingStockQty, setIsEditingStockQty] = useState(false);
   const [initialSnapshotReady, setInitialSnapshotReady] = useState(false);
 
   const objectUrlsRef = useRef<string[]>([]);
@@ -343,6 +348,11 @@ export default function AdminItemDetailPage() {
     if (!item || isEditingFundedQty) return;
     setFundedQtyInput(item.fundedQty === 0 ? '' : String(item.fundedQty));
   }, [item?.fundedQty, isEditingFundedQty, item]);
+
+  useEffect(() => {
+    if (!item || isEditingStockQty) return;
+    setStockQtyInput(item.stockQty === undefined ? '' : String(item.stockQty));
+  }, [item?.stockQty, isEditingStockQty, item]);
 
   const digitsOnly = useCallback((value: string) => value.replace(/[^\d]/g, ''), []);
 
@@ -426,6 +436,7 @@ export default function AdminItemDetailPage() {
         thumbnailKey: current.thumbnailKey?.trim() || undefined,
         targetQty: null,
         fundedQty: 0,
+        stockQty: null,
       };
     }
 
@@ -438,13 +449,16 @@ export default function AdminItemDetailPage() {
       saleType: current.saleType,
       status: current.status,
       journalFileKey: null,
-      fundedQty: Number(current.fundedQty ?? 0),
+      targetQty: current.saleType === 'GROUPBUY' ? Number(current.targetQty ?? 0) || null : null,
+      fundedQty: current.saleType === 'GROUPBUY' ? Number(current.fundedQty ?? 0) : null,
+      stockQty:
+        current.saleType === 'NORMAL'
+          ? current.stockQty === undefined || current.stockQty === null
+            ? null
+            : Number(current.stockQty)
+          : null,
       thumbnailKey: current.thumbnailKey?.trim(),
     };
-
-    if (current.saleType === 'GROUPBUY' && current.targetQty) {
-      payload.targetQty = Number(current.targetQty);
-    }
 
     return payload;
   }, []);
@@ -453,10 +467,12 @@ export default function AdminItemDetailPage() {
     if (!item) return;
     const normalizedPriceStr = normalizeDigits(priceInput);
     const normalizedFundedQtyStr = normalizeDigits(fundedQtyInput);
+    const normalizedStockQtyStr = normalizeDigits(stockQtyInput);
     const normalizedBase = {
       ...item,
       price: normalizedPriceStr === '' ? 0 : Number(normalizedPriceStr),
       fundedQty: normalizedFundedQtyStr === '' ? 0 : Number(normalizedFundedQtyStr),
+      stockQty: normalizedStockQtyStr === '' ? undefined : Number(normalizedStockQtyStr),
     };
     const normalized =
       normalizedBase.itemType === 'DIGITAL_JOURNAL'
@@ -466,6 +482,7 @@ export default function AdminItemDetailPage() {
             saleType: 'NORMAL' as const,
             targetQty: undefined,
             fundedQty: 0,
+            stockQty: undefined,
           }
         : normalizedBase;
     const validation = getValidation(normalized);
@@ -527,6 +544,7 @@ export default function AdminItemDetailPage() {
     buildPayloadUpdate,
     confirm,
     fundedQtyInput,
+    stockQtyInput,
     getValidation,
     item,
     loadItemDetail,
@@ -557,6 +575,7 @@ export default function AdminItemDetailPage() {
       status: value.status,
       targetQty: value.targetQty ?? null,
       fundedQty: value.fundedQty ?? null,
+      stockQty: value.stockQty ?? null,
       journalFileKey: normalizeString(value.journalFileKey),
       thumbnailKey,
       thumbnailUrl,
@@ -680,6 +699,7 @@ export default function AdminItemDetailPage() {
           saleType: 'NORMAL',
           price: 0,
           fundedQty: 0,
+          stockQty: undefined,
           targetQty: undefined,
           journalFileKey: target.key,
         });
@@ -1103,10 +1123,12 @@ export default function AdminItemDetailPage() {
                             price: 0,
                             targetQty: undefined,
                             fundedQty: 0,
+                            stockQty: undefined,
                             validationError: null,
                           });
                           setPriceInput('');
                           setFundedQtyInput('');
+                          setStockQtyInput('');
                           return;
                         }
                         updateItem({
@@ -1166,6 +1188,10 @@ export default function AdminItemDetailPage() {
                     onChange={(e) => {
                       const next = digitsOnly(e.target.value);
                       setPriceInput(next);
+                      updateItem({
+                        price: next === '' ? 0 : Number(next),
+                        validationError: null,
+                      });
                     }}
                     onBlur={() => {
                       setIsEditingPrice(false);
@@ -1183,36 +1209,69 @@ export default function AdminItemDetailPage() {
               {!isJournalItem && (
                 <div>
                   <label className="text-sm font-bold text-slate-700">판매 유형</label>
-                  <select
-                    value={item.saleType}
-                    onChange={(e) =>
-                      updateItem({
-                        saleType: e.target.value as AdminItemSaleType,
-                        targetQty: e.target.value === 'GROUPBUY' ? item.targetQty : undefined,
-                      })
-                    }
-                    className={`${INPUT_CLASS} mt-2`}
-                  >
+                  <div className="mt-2 grid grid-cols-2 gap-2">
                     {SALETYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          updateItem({
+                            saleType: option.value,
+                            targetQty: option.value === 'GROUPBUY' ? item.targetQty : undefined,
+                            fundedQty: option.value === 'GROUPBUY' ? item.fundedQty : 0,
+                            stockQty: option.value === 'NORMAL' ? item.stockQty : undefined,
+                          })
+                        }
+                        className={[
+                          'rounded-2xl border px-4 py-3 text-sm font-bold transition',
+                          item.saleType === option.value
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
+                        ].join(' ')}
+                      >
                         {option.label}
-                      </option>
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
               )}
-              {!isJournalItem && (
+              {!isJournalItem && item.saleType === 'NORMAL' && (
+                <div>
+                  <label className="text-sm font-bold text-slate-700">재고</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={stockQtyInput}
+                    placeholder="재고 수량을 입력해주세요"
+                    onFocus={() => setIsEditingStockQty(true)}
+                    onChange={(e) => {
+                      const next = digitsOnly(e.target.value);
+                      setStockQtyInput(next);
+                      updateItem({ stockQty: next === '' ? undefined : Number(next) });
+                    }}
+                    onBlur={() => {
+                      setIsEditingStockQty(false);
+                      const normalized = normalizeDigits(stockQtyInput);
+                      setStockQtyInput(normalized);
+                      updateItem({ stockQty: normalized === '' ? undefined : Number(normalized) });
+                    }}
+                    className={`${INPUT_CLASS} mt-2`}
+                  />
+                </div>
+              )}
+              {!isJournalItem && item.saleType === 'GROUPBUY' && (
                 <div>
                   <label className="text-sm font-bold text-slate-700">펀딩 수량</label>
                   <input
                     type="text"
                     inputMode="numeric"
                     value={fundedQtyInput}
-                    placeholder="판매 수량을 입력해주세요"
+                    placeholder="펀딩 수량을 입력해주세요"
                     onFocus={() => setIsEditingFundedQty(true)}
                     onChange={(e) => {
                       const next = digitsOnly(e.target.value);
                       setFundedQtyInput(next);
+                      updateItem({ fundedQty: next === '' ? 0 : Number(next) });
                     }}
                     onBlur={() => {
                       setIsEditingFundedQty(false);
