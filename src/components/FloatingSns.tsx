@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { snsApi } from '../api/sns';
 import instagramLogo from '../assets/logos/instagram.png';
 import kakaoLogo from '../assets/logos/kakao.png';
@@ -47,6 +48,27 @@ export default function FloatingSns() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      <Link
+        to="/notices"
+        className="grid h-13 w-13 place-items-center rounded-full bg-white text-slate-700 shadow-lg ring-1 ring-slate-200 transition hover:scale-[1.03]"
+        aria-label="공지사항"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M18 8a6 6 0 10-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+          <path d="M13.73 21a2 2 0 01-3.46 0" />
+        </svg>
+      </Link>
+
       {instagramUrl && (
         <a
           href={instagramUrl}
@@ -74,7 +96,7 @@ export default function FloatingSns() {
           <img
             src={kakaoLogo}
             alt="Kakao"
-            className="h-full w-full object-cover"
+            className="h-full w-full rounded-full object-cover"
           />
         </a>
       )}
