@@ -13,11 +13,6 @@ import ResourcesPage from './pages/site/ResourcesPage';
 import SettlementsPage from './pages/site/SettlementsPage';
 import LoginPage from './pages/site/LoginPage';
 import OAuthCallbackPage from './pages/site/OAuthCallbackPage';
-import NoticesPage from './pages/site/NoticesPage';
-import NoticeDetailPage from './pages/site/NoticeDetailPage';
-import ApplyPage from './pages/site/ApplyPage';
-import ApplicationEditPage from './pages/site/ApplicationEditPage';
-import ApplicationResultPage from './pages/site/ApplicationResultPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProjectsListPage from './pages/admin/AdminProjectsListPage';
 import AdminProjectEditorPage from './pages/admin/AdminProjectEditorPage';
@@ -27,6 +22,8 @@ import AdminItemDetailPage from './pages/admin/AdminItemDetailPage';
 import AdminNoticesListPage from './pages/admin/AdminNoticesListPage';
 import AdminNoticeEditorPage from './pages/admin/AdminNoticeEditorPage';
 import AdminNoticeDetailPage from './pages/admin/AdminNoticeDetailPage';
+import AdminApplicationsListPage from './pages/admin/AdminApplicationsListPage';
+import AdminApplicationDetailPage from './pages/admin/AdminApplicationDetailPage';
 import FloatingSns from './components/FloatingSns';
 
 export default function App() {
@@ -45,17 +42,13 @@ export default function App() {
           <Route path="/settlements" element={<SettlementsPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/forms" element={<FormPage />} />
-          <Route path="/apply" element={<ApplyPage />} />
-          <Route path="/apply/edit" element={<ApplicationEditPage />} />
-          <Route path="/apply/result" element={<ApplicationResultPage />} />
-          <Route path="/notices" element={<NoticesPage />} />
-          <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/oauth/kakao/callback" element={<OAuthCallbackPage />} />
           <Route path="/oauth/naver/callback" element={<OAuthCallbackPage />} />
         </Route>
+
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/projects" element={<AdminProjectsListPage />} />
@@ -91,6 +84,14 @@ export default function App() {
           <Route
             path="/admin/notices/:noticeId/edit"
             element={<AdminNoticeEditorPage />}
+          />
+          <Route
+            path="/admin/applications"
+            element={<AdminApplicationsListPage />}
+          />
+          <Route
+            path="/admin/applications/:formId/:applicationId"
+            element={<AdminApplicationDetailPage />}
           />
         </Route>
       </Routes>
