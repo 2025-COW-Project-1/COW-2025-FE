@@ -18,6 +18,8 @@ import OrderLookupPage from './pages/site/OrderLookupPage';
 import OrderViewPage from './pages/site/OrderViewPage';
 import LoginPage from './pages/site/LoginPage';
 import OAuthCallbackPage from './pages/site/OAuthCallbackPage';
+import NoticesPage from './pages/site/NoticesPage';
+import NoticeDetailPage from './pages/site/NoticeDetailPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProjectsListPage from './pages/admin/AdminProjectsListPage';
 import AdminProjectEditorPage from './pages/admin/AdminProjectEditorPage';
@@ -57,7 +59,10 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/oauth/kakao/callback" element={<OAuthCallbackPage />} />
           <Route path="/oauth/naver/callback" element={<OAuthCallbackPage />} />
+          <Route path="/notices" element={<NoticesPage />} />
+          <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
         </Route>
+
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/projects" element={<AdminProjectsListPage />} />
@@ -83,7 +88,10 @@ export default function App() {
           />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/notices" element={<AdminNoticesListPage />} />
-          <Route path="/admin/notices/new" element={<AdminNoticeEditorPage />} />
+          <Route
+            path="/admin/notices/new"
+            element={<AdminNoticeEditorPage />}
+          />
           <Route
             path="/admin/notices/:noticeId"
             element={<AdminNoticeDetailPage />}

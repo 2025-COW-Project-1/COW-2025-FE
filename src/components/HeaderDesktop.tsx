@@ -76,6 +76,22 @@ export default function HeaderDesktop() {
       </div>
 
       <Link
+        to="/notices"
+        onClick={() => setOpen(null)}
+        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+      >
+        NOTICES
+      </Link>
+
+      <Link
+        to="/resources"
+        onClick={() => setOpen(null)}
+        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+      >
+        FREE RESOURCES
+      </Link>
+
+      <Link
         to="/settlements"
         onClick={() => setOpen(null)}
         className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
