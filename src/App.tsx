@@ -1,4 +1,4 @@
-﻿import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import SiteLayout from './components/SiteLayout';
 import AdminLayout from './components/AdminLayout';
 import MainPage from './pages/site/MainPage';
@@ -11,6 +11,11 @@ import ProjectDetailPage from './pages/site/ProjectDetailPage';
 import ProjectItemDetailPage from './pages/site/ProjectItemDetailPage';
 import ResourcesPage from './pages/site/ResourcesPage';
 import SettlementsPage from './pages/site/SettlementsPage';
+import CartPage from './pages/site/CartPage';
+import OrderPage from './pages/site/OrderPage';
+import OrderCompletePage from './pages/site/OrderCompletePage';
+import OrderLookupPage from './pages/site/OrderLookupPage';
+import OrderViewPage from './pages/site/OrderViewPage';
 import LoginPage from './pages/site/LoginPage';
 import OAuthCallbackPage from './pages/site/OAuthCallbackPage';
 import NoticesPage from './pages/site/NoticesPage';
@@ -21,12 +26,16 @@ import AdminProjectEditorPage from './pages/admin/AdminProjectEditorPage';
 import AdminProjectItemsListPage from './pages/admin/AdminProjectItemsListPage';
 import AdminProjectItemCreatePage from './pages/admin/AdminProjectItemCreatePage';
 import AdminItemDetailPage from './pages/admin/AdminItemDetailPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminNoticesListPage from './pages/admin/AdminNoticesListPage';
 import AdminNoticeEditorPage from './pages/admin/AdminNoticeEditorPage';
 import AdminNoticeDetailPage from './pages/admin/AdminNoticeDetailPage';
 import FloatingSns from './components/FloatingSns';
 
 export default function App() {
+  const location = useLocation();
+  const hideFloatingSns = location.pathname.startsWith('/orders/');
+
   return (
     <>
       <Routes>
@@ -39,6 +48,9 @@ export default function App() {
             element={<ProjectItemDetailPage />}
           />
           <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/order" element={<OrderPage />} />
+          <Route path="/order/complete" element={<OrderCompletePage />} />
           <Route path="/settlements" element={<SettlementsPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/forms" element={<FormPage />} />
@@ -74,6 +86,7 @@ export default function App() {
             path="/admin/items/:itemId"
             element={<AdminItemDetailPage />}
           />
+          <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/notices" element={<AdminNoticesListPage />} />
           <Route
             path="/admin/notices/new"
@@ -88,9 +101,11 @@ export default function App() {
             element={<AdminNoticeEditorPage />}
           />
         </Route>
+        <Route path="/orders/lookup" element={<OrderLookupPage />} />
+        <Route path="/orders/view" element={<OrderViewPage />} />
       </Routes>
 
-      <FloatingSns />
+      {!hideFloatingSns && <FloatingSns />}
     </>
   );
 }

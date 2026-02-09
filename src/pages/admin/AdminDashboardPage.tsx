@@ -136,30 +136,32 @@ export default function AdminDashboardPage() {
             <p className="mt-2 text-sm text-slate-600">관리자 권한</p>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className={[
-                'rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition',
-                saving ? 'opacity-60' : 'hover:opacity-95',
-              ].join(' ')}
-            >
-              {saving ? '저장 중...' : dirty ? '변경사항 저장' : '저장'}
-            </button>
+          {section !== 'about' && (
+            <div className="flex flex-col items-end gap-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className={[
+                  'rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition',
+                  saving ? 'opacity-60' : 'hover:opacity-95',
+                ].join(' ')}
+              >
+                {saving ? '저장 중...' : dirty ? '변경사항 저장' : '저장'}
+              </button>
 
-            <div className="min-h-4.5">
-              {saveMsg && saveMsgTone === 'success' && (
-                <p className="text-xs font-semibold text-emerald-600">
-                  {saveMsg}
-                </p>
-              )}
-              {saveMsg && saveMsgTone === 'error' && (
-                <p className="text-xs font-semibold text-rose-600">{saveMsg}</p>
-              )}
+              <div className="min-h-4.5">
+                {saveMsg && saveMsgTone === 'success' && (
+                  <p className="text-xs font-semibold text-emerald-600">
+                    {saveMsg}
+                  </p>
+                )}
+                {saveMsg && saveMsgTone === 'error' && (
+                  <p className="text-xs font-semibold text-rose-600">{saveMsg}</p>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </Reveal>
 

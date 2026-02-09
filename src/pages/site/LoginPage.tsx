@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { adminApi } from '../../api/admin';
+import { useConfirm } from '../../components/confirm/useConfirm';
 import { setAuth } from '../../utils/auth';
 
 type Mode = 'user' | 'admin';
@@ -27,6 +28,7 @@ type SocialAuthMessage =
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const confirm = useConfirm();
   const [searchParams] = useSearchParams();
 
   const initialMode: Mode = useMemo(() => {
@@ -152,6 +154,26 @@ export default function LoginPage() {
     return null;
   };
 
+  const showAdminLoginErrorModal = async (message: string) => {
+    await confirm.open({
+      title: '관리자 로그인 실패',
+      description: message,
+      confirmText: '확인',
+    });
+  };
+
+  const normalizeAdminLoginErrorMessage = (raw: string) => {
+    const normalized = raw.trim().toLowerCase();
+    if (!normalized) return '로그인에 실패했어요. 다시 시도해 주세요.';
+    if (normalized.includes('invalid credentials')) {
+      return '아이디 또는 비밀번호가 올바르지 않습니다.';
+    }
+    if (normalized.includes('unauthorized') || normalized.includes('forbidden')) {
+      return '로그인 권한이 없어요. 관리자 계정을 확인해 주세요.';
+    }
+    return raw;
+  };
+
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -160,6 +182,7 @@ export default function LoginPage() {
     if (v) {
       setStatus('error');
       setErrorMsg(v);
+      await showAdminLoginErrorModal(v);
       return;
     }
 
@@ -173,8 +196,10 @@ export default function LoginPage() {
       })) as AdminLoginResponse;
 
       if (!result?.accessToken) {
+        const message = '아이디 또는 비밀번호가 올바르지 않습니다.';
         setStatus('error');
-        setErrorMsg('아이디 또는 비밀번호가 올바르지 않습니다.');
+        setErrorMsg(message);
+        await showAdminLoginErrorModal(message);
         return;
       }
 
@@ -187,8 +212,10 @@ export default function LoginPage() {
       navigate('/admin', { replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      const message = normalizeAdminLoginErrorMessage(msg);
       setStatus('error');
-      setErrorMsg(msg);
+      setErrorMsg(message);
+      await showAdminLoginErrorModal(message);
     } finally {
       setStatus((prev) => (prev === 'submitting' ? 'idle' : prev));
     }
