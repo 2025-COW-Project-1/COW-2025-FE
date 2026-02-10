@@ -21,6 +21,7 @@ const KAKAO_AUTHORIZE_URL = import.meta.env.VITE_KAKAO_AUTHORIZE_URL as
 const NAVER_AUTHORIZE_URL = import.meta.env.VITE_NAVER_AUTHORIZE_URL as
   | string
   | undefined;
+const ENABLE_NAVER = false;
 
 type SocialAuthMessage =
   | { type: 'SOCIAL_AUTH_SUCCESS'; accessToken: string; userName: string }
@@ -66,7 +67,7 @@ export default function LoginPage() {
     params.set('mode', next);
     navigate(
       { pathname: '/login', search: params.toString() },
-      { replace: true }
+      { replace: true },
     );
   };
 
@@ -93,13 +94,13 @@ export default function LoginPage() {
     const popup = window.open(
       popupUrl,
       'social-login',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
     );
 
     if (!popup) {
       setStatus('error');
       setErrorMsg(
-        '팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요.'
+        '팝업이 차단됐어요. 브라우저에서 팝업 허용 후 다시 시도해 주세요.',
       );
       return;
     }
@@ -139,7 +140,7 @@ export default function LoginPage() {
 
         setStatus('error');
         setErrorMsg(
-          data.message || '소셜 로그인에 실패했어요. 다시 시도해 주세요.'
+          data.message || '소셜 로그인에 실패했어요. 다시 시도해 주세요.',
         );
       }
     };
@@ -168,7 +169,10 @@ export default function LoginPage() {
     if (normalized.includes('invalid credentials')) {
       return '아이디 또는 비밀번호가 올바르지 않습니다.';
     }
-    if (normalized.includes('unauthorized') || normalized.includes('forbidden')) {
+    if (
+      normalized.includes('unauthorized') ||
+      normalized.includes('forbidden')
+    ) {
       return '로그인 권한이 없어요. 관리자 계정을 확인해 주세요.';
     }
     return raw;
@@ -314,14 +318,16 @@ export default function LoginPage() {
                     카카오로 시작하기
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => startSocialLogin('naver')}
-                    disabled={isSubmitting}
-                    className={`${socialBtnBase} bg-[#03C75A] text-white`}
-                  >
-                    네이버로 시작하기
-                  </button>
+                  {ENABLE_NAVER && (
+                    <button
+                      type="button"
+                      onClick={() => startSocialLogin('naver')}
+                      disabled={isSubmitting}
+                      className={`${socialBtnBase} bg-[#03C75A] text-white`}
+                    >
+                      네이버로 시작하기
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
