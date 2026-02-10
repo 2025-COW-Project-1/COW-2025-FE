@@ -82,7 +82,7 @@ function ProductGallery({
   return (
     <div className="flex flex-col gap-4">
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="aspect-[5/6] w-full">
+        <div className="aspect-5/6 w-full">
           {activeImage ? (
             <button
               type="button"
@@ -90,7 +90,11 @@ function ProductGallery({
               className="h-full w-full"
               aria-label="대표 이미지 크게 보기"
             >
-              <img src={activeImage} alt={name} className="h-full w-full object-cover" />
+              <img
+                src={activeImage}
+                alt={name}
+                className="h-full w-full object-cover"
+              />
             </button>
           ) : (
             <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-400">
@@ -156,12 +160,16 @@ function PurchaseCard({
         {item.summary ? (
           <p className="text-sm text-slate-600">{item.summary}</p>
         ) : (
-          <p className="text-sm text-slate-500">간단한 요약 정보가 아직 없어요.</p>
+          <p className="text-sm text-slate-500">
+            간단한 요약 정보가 아직 없어요.
+          </p>
         )}
       </div>
 
       <div className="mt-6 px-1">
-        <p className="text-2xl font-bold text-slate-900">{formatMoney(item.price)}원</p>
+        <p className="text-2xl font-bold text-slate-900">
+          {formatMoney(item.price)}원
+        </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {item.saleType === 'NORMAL' && stockSummary && (
             <span
@@ -289,7 +297,7 @@ function DetailImagesViewer({
   return (
     <div className="mt-5 space-y-4">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-        <div className="aspect-[5/6] w-full">
+        <div className="aspect-5/6 w-full">
           {preview && (
             <button
               type="button"
@@ -358,7 +366,8 @@ export default function ProjectItemDetailPage() {
     if (!item) return [];
     const rawUrls = (item as ItemResponse & { imageUrls?: string[] }).imageUrls;
     if (Array.isArray(rawUrls) && rawUrls.length > 0) return rawUrls;
-    const rawImages = (item as ItemResponse & { images?: ItemImageLike[] }).images;
+    const rawImages = (item as ItemResponse & { images?: ItemImageLike[] })
+      .images;
     if (!Array.isArray(rawImages)) return [];
     return rawImages
       .map((image) => image.imageUrl ?? image.url ?? '')
@@ -399,7 +408,9 @@ export default function ProjectItemDetailPage() {
       })
       .catch((err) => {
         if (!active) return;
-        setError(err instanceof Error ? err.message : '상품을 불러오지 못했어요.');
+        setError(
+          err instanceof Error ? err.message : '상품을 불러오지 못했어요.',
+        );
       })
       .finally(() => {
         if (!active) return;
@@ -441,14 +452,18 @@ export default function ProjectItemDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">로딩 중...</div>
+      <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">
+        로딩 중...
+      </div>
     );
   }
 
   if (error) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <h1 className="font-heading text-2xl text-slate-900">상품을 불러오지 못했어요</h1>
+        <h1 className="font-heading text-2xl text-slate-900">
+          상품을 불러오지 못했어요
+        </h1>
         <p className="mt-2 text-sm text-slate-600">{error}</p>
         {projectId && (
           <Link
@@ -465,7 +480,9 @@ export default function ProjectItemDetailPage() {
   if (notFound || !item) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <h1 className="font-heading text-2xl text-slate-900">상품을 찾을 수 없어요</h1>
+        <h1 className="font-heading text-2xl text-slate-900">
+          상품을 찾을 수 없어요
+        </h1>
         {projectId && (
           <Link
             to={`/projects/${projectId}`}
@@ -572,7 +589,10 @@ export default function ProjectItemDetailPage() {
             <ProductGallery
               name={item.name}
               images={galleryImages}
-              activeIndex={Math.min(galleryIndex, Math.max(0, galleryImages.length - 1))}
+              activeIndex={Math.min(
+                galleryIndex,
+                Math.max(0, galleryImages.length - 1),
+              )}
               onSelect={setGalleryIndex}
               onOpen={setActiveImage}
               fallbackLabel="대표 이미지가 없어요"
@@ -595,7 +615,9 @@ export default function ProjectItemDetailPage() {
             <section className="rounded-2xl border border-slate-200 bg-white/90 p-6">
               <div className="flex flex-wrap items-end justify-between gap-2">
                 <div>
-                  <h2 className="font-heading text-xl text-slate-900">상세 설명</h2>
+                  <h2 className="font-heading text-xl text-slate-900">
+                    상세 설명
+                  </h2>
                   <p className="mt-1 text-sm text-slate-500">
                     아래 내용에 구매/수령/유의사항이 포함되어 있어요.
                   </p>
@@ -607,7 +629,9 @@ export default function ProjectItemDetailPage() {
                 <div className="mt-5 text-sm text-slate-700">
                   <RenderGuard
                     fallback={
-                      <p className="whitespace-pre-wrap break-words">{item.description}</p>
+                      <p className="whitespace-pre-wrap wrap-break-word">
+                        {item.description}
+                      </p>
                     }
                   >
                     <ReactMarkdown
@@ -633,12 +657,15 @@ export default function ProjectItemDetailPage() {
                         ),
                         p: ({ ...props }) => (
                           <p
-                            className="mt-3 whitespace-normal break-words leading-relaxed first:mt-0"
+                            className="mt-3 whitespace-normal wrap-break-word leading-relaxed first:mt-0"
                             {...props}
                           />
                         ),
                         ul: ({ ...props }) => (
-                          <ul className="mt-3 list-disc space-y-2 pl-5 first:mt-0" {...props} />
+                          <ul
+                            className="mt-3 list-disc space-y-2 pl-5 first:mt-0"
+                            {...props}
+                          />
                         ),
                         ol: ({ ...props }) => (
                           <ol
@@ -647,20 +674,26 @@ export default function ProjectItemDetailPage() {
                           />
                         ),
                         li: ({ ...props }) => (
-                          <li className="break-words leading-relaxed" {...props} />
+                          <li
+                            className="wrap-break-word leading-relaxed"
+                            {...props}
+                          />
                         ),
                         hr: ({ ...props }) => (
                           <hr className="my-6 border-slate-200" {...props} />
                         ),
                         strong: ({ ...props }) => (
-                          <strong className="font-semibold text-slate-900" {...props} />
+                          <strong
+                            className="font-semibold text-slate-900"
+                            {...props}
+                          />
                         ),
                         em: ({ ...props }) => (
                           <em className="italic text-slate-700" {...props} />
                         ),
                         a: ({ ...props }) => (
                           <a
-                            className="text-primary underline decoration-slate-300 underline-offset-4 break-words"
+                            className="text-primary underline decoration-slate-300 underline-offset-4 wrap-break-word"
                             target="_blank"
                             rel="noreferrer noopener"
                             {...props}
@@ -670,7 +703,10 @@ export default function ProjectItemDetailPage() {
                           const isBlock = Boolean(className);
                           if (isBlock) {
                             return (
-                              <code className="block whitespace-pre-wrap break-words" {...props} />
+                              <code
+                                className="block whitespace-pre-wrap wrap-break-word"
+                                {...props}
+                              />
                             );
                           }
                           return (
@@ -708,7 +744,9 @@ export default function ProjectItemDetailPage() {
             <section className="rounded-2xl border border-slate-200 bg-white/90 p-6">
               <div className="flex flex-wrap items-end justify-between gap-2">
                 <div>
-                  <h2 className="font-heading text-xl text-slate-900">상세 이미지</h2>
+                  <h2 className="font-heading text-xl text-slate-900">
+                    상세 이미지
+                  </h2>
                   <p className="mt-1 text-sm text-slate-500">
                     상품 이미지를 크게 확인할 수 있어요
                   </p>
@@ -719,7 +757,10 @@ export default function ProjectItemDetailPage() {
               <DetailImagesViewer
                 name={item.name}
                 images={detailImages}
-                activeIndex={Math.min(detailIndex, Math.max(0, detailImages.length - 1))}
+                activeIndex={Math.min(
+                  detailIndex,
+                  Math.max(0, detailImages.length - 1),
+                )}
                 onSelect={setDetailIndex}
                 onOpen={setActiveImage}
               />
