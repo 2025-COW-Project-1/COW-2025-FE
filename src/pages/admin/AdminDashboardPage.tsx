@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import {
@@ -6,10 +6,6 @@ import {
   saveAdminContent,
   type AdminContent,
 } from '../../utils/adminContent';
-import {
-  loadFeedbackEntries,
-  type FeedbackEntry,
-} from '../../utils/feedbackStore';
 import { loadAdminSettlements } from '../../utils/adminSettlements';
 import type { SettlementReport } from '../../types/settlements';
 import AdminFeedbackFormSection from './sections/AdminFeedbackFormSection';
@@ -20,8 +16,12 @@ import AdminSettlementsSection from './sections/AdminSettlementsSection';
 import AdminEditSection from './sections/AdminEditSection';
 import AdminIntroduceEditorPage from './sections/AdminIntroduceEditorPage';
 import AdminProjectsSection from './sections/AdminProjectsSection';
+import {
+  adminFeedbackApi,
+  type AdminFeedbackResponse,
+} from '../../api/adminFeedback';
 
-// const LOCAL_SAVE_SECTIONS = new Set(['links', 'linktree', 'projects', 'form']);
+type SaveHandler = () => Promise<string | null>;
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -35,24 +35,27 @@ export default function AdminDashboardPage() {
   const aboutTab = tabParam === 'detail' ? 'detail' : 'main';
 
   const [content, setContent] = useState<AdminContent>(() =>
-    loadAdminContent()
+    loadAdminContent(),
   );
-  const [dirty, setDirty] = useState(false);
 
-  const [entries, setEntries] = useState<FeedbackEntry[]>(() =>
-    loadFeedbackEntries()
-  );
+  const [entries, setEntries] = useState<AdminFeedbackResponse[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   const [settlements, setSettlements] = useState<SettlementReport[]>(() =>
-    loadAdminSettlements()
+    loadAdminSettlements(),
   );
   const [settlementsDirty, setSettlementsDirty] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveMsgTone, setSaveMsgTone] = useState<'success' | 'error' | null>(
-    null
+    null,
   );
+
+  const [projectSaveHandler, setProjectSaveHandler] =
+    useState<SaveHandler | null>(null);
+  const [projectsDirty, setProjectsDirty] = useState(false);
 
   useEffect(() => {
     setSaveMsg(null);
@@ -78,7 +81,6 @@ export default function AdminDashboardPage() {
 
   const updateContent = (next: AdminContent) => {
     setContent(next);
-    setDirty(true);
     setSaveMsg(null);
     setSaveMsgTone(null);
   };
@@ -89,8 +91,17 @@ export default function AdminDashboardPage() {
     setSaveMsgTone(null);
 
     try {
+      if (section === 'projects' && projectSaveHandler) {
+        const msg = await projectSaveHandler();
+        if (msg) {
+          setSaveMsg(msg);
+          setSaveMsgTone('success');
+        }
+        setProjectsDirty(false);
+        return;
+      }
+
       saveAdminContent(content);
-      setDirty(false);
 
       if (section === 'links') {
         const result = await saveLinksToApi(content);
@@ -109,6 +120,29 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const loadFeedback = useCallback(async () => {
+    setFeedbackLoading(true);
+    setFeedbackError(null);
+
+    try {
+      const list = await adminFeedbackApi.list();
+      setEntries(list ?? []);
+    } catch (err) {
+      console.error(err);
+      setFeedbackError(
+        '피드백을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+      );
+    } finally {
+      setFeedbackLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (section === 'feedback') {
+      void loadFeedback();
+    }
+  }, [section, loadFeedback]);
+
   useEffect(() => {
     if (section === 'about-main') {
       navigate('/admin#about?tab=main', { replace: true });
@@ -125,6 +159,10 @@ export default function AdminDashboardPage() {
     }
   }, [navigate, section, tabParam]);
 
+  const handleAboutTabChange = (tab: 'main' | 'detail') => {
+    navigate(`/admin#about?tab=${tab}`, { replace: true });
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <Reveal>
@@ -136,43 +174,39 @@ export default function AdminDashboardPage() {
             <p className="mt-2 text-sm text-slate-600">관리자 권한</p>
           </div>
 
-          {section !== 'about' && (
-            <div className="flex flex-col items-end gap-2">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className={[
-                  'rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition',
-                  saving ? 'opacity-60' : 'hover:opacity-95',
-                ].join(' ')}
-              >
-                {saving ? '저장 중...' : dirty ? '변경사항 저장' : '저장'}
-              </button>
-
-              <div className="min-h-4.5">
-                {saveMsg && saveMsgTone === 'success' && (
-                  <p className="text-xs font-semibold text-emerald-600">
-                    {saveMsg}
-                  </p>
-                )}
-                {saveMsg && saveMsgTone === 'error' && (
-                  <p className="text-xs font-semibold text-rose-600">{saveMsg}</p>
-                )}
-              </div>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving}
+              className={[
+                'rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg transition',
+                saving ? 'opacity-60' : 'hover:opacity-95',
+              ].join(' ')}
+            >
+              {saving ? '저장 중...' : '저장'}
+            </button>
+          </div>
         </div>
       </Reveal>
+
+      {saveMsg && (
+        <p
+          className={[
+            'mt-4 text-sm font-semibold',
+            saveMsgTone === 'success' ? 'text-emerald-600' : 'text-rose-600',
+          ].join(' ')}
+        >
+          {saveMsg}
+        </p>
+      )}
 
       {section === 'edit' && <AdminEditSection />}
 
       {section === 'about' && (
         <AdminIntroduceEditorPage
           activeTab={aboutTab}
-          onTabChange={(nextTab) => {
-            navigate(`/admin#about?tab=${nextTab}`);
-          }}
+          onTabChange={handleAboutTabChange}
         />
       )}
 
@@ -180,7 +214,12 @@ export default function AdminDashboardPage() {
         <AdminLinksSection content={content} updateContent={updateContent} />
       )}
 
-      {section === 'projects' && <AdminProjectsSection />}
+      {section === 'projects' && (
+        <AdminProjectsSection
+          registerSave={(handler) => setProjectSaveHandler(() => handler)}
+          onDirtyChange={setProjectsDirty}
+        />
+      )}
 
       {section === 'settlements' && (
         <AdminSettlementsSection
@@ -200,7 +239,18 @@ export default function AdminDashboardPage() {
       )}
 
       {section === 'feedback' && (
-        <AdminFeedbackListSection entries={entries} setEntries={setEntries} />
+        <AdminFeedbackListSection
+          entries={entries}
+          loading={feedbackLoading}
+          error={feedbackError}
+          onRefresh={loadFeedback}
+        />
+      )}
+
+      {section === 'projects' && projectsDirty && (
+        <p className="mt-4 text-xs font-semibold text-slate-500">
+          변경사항이 있습니다. 저장 버튼을 눌러주세요.
+        </p>
       )}
     </div>
   );

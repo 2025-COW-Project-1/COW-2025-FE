@@ -26,8 +26,10 @@ export default function ContactPage() {
     if (!t) return '제목을 입력해 주세요.';
     if (!c) return '내용을 입력해 주세요.';
 
-    if (t.length > TITLE_MAX) return `제목은 ${TITLE_MAX}자 이내로 입력해 주세요.`;
-    if (c.length > CONTENT_MAX) return `내용은 ${CONTENT_MAX}자 이내로 입력해 주세요.`;
+    if (t.length > TITLE_MAX)
+      return `제목은 ${TITLE_MAX}자 이내로 입력해 주세요.`;
+    if (c.length > CONTENT_MAX)
+      return `내용은 ${CONTENT_MAX}자 이내로 입력해 주세요.`;
 
     return null;
   };
@@ -35,7 +37,6 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // submitting 중 중복 submit 방지 (모바일에서 더 유용)
     if (status === 'submitting') return;
 
     const validationError = validate();
@@ -123,23 +124,28 @@ export default function ContactPage() {
 
   const isSubmitting = status === 'submitting';
 
-  const titleErrorText =
-    titleLimitHit ? `제목은 최대 ${TITLE_MAX}자까지 입력할 수 있어요.` : null;
+  const titleErrorText = titleLimitHit
+    ? `제목은 최대 ${TITLE_MAX}자까지 입력할 수 있어요.`
+    : null;
 
-  const contentErrorText =
-    contentLimitHit ? `내용은 최대 ${CONTENT_MAX}자까지 입력할 수 있어요.` : null;
+  const contentErrorText = contentLimitHit
+    ? `내용은 최대 ${CONTENT_MAX}자까지 입력할 수 있어요.`
+    : null;
 
   const inputBase =
     'mt-2 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition disabled:bg-slate-50';
 
   const focusRing = 'focus:ring-4 focus:ring-primary/10';
   const focusBorderOk = 'border-slate-200 focus:border-primary/60';
-  const focusBorderErr = 'border-rose-300 focus:border-rose-400 focus:ring-rose-100';
+  const focusBorderErr =
+    'border-rose-300 focus:border-rose-400 focus:ring-rose-100';
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
       <Reveal>
-        <h1 className="font-heading text-2xl text-primary sm:text-3xl">CONTACT</h1>
+        <h1 className="font-heading text-2xl text-primary sm:text-3xl">
+          CONTACT
+        </h1>
         <p className="mt-2 text-sm text-slate-600 sm:text-base">
           더 나은 서비스를 위해 피드백을 제출해주세요!
         </p>
@@ -235,7 +241,6 @@ export default function ContactPage() {
             )}
           </div>
 
-          {/* 버튼: 모바일 full width / sm 이상 auto */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs leading-relaxed text-slate-500 sm:max-w-[70%]">
               제출된 피드백은 내부 검토 후 서비스 개선에 반영될 수 있어요.
