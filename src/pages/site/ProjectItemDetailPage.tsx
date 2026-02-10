@@ -541,6 +541,7 @@ export default function ProjectItemDetailPage() {
     setShowCartNotice(true);
     toast.success('장바구니에 상품을 담았어요.');
   };
+
   const handleBuyNow = () => {
     if (isSoldOut) {
       toast.error('재고가 소진되어 구매할 수 없어요.');
@@ -597,7 +598,6 @@ export default function ProjectItemDetailPage() {
               onOpen={setActiveImage}
               fallbackLabel="대표 이미지가 없어요"
             />
-
             <PurchaseCard
               item={item}
               saleTypeLabel={saleTypeLabel}

@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { key: 'about', label: '소개', href: '/admin#about?tab=main' },
   { key: 'links', label: '링크', href: '/admin#links' },
   { key: 'projects', label: '프로젝트/상품', href: '/admin/projects' },
+  { key: 'orders', label: '주문', href: '/admin/orders' },
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
   { key: 'applications', label: '지원서', href: '/admin/applications' },
   { key: 'settlements', label: '정산', href: '/admin#settlements' },
@@ -31,11 +32,13 @@ export default function AdminHeaderDesktop() {
     location.pathname.startsWith('/admin/projects') ||
     location.pathname.startsWith('/admin/items')
       ? 'projects'
-      : location.pathname.startsWith('/admin/notices')
-        ? 'notices'
-        : location.pathname.startsWith('/admin/applications')
-          ? 'applications'
-          : normalizedActive;
+      : location.pathname.startsWith('/admin/orders')
+        ? 'orders'
+        : location.pathname.startsWith('/admin/notices')
+          ? 'notices'
+          : location.pathname.startsWith('/admin/applications')
+            ? 'applications'
+            : normalizedActive;
 
   return (
     <div className="mx-auto hidden max-w-none grid-cols-[1fr_auto_1fr] items-center px-6 py-4 md:grid">

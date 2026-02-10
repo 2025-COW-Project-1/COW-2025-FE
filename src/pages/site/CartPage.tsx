@@ -109,7 +109,9 @@ export default function CartPage() {
 
       {items.length === 0 ? (
         <Reveal className="mt-6 rounded-3xl border border-slate-200 bg-white p-8 text-center">
-          <p className="text-sm font-semibold text-slate-500">장바구니가 비어 있어요.</p>
+          <p className="text-sm font-semibold text-slate-500">
+            장바구니가 비어 있어요.
+          </p>
           <Link
             to="/projects"
             className="mt-4 inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white hover:opacity-95"
@@ -170,7 +172,10 @@ export default function CartPage() {
                           <button
                             type="button"
                             onClick={() =>
-                              setCartItemQuantity(item.itemId, Math.max(1, item.quantity - 1))
+                              setCartItemQuantity(
+                                item.itemId,
+                                Math.max(1, item.quantity - 1),
+                              )
                             }
                             className="h-8 w-8 text-sm font-bold text-slate-700 hover:bg-slate-50"
                             aria-label="수량 감소"
@@ -182,7 +187,12 @@ export default function CartPage() {
                           </span>
                           <button
                             type="button"
-                            onClick={() => setCartItemQuantity(item.itemId, item.quantity + 1)}
+                            onClick={() =>
+                              setCartItemQuantity(
+                                item.itemId,
+                                item.quantity + 1,
+                              )
+                            }
                             className="h-8 w-8 text-sm font-bold text-slate-700 hover:bg-slate-50"
                             aria-label="수량 증가"
                           >
@@ -191,7 +201,8 @@ export default function CartPage() {
                         </div>
                         {item.mergedByDuplicateAdd && (
                           <p className="mt-2 text-[11px] font-semibold text-primary">
-                            동일한 상품을 추가로 담아 기존에 담긴 상품 수량이 변경되었어요.
+                            동일한 상품을 추가로 담아 기존에 담긴 상품 수량이
+                            변경되었어요.
                             <button
                               type="button"
                               onClick={() => clearMergedNotice(item.itemId)}
@@ -232,7 +243,8 @@ export default function CartPage() {
               <div className="mt-5 space-y-2">
                 {hasNonOpenItem && (
                   <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
-                    진행중이 아닌 상품이 포함되어 있어요. 해당 상품을 삭제한 뒤 주문해주세요.
+                    진행중이 아닌 상품이 포함되어 있어요. 해당 상품을 삭제한 뒤
+                    주문해주세요.
                   </p>
                 )}
                 <button

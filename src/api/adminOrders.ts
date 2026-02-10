@@ -231,7 +231,11 @@ function toDetail(raw: unknown): AdminOrderDetail {
           ),
           createdAt: pickDateTime(orderRecord, 'createdAt', 'created_at'),
           canceledAt: pickDateTime(orderRecord, 'canceledAt', 'canceled_at'),
-          cancelReason: pickString(orderRecord, 'cancelReason', 'cancel_reason'),
+          cancelReason: pickString(
+            orderRecord,
+            'cancelReason',
+            'cancel_reason',
+          ),
           refundRequestedAt: pickDateTime(
             orderRecord,
             'refundRequestedAt',
@@ -239,7 +243,11 @@ function toDetail(raw: unknown): AdminOrderDetail {
           ),
           refundedAt: pickDateTime(orderRecord, 'refundedAt', 'refunded_at'),
           paidAt: pickDateTime(orderRecord, 'paidAt', 'paid_at'),
-          depositorName: pickString(orderRecord, 'depositorName', 'depositor_name'),
+          depositorName: pickString(
+            orderRecord,
+            'depositorName',
+            'depositor_name',
+          ),
         }
       : undefined,
     buyer: buyerRecord
@@ -256,7 +264,11 @@ function toDetail(raw: unknown): AdminOrderDetail {
           ),
           studentNo: pickString(buyerRecord, 'studentNo', 'student_no'),
           refundBank: pickString(buyerRecord, 'refundBank', 'refund_bank'),
-          refundAccount: pickString(buyerRecord, 'refundAccount', 'refund_account'),
+          refundAccount: pickString(
+            buyerRecord,
+            'refundAccount',
+            'refund_account',
+          ),
           referralSource: pickString(
             buyerRecord,
             'referralSource',
@@ -282,10 +294,26 @@ function toDetail(raw: unknown): AdminOrderDetail {
             'infoConfirmed',
             'info_confirmed',
           ),
-          postalCode: pickString(fulfillmentRecord, 'postalCode', 'postal_code'),
-          addressLine1: pickString(fulfillmentRecord, 'addressLine1', 'address_line1'),
-          addressLine2: pickString(fulfillmentRecord, 'addressLine2', 'address_line2'),
-          deliveryMemo: pickString(fulfillmentRecord, 'deliveryMemo', 'delivery_memo'),
+          postalCode: pickString(
+            fulfillmentRecord,
+            'postalCode',
+            'postal_code',
+          ),
+          addressLine1: pickString(
+            fulfillmentRecord,
+            'addressLine1',
+            'address_line1',
+          ),
+          addressLine2: pickString(
+            fulfillmentRecord,
+            'addressLine2',
+            'address_line2',
+          ),
+          deliveryMemo: pickString(
+            fulfillmentRecord,
+            'deliveryMemo',
+            'delivery_memo',
+          ),
         }
       : undefined,
     items,

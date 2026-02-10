@@ -156,33 +156,33 @@ function toOrderCreateResponse(raw: unknown): OrderCreateResponse {
       typeof record.orderId === 'number'
         ? record.orderId
         : typeof record.order_id === 'number'
-        ? record.order_id
-        : undefined,
+          ? record.order_id
+          : undefined,
     orderNo:
       typeof record.orderNo === 'string'
         ? record.orderNo
         : typeof record.order_no === 'string'
-        ? record.order_no
-        : undefined,
+          ? record.order_no
+          : undefined,
     status: typeof record.status === 'string' ? record.status : undefined,
     totalAmount:
       typeof record.totalAmount === 'number'
         ? record.totalAmount
         : typeof record.total_amount === 'number'
-        ? record.total_amount
-        : undefined,
+          ? record.total_amount
+          : undefined,
     shippingFee:
       typeof record.shippingFee === 'number'
         ? record.shippingFee
         : typeof record.shipping_fee === 'number'
-        ? record.shipping_fee
-        : undefined,
+          ? record.shipping_fee
+          : undefined,
     finalAmount:
       typeof record.finalAmount === 'number'
         ? record.finalAmount
         : typeof record.final_amount === 'number'
-        ? record.final_amount
-        : undefined,
+          ? record.final_amount
+          : undefined,
     depositDeadline: normalizeDateValue(
       record.depositDeadline ?? record.deposit_deadline,
     ),
@@ -190,14 +190,14 @@ function toOrderCreateResponse(raw: unknown): OrderCreateResponse {
       typeof record.lookupId === 'string'
         ? record.lookupId
         : typeof record.lookup_id === 'string'
-        ? record.lookup_id
-        : undefined,
+          ? record.lookup_id
+          : undefined,
     viewToken:
       typeof record.viewToken === 'string'
         ? record.viewToken
         : typeof record.view_token === 'string'
-        ? record.view_token
-        : undefined,
+          ? record.view_token
+          : undefined,
     raw,
   };
 }
@@ -302,7 +302,12 @@ function toOrderDetailItem(raw: unknown): OrderDetailItem | null {
   const record = asRecord(raw);
   if (!record) return null;
   return {
-    projectItemId: pickNumber(record, 'projectItemId', 'project_item_id', 'itemId'),
+    projectItemId: pickNumber(
+      record,
+      'projectItemId',
+      'project_item_id',
+      'itemId',
+    ),
     itemName: pickString(
       record,
       'itemName',
@@ -380,7 +385,11 @@ function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
           studentNo: pickString(buyerRecord, 'studentNo', 'student_no'),
           phone: pickString(buyerRecord, 'phone'),
           refundBank: pickString(buyerRecord, 'refundBank', 'refund_bank'),
-          refundAccount: pickString(buyerRecord, 'refundAccount', 'refund_account'),
+          refundAccount: pickString(
+            buyerRecord,
+            'refundAccount',
+            'refund_account',
+          ),
           referralSource: pickString(
             buyerRecord,
             'referralSource',
@@ -407,10 +416,26 @@ function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
             'infoConfirmed',
             'info_confirmed',
           ),
-          postalCode: pickString(fulfillmentRecord, 'postalCode', 'postal_code'),
-          addressLine1: pickString(fulfillmentRecord, 'addressLine1', 'address_line1'),
-          addressLine2: pickString(fulfillmentRecord, 'addressLine2', 'address_line2'),
-          deliveryMemo: pickString(fulfillmentRecord, 'deliveryMemo', 'delivery_memo'),
+          postalCode: pickString(
+            fulfillmentRecord,
+            'postalCode',
+            'postal_code',
+          ),
+          addressLine1: pickString(
+            fulfillmentRecord,
+            'addressLine1',
+            'address_line1',
+          ),
+          addressLine2: pickString(
+            fulfillmentRecord,
+            'addressLine2',
+            'address_line2',
+          ),
+          deliveryMemo: pickString(
+            fulfillmentRecord,
+            'deliveryMemo',
+            'delivery_memo',
+          ),
         }
       : undefined,
     items,
@@ -430,10 +455,13 @@ export const ordersApi = {
   },
 
   async createOrder(payload: OrderCreateRequest) {
-    const data = await api<ApiResult<unknown> | unknown>(withApiBase('/orders'), {
-      method: 'POST',
-      body: payload,
-    });
+    const data = await api<ApiResult<unknown> | unknown>(
+      withApiBase('/orders'),
+      {
+        method: 'POST',
+        body: payload,
+      },
+    );
     return toOrderCreateResponse(unwrapApiResult(data));
   },
 

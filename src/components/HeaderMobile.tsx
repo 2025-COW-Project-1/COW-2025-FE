@@ -240,7 +240,6 @@ export default function HeaderMobile() {
             </div>
 
             {[
-              { label: 'FREE RESOURCES', href: '/resources' },
               { label: 'APPLY', href: '/apply' },
               { label: 'CONTACT', href: '/contact' },
               { label: 'PAYOUTS', href: '/settlements' },

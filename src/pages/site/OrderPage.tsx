@@ -198,7 +198,8 @@ const AGREEMENT_ITEMS: Array<{
       '전 물품은 사전에 명지공방(明智工房) 팀원의 1차 검수를 진행하였으며, 물품 수령 시 현장에서의 2차 검수를 통해 이상 유무를 확인할 예정입니다. 수령 이후 발생하는 제품의 흠집, 오염, 인쇄불량, 파손 등의 문제에 대해서는 환불 및 교환이 불가합니다.',
       '이러한 정책은 한정된 예산과 물품 수량, 저마진 구조 등 운영상의 제약으로 인함을 양해 부탁드립니다.',
     ],
-    question: '위 환불 및 교환 불가 정책을 충분히 인지하였으며, 이에 동의하십니까?',
+    question:
+      '위 환불 및 교환 불가 정책을 충분히 인지하였으며, 이에 동의하십니까?',
   },
   {
     key: 'cancelRisk',
@@ -222,7 +223,8 @@ function sanitizeCartItems(raw: unknown): CartItem[] {
     if (!entry || typeof entry !== 'object') return acc;
     const item = entry as Partial<CartItem>;
     if (!item.itemId || !item.projectId || !item.name) return acc;
-    if (typeof item.price !== 'number' || !Number.isFinite(item.price)) return acc;
+    if (typeof item.price !== 'number' || !Number.isFinite(item.price))
+      return acc;
     const quantity =
       typeof item.quantity === 'number' && Number.isFinite(item.quantity)
         ? Math.max(1, Math.trunc(item.quantity))
@@ -348,8 +350,10 @@ function validateBuyerStep(draft: OrderDraft): string | null {
   const isStaff = buyer.buyerType === 'STAFF';
 
   if (isBlank(buyer.name)) return '이름을 입력해주세요.';
-  if (isStudent && isBlank(buyer.departmentOrMajor)) return '소속 학과를 입력해주세요.';
-  if (isStaff && isBlank(buyer.departmentOrMajor)) return '소속 부서를 입력해주세요.';
+  if (isStudent && isBlank(buyer.departmentOrMajor))
+    return '소속 학과를 입력해주세요.';
+  if (isStaff && isBlank(buyer.departmentOrMajor))
+    return '소속 부서를 입력해주세요.';
   if (isStudent && isBlank(buyer.studentNo)) return '학번을 입력해주세요.';
   if (isBlank(buyer.phone)) return '휴대폰 번호를 입력해주세요.';
   if (isBlank(buyer.refundBank)) return '환불 은행을 입력해주세요.';
@@ -364,7 +368,8 @@ function validateFulfillmentStep(draft: OrderDraft): string | null {
   const { fulfillment } = draft;
 
   if (isBlank(fulfillment.receiverName)) return '수령자 성함을 입력해주세요.';
-  if (isBlank(fulfillment.receiverPhone)) return '수령자 휴대폰 번호를 입력해주세요.';
+  if (isBlank(fulfillment.receiverPhone))
+    return '수령자 휴대폰 번호를 입력해주세요.';
   if (fulfillment.method === 'DELIVERY') {
     if (isBlank(fulfillment.postalCode)) return '우편번호를 입력해주세요.';
     if (isBlank(fulfillment.addressLine1)) return '기본 주소를 입력해주세요.';
@@ -380,7 +385,8 @@ function validateFinalStep(draft: OrderDraft): string | null {
   const { lookup, buyer } = draft;
   if (isBlank(lookup.lookupId)) return '조회 아이디를 입력해주세요.';
   if (isBlank(lookup.password)) return '조회 비밀번호를 입력해주세요.';
-  if (isBlank(lookup.passwordConfirm)) return '조회 비밀번호 확인을 입력해주세요.';
+  if (isBlank(lookup.passwordConfirm))
+    return '조회 비밀번호 확인을 입력해주세요.';
   if (lookup.password !== lookup.passwordConfirm) {
     return '조회 비밀번호와 비밀번호 확인이 일치하지 않아요.';
   }
@@ -396,17 +402,16 @@ export default function OrderPage() {
 
   const [draft, setDraft] = useState<OrderDraft>(() => {
     const saved = loadOrderDraft();
-    const base: OrderDraft =
-      saved ?? {
-        source: 'cart',
-        items: loadCartItems(),
-        step: 0,
-        agreements: DEFAULT_AGREEMENTS,
-        buyer: DEFAULT_BUYER,
-        lookup: DEFAULT_LOOKUP,
-        payment: DEFAULT_PAYMENT,
-        fulfillment: DEFAULT_FULFILLMENT,
-      };
+    const base: OrderDraft = saved ?? {
+      source: 'cart',
+      items: loadCartItems(),
+      step: 0,
+      agreements: DEFAULT_AGREEMENTS,
+      buyer: DEFAULT_BUYER,
+      lookup: DEFAULT_LOOKUP,
+      payment: DEFAULT_PAYMENT,
+      fulfillment: DEFAULT_FULFILLMENT,
+    };
 
     if (state.source === 'direct' && Array.isArray(state.items)) {
       return {
@@ -426,11 +431,13 @@ export default function OrderPage() {
     }
     return base;
   });
-  const [lookupCheckState, setLookupCheckState] = useState<LookupCheckState>('idle');
+  const [lookupCheckState, setLookupCheckState] =
+    useState<LookupCheckState>('idle');
   const [lookupCheckMessage, setLookupCheckMessage] = useState('');
   const [lookupCheckedId, setLookupCheckedId] = useState('');
   const [showLookupPassword, setShowLookupPassword] = useState(false);
-  const [showLookupPasswordConfirm, setShowLookupPasswordConfirm] = useState(false);
+  const [showLookupPasswordConfirm, setShowLookupPasswordConfirm] =
+    useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -542,7 +549,10 @@ export default function OrderPage() {
     }));
   };
 
-  const updateBuyer = <K extends keyof BuyerForm>(key: K, value: BuyerForm[K]) => {
+  const updateBuyer = <K extends keyof BuyerForm>(
+    key: K,
+    value: BuyerForm[K],
+  ) => {
     setDraft((prev) => ({
       ...prev,
       buyer: {
@@ -552,7 +562,10 @@ export default function OrderPage() {
     }));
   };
 
-  const updateLookup = <K extends keyof LookupForm>(key: K, value: LookupForm[K]) => {
+  const updateLookup = <K extends keyof LookupForm>(
+    key: K,
+    value: LookupForm[K],
+  ) => {
     const isLookupId = key === 'lookupId';
     const nextLookupId = isLookupId ? String(value) : draft.lookup.lookupId;
     const trimmedNextLookupId = nextLookupId.trim();
@@ -615,12 +628,15 @@ export default function OrderPage() {
       if (result.available) {
         setLookupCheckState('available');
         setLookupCheckedId(lookupId);
-        setLookupCheckMessage(result.message ?? '사용 가능한 조회 아이디입니다.');
+        setLookupCheckMessage(
+          result.message ?? '사용 가능한 조회 아이디입니다.',
+        );
       } else {
         setLookupCheckState('taken');
         setLookupCheckedId('');
         setLookupCheckMessage(
-          result.message ?? '이미 사용 중인 조회 아이디예요. 다른 아이디를 입력해주세요.',
+          result.message ??
+            '이미 사용 중인 조회 아이디예요. 다른 아이디를 입력해주세요.',
         );
       }
     } catch (error) {
@@ -636,7 +652,9 @@ export default function OrderPage() {
 
   const openDeliveryPostcode = () => {
     if (!window.daum) {
-      toast.error('주소 검색 스크립트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+      toast.error(
+        '주소 검색 스크립트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
+      );
       return;
     }
 
@@ -648,7 +666,10 @@ export default function OrderPage() {
     new window.daum.Postcode({
       oncomplete: (data) => {
         updateFulfillment('postalCode', data.zonecode);
-        updateFulfillment('addressLine1', data.roadAddress || data.jibunAddress || '');
+        updateFulfillment(
+          'addressLine1',
+          data.roadAddress || data.jibunAddress || '',
+        );
       },
     }).open({ left, top });
   };
@@ -661,23 +682,33 @@ export default function OrderPage() {
     }
 
     const trimmedLookupId = draft.lookup.lookupId.trim();
-    if (lookupCheckState !== 'available' || lookupCheckedId !== trimmedLookupId) {
+    if (
+      lookupCheckState !== 'available' ||
+      lookupCheckedId !== trimmedLookupId
+    ) {
       toast.error('조회 아이디 중복 확인을 완료해주세요.');
       return;
     }
 
-    const aggregatedItems = draft.items.reduce<Record<number, number>>((acc, item) => {
-      const projectItemId = Number(item.itemId);
-      if (!Number.isFinite(projectItemId)) return acc;
-      const quantity = Number.isFinite(item.quantity) ? Math.max(1, item.quantity) : 1;
-      acc[projectItemId] = (acc[projectItemId] ?? 0) + quantity;
-      return acc;
-    }, {});
+    const aggregatedItems = draft.items.reduce<Record<number, number>>(
+      (acc, item) => {
+        const projectItemId = Number(item.itemId);
+        if (!Number.isFinite(projectItemId)) return acc;
+        const quantity = Number.isFinite(item.quantity)
+          ? Math.max(1, item.quantity)
+          : 1;
+        acc[projectItemId] = (acc[projectItemId] ?? 0) + quantity;
+        return acc;
+      },
+      {},
+    );
 
-    const itemsPayload = Object.entries(aggregatedItems).map(([projectItemId, quantity]) => ({
-      projectItemId: Number(projectItemId),
-      quantity,
-    }));
+    const itemsPayload = Object.entries(aggregatedItems).map(
+      ([projectItemId, quantity]) => ({
+        projectItemId: Number(projectItemId),
+        quantity,
+      }),
+    );
 
     if (itemsPayload.length === 0) {
       toast.error('주문 상품 정보가 올바르지 않아 제출할 수 없어요.');
@@ -694,7 +725,9 @@ export default function OrderPage() {
       items: itemsPayload,
       buyer: {
         buyerType: draft.buyer.buyerType,
-        ...(draft.buyer.buyerType !== 'EXTERNAL' ? { campus: draft.buyer.campus } : {}),
+        ...(draft.buyer.buyerType !== 'EXTERNAL'
+          ? { campus: draft.buyer.campus }
+          : {}),
         name: draft.buyer.name.trim(),
         ...(draft.buyer.buyerType !== 'EXTERNAL'
           ? { departmentOrMajor: draft.buyer.departmentOrMajor.trim() }
@@ -743,7 +776,9 @@ export default function OrderPage() {
       });
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : '주문 제출 중 오류가 발생했어요.',
+        error instanceof Error
+          ? error.message
+          : '주문 제출 중 오류가 발생했어요.',
       );
     } finally {
       setIsSubmitting(false);
@@ -754,7 +789,8 @@ export default function OrderPage() {
   const isStaff = draft.buyer.buyerType === 'STAFF';
   const isDelivery = draft.fulfillment.method === 'DELIVERY';
   const hasLookupPassword = draft.lookup.password.trim().length > 0;
-  const hasLookupPasswordConfirm = draft.lookup.passwordConfirm.trim().length > 0;
+  const hasLookupPasswordConfirm =
+    draft.lookup.passwordConfirm.trim().length > 0;
   const isLookupPasswordMatched =
     hasLookupPassword &&
     hasLookupPasswordConfirm &&
@@ -763,8 +799,8 @@ export default function OrderPage() {
     draft.buyer.campus === 'SEOUL'
       ? '서울캠퍼스'
       : draft.buyer.campus === 'YONGIN'
-      ? '자연캠퍼스'
-      : '미선택';
+        ? '자연캠퍼스'
+        : '미선택';
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
@@ -798,7 +834,9 @@ export default function OrderPage() {
           <>
             {items.length === 0 ? (
               <div className="text-center">
-                <p className="text-sm font-semibold text-slate-500">주문할 상품이 없어요.</p>
+                <p className="text-sm font-semibold text-slate-500">
+                  주문할 상품이 없어요.
+                </p>
                 <Link
                   to="/projects"
                   className="mt-4 inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-white hover:opacity-95"
@@ -815,7 +853,9 @@ export default function OrderPage() {
                       className="rounded-2xl border border-slate-200 px-4 py-3"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {item.name}
+                        </p>
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(item.itemId)}
@@ -825,14 +865,17 @@ export default function OrderPage() {
                         </button>
                       </div>
                       <p className="mt-1 text-sm text-slate-700">
-                        {item.quantity}개 · {formatMoney(item.price * item.quantity)}원
+                        {item.quantity}개 ·{' '}
+                        {formatMoney(item.price * item.quantity)}원
                       </p>
                     </li>
                   ))}
                 </ul>
 
                 <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                  <p className="text-sm font-semibold text-slate-700">총 결제 예상 금액</p>
+                  <p className="text-sm font-semibold text-slate-700">
+                    총 결제 예상 금액
+                  </p>
                   <p className="text-base font-bold text-slate-900">
                     {formatMoney(totalPrice)}원
                   </p>
@@ -844,8 +887,12 @@ export default function OrderPage() {
 
         {draft.step === 1 && (
           <>
-            <h2 className="font-heading text-xl text-slate-900">구매 전 필수 동의</h2>
-            <p className="mt-1 text-sm text-slate-600">아래 항목은 모두 필수 동의입니다.</p>
+            <h2 className="font-heading text-xl text-slate-900">
+              구매 전 필수 동의
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              아래 항목은 모두 필수 동의입니다.
+            </p>
 
             <div className="mt-5 space-y-3">
               {AGREEMENT_ITEMS.map((agreement) => (
@@ -863,7 +910,9 @@ export default function OrderPage() {
                       className="mt-1 h-5 w-5 rounded-sm border-2 border-slate-300 text-primary focus:ring-2 focus:ring-primary/20"
                     />
                     <div>
-                      <p className="text-sm font-bold text-slate-900">{agreement.title}</p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {agreement.title}
+                      </p>
                       <p className="mt-3 text-xs font-bold text-slate-800">
                         {agreement.noticeTitle}
                       </p>
@@ -894,7 +943,9 @@ export default function OrderPage() {
 
         {draft.step === 2 && (
           <>
-            <h2 className="font-heading text-xl text-slate-900">구매자 신분 및 정보 입력</h2>
+            <h2 className="font-heading text-xl text-slate-900">
+              구매자 신분 및 정보 입력
+            </h2>
             <p className="mt-1 text-sm text-slate-600">
               신분에 따라 필요한 입력 항목이 달라집니다.
             </p>
@@ -904,38 +955,44 @@ export default function OrderPage() {
                 Buyer Type
               </p>
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-              {[
-                {
-                  value: 'STUDENT',
-                  label: '재학생',
-                  description: '학과/학번 정보까지 입력',
-                },
-                {
-                  value: 'STAFF',
-                  label: '교직원',
-                  description: '소속 부서 정보를 입력',
-                },
-                {
-                  value: 'EXTERNAL',
-                  label: '외부인',
-                  description: '기본 인적 사항 입력',
-                },
-              ].map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => updateBuyer('buyerType', item.value as BuyerType)}
-                  className={[
-                    'rounded-2xl border-2 bg-white px-4 py-3 text-left shadow-sm transition',
-                    draft.buyer.buyerType === item.value
-                      ? 'border-primary/40 ring-2 ring-primary/15'
-                      : 'border-slate-200 hover:border-slate-300',
-                  ].join(' ')}
-                >
-                  <p className="text-sm font-bold text-slate-900">{item.label}</p>
-                  <p className="mt-1 text-xs text-slate-500">{item.description}</p>
-                </button>
-              ))}
+                {[
+                  {
+                    value: 'STUDENT',
+                    label: '재학생',
+                    description: '학과/학번 정보까지 입력',
+                  },
+                  {
+                    value: 'STAFF',
+                    label: '교직원',
+                    description: '소속 부서 정보를 입력',
+                  },
+                  {
+                    value: 'EXTERNAL',
+                    label: '외부인',
+                    description: '기본 인적 사항 입력',
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() =>
+                      updateBuyer('buyerType', item.value as BuyerType)
+                    }
+                    className={[
+                      'rounded-2xl border-2 bg-white px-4 py-3 text-left shadow-sm transition',
+                      draft.buyer.buyerType === item.value
+                        ? 'border-primary/40 ring-2 ring-primary/15'
+                        : 'border-slate-200 hover:border-slate-300',
+                    ].join(' ')}
+                  >
+                    <p className="text-sm font-bold text-slate-900">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {item.description}
+                    </p>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -955,7 +1012,10 @@ export default function OrderPage() {
                     <select
                       value={draft.buyer.campus}
                       onChange={(event) =>
-                        updateBuyer('campus', event.target.value as BuyerForm['campus'])
+                        updateBuyer(
+                          'campus',
+                          event.target.value as BuyerForm['campus'],
+                        )
                       }
                       className={SELECT_CLASS}
                     >
@@ -998,14 +1058,17 @@ export default function OrderPage() {
 
               {(isStudent || isStaff) && (
                 <label className="text-sm font-semibold text-slate-700">
-                  {isStudent ? '소속 학과' : '소속 부서'} <span className="text-rose-500">*</span>
+                  {isStudent ? '소속 학과' : '소속 부서'}{' '}
+                  <span className="text-rose-500">*</span>
                   <input
                     value={draft.buyer.departmentOrMajor}
                     onChange={(event) =>
                       updateBuyer('departmentOrMajor', event.target.value)
                     }
                     className={INPUT_CLASS}
-                    placeholder={isStudent ? '예) 컴퓨터공학과' : '예) 학생지원팀'}
+                    placeholder={
+                      isStudent ? '예) 컴퓨터공학과' : '예) 학생지원팀'
+                    }
                   />
                 </label>
               )}
@@ -1015,7 +1078,9 @@ export default function OrderPage() {
                   학번 <span className="text-rose-500">*</span>
                   <input
                     value={draft.buyer.studentNo}
-                    onChange={(event) => updateBuyer('studentNo', event.target.value)}
+                    onChange={(event) =>
+                      updateBuyer('studentNo', event.target.value)
+                    }
                     className={INPUT_CLASS}
                     placeholder="예) 60123456"
                   />
@@ -1036,7 +1101,9 @@ export default function OrderPage() {
                 환불 은행 <span className="text-rose-500">*</span>
                 <input
                   value={draft.buyer.refundBank}
-                  onChange={(event) => updateBuyer('refundBank', event.target.value)}
+                  onChange={(event) =>
+                    updateBuyer('refundBank', event.target.value)
+                  }
                   className={INPUT_CLASS}
                   placeholder="예) 국민은행"
                 />
@@ -1046,7 +1113,9 @@ export default function OrderPage() {
                 환불 계좌 <span className="text-rose-500">*</span>
                 <input
                   value={draft.buyer.refundAccount}
-                  onChange={(event) => updateBuyer('refundAccount', event.target.value)}
+                  onChange={(event) =>
+                    updateBuyer('refundAccount', event.target.value)
+                  }
                   className={INPUT_CLASS}
                   placeholder="예) 123456-78-901234"
                 />
@@ -1056,7 +1125,9 @@ export default function OrderPage() {
                 알게 된 경로 <span className="text-rose-500">*</span>
                 <input
                   value={draft.buyer.referralSource}
-                  onChange={(event) => updateBuyer('referralSource', event.target.value)}
+                  onChange={(event) =>
+                    updateBuyer('referralSource', event.target.value)
+                  }
                   className={INPUT_CLASS}
                   placeholder="예) instagram"
                 />
@@ -1066,7 +1137,9 @@ export default function OrderPage() {
                 입금자명 <span className="text-rose-500">*</span>
                 <input
                   value={draft.payment.depositorName}
-                  onChange={(event) => updatePayment('depositorName', event.target.value)}
+                  onChange={(event) =>
+                    updatePayment('depositorName', event.target.value)
+                  }
                   className={INPUT_CLASS}
                   placeholder="예) 홍길동"
                 />
@@ -1077,8 +1150,12 @@ export default function OrderPage() {
 
         {draft.step === 3 && (
           <>
-            <h2 className="font-heading text-xl text-slate-900">수령 방식 선택</h2>
-            <p className="mt-1 text-sm text-slate-600">현장 수령 또는 택배 배송을 선택해주세요.</p>
+            <h2 className="font-heading text-xl text-slate-900">
+              수령 방식 선택
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              현장 수령 또는 택배 배송을 선택해주세요.
+            </p>
 
             <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {[
@@ -1106,8 +1183,12 @@ export default function OrderPage() {
                       : 'border-slate-200 hover:border-slate-300',
                   ].join(' ')}
                 >
-                  <p className="text-sm font-bold text-slate-900">{item.label}</p>
-                  <p className="mt-1 text-xs text-slate-500">{item.description}</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {item.label}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {item.description}
+                  </p>
                 </button>
               ))}
             </div>
@@ -1117,7 +1198,9 @@ export default function OrderPage() {
                 수령자 성함 <span className="text-rose-500">*</span>
                 <input
                   value={draft.fulfillment.receiverName}
-                  onChange={(event) => updateFulfillment('receiverName', event.target.value)}
+                  onChange={(event) =>
+                    updateFulfillment('receiverName', event.target.value)
+                  }
                   className={INPUT_CLASS}
                   placeholder="수령자 이름"
                 />
@@ -1126,7 +1209,9 @@ export default function OrderPage() {
                 수령자 휴대폰 번호 <span className="text-rose-500">*</span>
                 <input
                   value={draft.fulfillment.receiverPhone}
-                  onChange={(event) => updateFulfillment('receiverPhone', event.target.value)}
+                  onChange={(event) =>
+                    updateFulfillment('receiverPhone', event.target.value)
+                  }
                   className={INPUT_CLASS}
                   placeholder="예) 010-1234-5678"
                 />
@@ -1135,7 +1220,9 @@ export default function OrderPage() {
 
             {isDelivery && (
               <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <h3 className="text-sm font-bold text-slate-900">배송지 정보</h3>
+                <h3 className="text-sm font-bold text-slate-900">
+                  배송지 정보
+                </h3>
                 <p className="mt-1 text-xs text-slate-600">
                   주소 검색은 카카오맵 API 연동 단계에서 연결할 예정입니다.
                 </p>
@@ -1215,23 +1302,30 @@ export default function OrderPage() {
 
         {draft.step === 4 && (
           <>
-            <h2 className="font-heading text-xl text-slate-900">최종 확인 및 제출</h2>
+            <h2 className="font-heading text-xl text-slate-900">
+              최종 확인 및 제출
+            </h2>
             <p className="mt-1 text-sm text-slate-600">
               입력한 정보를 최종 확인한 뒤 구매 제출을 진행해주세요.
             </p>
 
             <div className="mt-6 space-y-4">
               <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <h3 className="text-sm font-bold text-slate-900">주문 조회 계정 설정</h3>
+                <h3 className="text-sm font-bold text-slate-900">
+                  주문 조회 계정 설정
+                </h3>
                 <p className="mt-1 text-xs leading-relaxed text-slate-600">
-                  주문 이후 상태 조회(입금 확인/배송 진행)를 위해 조회 아이디와 비밀번호를 설정해주세요.
+                  주문 이후 상태 조회(입금 확인/배송 진행)를 위해 조회 아이디와
+                  비밀번호를 설정해주세요.
                 </p>
                 <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
                   <label className="text-sm font-semibold text-slate-700">
                     조회 아이디 <span className="text-rose-500">*</span>
                     <input
                       value={draft.lookup.lookupId}
-                      onChange={(event) => updateLookup('lookupId', event.target.value)}
+                      onChange={(event) =>
+                        updateLookup('lookupId', event.target.value)
+                      }
                       className={INPUT_CLASS}
                       placeholder="예) guest-mju-001"
                     />
@@ -1243,7 +1337,9 @@ export default function OrderPage() {
                       disabled={lookupCheckState === 'checking'}
                       className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {lookupCheckState === 'checking' ? '확인 중...' : '아이디 확인'}
+                      {lookupCheckState === 'checking'
+                        ? '확인 중...'
+                        : '아이디 확인'}
                     </button>
                   </div>
                 </div>
@@ -1254,9 +1350,10 @@ export default function OrderPage() {
                       'mt-2 rounded-xl px-3 py-2 text-xs font-semibold',
                       lookupCheckState === 'available'
                         ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-                        : lookupCheckState === 'taken' || lookupCheckState === 'error'
-                        ? 'border border-rose-200 bg-rose-50 text-rose-700'
-                        : 'border border-slate-200 bg-white text-slate-600',
+                        : lookupCheckState === 'taken' ||
+                            lookupCheckState === 'error'
+                          ? 'border border-rose-200 bg-rose-50 text-rose-700'
+                          : 'border border-slate-200 bg-white text-slate-600',
                     ].join(' ')}
                   >
                     {lookupCheckMessage}
@@ -1270,7 +1367,9 @@ export default function OrderPage() {
                       <input
                         type={showLookupPassword ? 'text' : 'password'}
                         value={draft.lookup.password}
-                        onChange={(event) => updateLookup('password', event.target.value)}
+                        onChange={(event) =>
+                          updateLookup('password', event.target.value)
+                        }
                         className={INPUT_CLASS}
                         placeholder="비밀번호 입력"
                       />
@@ -1302,7 +1401,9 @@ export default function OrderPage() {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowLookupPasswordConfirm((prev) => !prev)}
+                        onClick={() =>
+                          setShowLookupPasswordConfirm((prev) => !prev)
+                        }
                         className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                         aria-label="조회 비밀번호 확인 표시 전환"
                       >
@@ -1317,7 +1418,9 @@ export default function OrderPage() {
                       <p
                         className={[
                           'mt-1 text-xs font-semibold',
-                          isLookupPasswordMatched ? 'text-emerald-600' : 'text-rose-600',
+                          isLookupPasswordMatched
+                            ? 'text-emerald-600'
+                            : 'text-rose-600',
                         ].join(' ')}
                       >
                         {isLookupPasswordMatched
@@ -1331,7 +1434,9 @@ export default function OrderPage() {
                     <input
                       type="email"
                       value={draft.buyer.email}
-                      onChange={(event) => updateBuyer('email', event.target.value)}
+                      onChange={(event) =>
+                        updateBuyer('email', event.target.value)
+                      }
                       className={INPUT_CLASS}
                       placeholder="주문 조회 링크를 받을 이메일"
                     />
@@ -1347,7 +1452,9 @@ export default function OrderPage() {
                       key={`${item.projectId}-${item.itemId}`}
                       className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
                     >
-                      <span className="text-slate-700">{item.name} x {item.quantity}</span>
+                      <span className="text-slate-700">
+                        {item.name} x {item.quantity}
+                      </span>
                       <span className="font-semibold text-slate-900">
                         {formatMoney(item.price * item.quantity)}원
                       </span>
@@ -1360,7 +1467,9 @@ export default function OrderPage() {
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
-                <h3 className="text-sm font-bold text-slate-900">구매자 정보</h3>
+                <h3 className="text-sm font-bold text-slate-900">
+                  구매자 정보
+                </h3>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     구매자 구분: {BUYER_TYPE_LABELS[draft.buyer.buyerType]}
@@ -1370,32 +1479,56 @@ export default function OrderPage() {
                       캠퍼스: {CAMPUS_LABELS[draft.buyer.campus]}
                     </div>
                   )}
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">이름: {draft.buyer.name || '-'}</div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    이름: {draft.buyer.name || '-'}
+                  </div>
                   {(isStudent || isStaff) && (
                     <div className="rounded-xl bg-slate-50 px-3 py-2">
-                      {isStudent ? '소속 학과' : '소속 부서'}: {draft.buyer.departmentOrMajor || '-'}
+                      {isStudent ? '소속 학과' : '소속 부서'}:{' '}
+                      {draft.buyer.departmentOrMajor || '-'}
                     </div>
                   )}
                   {isStudent && (
-                    <div className="rounded-xl bg-slate-50 px-3 py-2">학번: {draft.buyer.studentNo || '-'}</div>
+                    <div className="rounded-xl bg-slate-50 px-3 py-2">
+                      학번: {draft.buyer.studentNo || '-'}
+                    </div>
                   )}
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">휴대폰 번호: {draft.buyer.phone || '-'}</div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">환불 은행: {draft.buyer.refundBank || '-'}</div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">환불 계좌: {draft.buyer.refundAccount || '-'}</div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">알게 된 경로: {draft.buyer.referralSource || '-'}</div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">이메일: {draft.buyer.email || '-'}</div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    휴대폰 번호: {draft.buyer.phone || '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    환불 은행: {draft.buyer.refundBank || '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    환불 계좌: {draft.buyer.refundAccount || '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    알게 된 경로: {draft.buyer.referralSource || '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    이메일: {draft.buyer.email || '-'}
+                  </div>
                 </div>
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-white p-5 text-sm text-slate-700">
-                <h3 className="text-sm font-bold text-slate-900">조회 계정 정보</h3>
+                <h3 className="text-sm font-bold text-slate-900">
+                  조회 계정 정보
+                </h3>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">조회 아이디: {draft.lookup.lookupId || '-'}</div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">조회 비밀번호: {draft.lookup.password ? '입력 완료' : '-'}</div>
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
-                    아이디 확인 상태: {lookupCheckState === 'available' ? '확인 완료' : '미확인'}
+                    조회 아이디: {draft.lookup.lookupId || '-'}
                   </div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">이메일: {draft.buyer.email || '-'}</div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    조회 비밀번호: {draft.lookup.password ? '입력 완료' : '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    아이디 확인 상태:{' '}
+                    {lookupCheckState === 'available' ? '확인 완료' : '미확인'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    이메일: {draft.buyer.email || '-'}
+                  </div>
                 </div>
               </section>
 
@@ -1410,19 +1543,33 @@ export default function OrderPage() {
                 <h3 className="text-sm font-bold text-slate-900">수령 정보</h3>
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
-                    수령 방식: {FULFILLMENT_METHOD_LABELS[draft.fulfillment.method]}
+                    수령 방식:{' '}
+                    {FULFILLMENT_METHOD_LABELS[draft.fulfillment.method]}
                   </div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">수령자 성함: {draft.fulfillment.receiverName || '-'}</div>
-                  <div className="rounded-xl bg-slate-50 px-3 py-2">수령자 휴대폰 번호: {draft.fulfillment.receiverPhone || '-'}</div>
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
-                    정보 정확성 확인: {draft.fulfillment.infoConfirmed ? '확인 완료' : '미확인'}
+                    수령자 성함: {draft.fulfillment.receiverName || '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    수령자 휴대폰 번호: {draft.fulfillment.receiverPhone || '-'}
+                  </div>
+                  <div className="rounded-xl bg-slate-50 px-3 py-2">
+                    정보 정확성 확인:{' '}
+                    {draft.fulfillment.infoConfirmed ? '확인 완료' : '미확인'}
                   </div>
                   {isDelivery && (
                     <>
-                      <div className="rounded-xl bg-slate-50 px-3 py-2">우편번호: {draft.fulfillment.postalCode || '-'}</div>
-                      <div className="rounded-xl bg-slate-50 px-3 py-2">기본 주소: {draft.fulfillment.addressLine1 || '-'}</div>
-                      <div className="rounded-xl bg-slate-50 px-3 py-2 sm:col-span-2">상세 주소: {draft.fulfillment.addressLine2 || '-'}</div>
-                      <div className="rounded-xl bg-slate-50 px-3 py-2 sm:col-span-2">배송 메모: {draft.fulfillment.deliveryMemo || '-'}</div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-2">
+                        우편번호: {draft.fulfillment.postalCode || '-'}
+                      </div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-2">
+                        기본 주소: {draft.fulfillment.addressLine1 || '-'}
+                      </div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-2 sm:col-span-2">
+                        상세 주소: {draft.fulfillment.addressLine2 || '-'}
+                      </div>
+                      <div className="rounded-xl bg-slate-50 px-3 py-2 sm:col-span-2">
+                        배송 메모: {draft.fulfillment.deliveryMemo || '-'}
+                      </div>
                     </>
                   )}
                 </div>

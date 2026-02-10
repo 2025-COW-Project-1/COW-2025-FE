@@ -9,15 +9,16 @@ export default function OrderViewPage() {
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token')?.trim() ?? '';
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<OrderDetailResponse | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     let active = true;
-    setLoading(true);
-    setOrder(null);
 
     ordersApi
       .viewOrder(token)
@@ -27,7 +28,9 @@ export default function OrderViewPage() {
       })
       .catch((error) => {
         if (!active) return;
-        toast.error(error instanceof Error ? error.message : '주문 조회에 실패했어요.');
+        toast.error(
+          error instanceof Error ? error.message : '주문 조회에 실패했어요.',
+        );
       })
       .finally(() => {
         if (!active) return;
@@ -44,7 +47,9 @@ export default function OrderViewPage() {
       <div className="mx-auto max-w-3xl px-4 py-12">
         <Reveal>
           <section className="rounded-3xl border border-rose-200 bg-white p-6 shadow-sm">
-            <h1 className="font-heading text-2xl text-slate-900">잘못된 접근이에요</h1>
+            <h1 className="font-heading text-2xl text-slate-900">
+              잘못된 접근이에요
+            </h1>
             <p className="mt-2 text-sm text-slate-600">
               조회 토큰이 없어서 주문 정보를 확인할 수 없어요.
             </p>
@@ -68,7 +73,11 @@ export default function OrderViewPage() {
           <p className="mt-2 text-sm text-slate-600">
             이메일 링크를 통해 주문 정보를 불러왔어요.
           </p>
-          {loading && <p className="mt-3 text-sm font-semibold text-primary">조회 중...</p>}
+          {loading && (
+            <p className="mt-3 text-sm font-semibold text-primary">
+              조회 중...
+            </p>
+          )}
         </section>
       </Reveal>
 

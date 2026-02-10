@@ -10,14 +10,15 @@ import {
   type AdminOrderStatus,
 } from '../../api/adminOrders';
 
-const STATUS_FILTERS: Array<{ key: 'ALL' | AdminOrderStatus; label: string }> = [
-  { key: 'ALL', label: '전체' },
-  { key: 'PENDING_DEPOSIT', label: '입금 확인 필요' },
-  { key: 'PAID', label: '입금 확인 완료' },
-  { key: 'CANCELED', label: '취소' },
-  { key: 'REFUND_REQUESTED', label: '환불 요청' },
-  { key: 'REFUNDED', label: '환불 완료' },
-];
+const STATUS_FILTERS: Array<{ key: 'ALL' | AdminOrderStatus; label: string }> =
+  [
+    { key: 'ALL', label: '전체' },
+    { key: 'PENDING_DEPOSIT', label: '입금 확인 필요' },
+    { key: 'PAID', label: '입금 확인 완료' },
+    { key: 'CANCELED', label: '취소' },
+    { key: 'REFUND_REQUESTED', label: '환불 요청' },
+    { key: 'REFUNDED', label: '환불 완료' },
+  ];
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING_DEPOSIT: '입금 확인 필요',
@@ -59,8 +60,12 @@ function formatDateTime(value?: string) {
   }).format(date);
 }
 
-function infoRows(rows: Array<{ label: string; value?: string | number | boolean }>) {
-  return rows.filter((row) => row.value !== undefined && row.value !== null && row.value !== '');
+function infoRows(
+  rows: Array<{ label: string; value?: string | number | boolean }>,
+) {
+  return rows.filter(
+    (row) => row.value !== undefined && row.value !== null && row.value !== '',
+  );
 }
 
 function toErrorMessage(error: unknown, fallback: string) {
@@ -114,7 +119,9 @@ export default function AdminOrdersPage() {
     setLoading(true);
     setError(null);
     try {
-      const list = await adminOrdersApi.list(filter === 'ALL' ? undefined : filter);
+      const list = await adminOrdersApi.list(
+        filter === 'ALL' ? undefined : filter,
+      );
       setOrders(list);
       if (list.length === 0) {
         setSelectedOrderId(null);
@@ -136,19 +143,22 @@ export default function AdminOrdersPage() {
     }
   }, [filter]);
 
-  const loadDetail = useCallback(async (orderId: number) => {
-    setDetailLoading(true);
-    try {
-      const data = await adminOrdersApi.getById(orderId);
-      setDetail(data);
-    } catch (err) {
-      console.error(err);
-      toast.error(toErrorMessage(err, '주문 상세를 불러오지 못했어요.'));
-      setDetail(null);
-    } finally {
-      setDetailLoading(false);
-    }
-  }, [toast]);
+  const loadDetail = useCallback(
+    async (orderId: number) => {
+      setDetailLoading(true);
+      try {
+        const data = await adminOrdersApi.getById(orderId);
+        setDetail(data);
+      } catch (err) {
+        console.error(err);
+        toast.error(toErrorMessage(err, '주문 상세를 불러오지 못했어요.'));
+        setDetail(null);
+      } finally {
+        setDetailLoading(false);
+      }
+    },
+    [toast],
+  );
 
   useEffect(() => {
     void loadOrders();
@@ -267,13 +277,14 @@ export default function AdminOrdersPage() {
         {
           label: '구매자 구분',
           value: detail?.buyer?.buyerType
-            ? BUYER_TYPE_LABELS[detail.buyer.buyerType] ?? detail.buyer.buyerType
+            ? (BUYER_TYPE_LABELS[detail.buyer.buyerType] ??
+              detail.buyer.buyerType)
             : undefined,
         },
         {
           label: '캠퍼스',
           value: detail?.buyer?.campus
-            ? CAMPUS_LABELS[detail.buyer.campus] ?? detail.buyer.campus
+            ? (CAMPUS_LABELS[detail.buyer.campus] ?? detail.buyer.campus)
             : undefined,
         },
         { label: '연락처', value: detail?.buyer?.phone },
@@ -293,7 +304,8 @@ export default function AdminOrdersPage() {
         {
           label: '수령 방식',
           value: detail?.fulfillment?.method
-            ? METHOD_LABELS[detail.fulfillment.method] ?? detail.fulfillment.method
+            ? (METHOD_LABELS[detail.fulfillment.method] ??
+              detail.fulfillment.method)
             : undefined,
         },
         { label: '수령자', value: detail?.fulfillment?.receiverName },
@@ -469,7 +481,9 @@ export default function AdminOrdersPage() {
                 목록에서 주문을 선택해주세요.
               </p>
             ) : detailLoading ? (
-              <p className="mt-4 text-sm text-slate-500">상세를 불러오는 중...</p>
+              <p className="mt-4 text-sm text-slate-500">
+                상세를 불러오는 중...
+              </p>
             ) : !detail ? (
               <p className="mt-4 text-sm text-rose-600">
                 주문 상세를 불러오지 못했습니다.
@@ -499,16 +513,21 @@ export default function AdminOrdersPage() {
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     입금 마감:{' '}
                     {formatDateTime(
-                      detail.order?.depositDeadline ?? selectedOrder?.depositDeadline,
+                      detail.order?.depositDeadline ??
+                        selectedOrder?.depositDeadline,
                     )}
                   </div>
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     입금자명:{' '}
-                    {detail.order?.depositorName ?? selectedOrder?.depositorName ?? '-'}
+                    {detail.order?.depositorName ??
+                      selectedOrder?.depositorName ??
+                      '-'}
                   </div>
                   <div className="rounded-xl bg-slate-50 px-3 py-2">
                     주문일:{' '}
-                    {formatDateTime(detail.order?.createdAt ?? selectedOrder?.createdAt)}
+                    {formatDateTime(
+                      detail.order?.createdAt ?? selectedOrder?.createdAt,
+                    )}
                   </div>
                 </div>
 
@@ -529,8 +548,8 @@ export default function AdminOrdersPage() {
                         type="button"
                         onClick={() => void handleConfirmPaid()}
                         disabled={actionLoading}
-                      className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
-                    >
+                        className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                      >
                         입금 확인
                       </button>
                       <button
@@ -566,10 +585,14 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div className="mt-6">
-                  <h3 className="text-sm font-bold text-slate-900">주문 상품</h3>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    주문 상품
+                  </h3>
                   <div className="mt-2 space-y-2">
                     {detail.items.length === 0 ? (
-                      <p className="text-sm text-slate-500">주문 상품이 없습니다.</p>
+                      <p className="text-sm text-slate-500">
+                        주문 상품이 없습니다.
+                      </p>
                     ) : (
                       detail.items.map((item, index) => (
                         <div
@@ -577,11 +600,13 @@ export default function AdminOrdersPage() {
                           className="rounded-xl bg-slate-50 px-3 py-2 text-sm"
                         >
                           <p className="font-semibold text-slate-800">
-                            {item.itemName ?? `상품 #${item.projectItemId ?? '-'}`}
+                            {item.itemName ??
+                              `상품 #${item.projectItemId ?? '-'}`}
                           </p>
                           <p className="text-slate-600">
-                            수량 {item.quantity ?? '-'} / 단가 {formatMoney(item.unitPrice)} /
-                            금액 {formatMoney(item.lineAmount)}
+                            수량 {item.quantity ?? '-'} / 단가{' '}
+                            {formatMoney(item.unitPrice)} / 금액{' '}
+                            {formatMoney(item.lineAmount)}
                           </p>
                         </div>
                       ))
@@ -590,13 +615,20 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div className="mt-6">
-                  <h3 className="text-sm font-bold text-slate-900">구매자 정보</h3>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    구매자 정보
+                  </h3>
                   <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {buyerRows.length === 0 ? (
-                      <p className="text-sm text-slate-500">구매자 정보가 없습니다.</p>
+                      <p className="text-sm text-slate-500">
+                        구매자 정보가 없습니다.
+                      </p>
                     ) : (
                       buyerRows.map((row) => (
-                        <div key={row.label} className="rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                        <div
+                          key={row.label}
+                          className="rounded-xl bg-slate-50 px-3 py-2 text-sm"
+                        >
                           {row.label}: {String(row.value)}
                         </div>
                       ))
@@ -605,13 +637,20 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div className="mt-6">
-                  <h3 className="text-sm font-bold text-slate-900">수령 정보</h3>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    수령 정보
+                  </h3>
                   <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {fulfillmentRows.length === 0 ? (
-                      <p className="text-sm text-slate-500">수령 정보가 없습니다.</p>
+                      <p className="text-sm text-slate-500">
+                        수령 정보가 없습니다.
+                      </p>
                     ) : (
                       fulfillmentRows.map((row) => (
-                        <div key={row.label} className="rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                        <div
+                          key={row.label}
+                          className="rounded-xl bg-slate-50 px-3 py-2 text-sm"
+                        >
                           {row.label}: {String(row.value)}
                         </div>
                       ))

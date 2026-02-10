@@ -23,13 +23,15 @@ export default function OrderCompletePage() {
   const state = (location.state ?? {}) as OrderCompleteState;
 
   const statusLabel = state.status
-    ? STATUS_LABELS[state.status] ?? state.status
+    ? (STATUS_LABELS[state.status] ?? state.status)
     : '-';
   const depositDeadlineText = resolveDepositDeadlineText(
     state.depositDeadline,
     state.orderNo,
   );
-  const canCopyLookupId = Boolean(state.lookupId && state.lookupId.trim().length > 0);
+  const canCopyLookupId = Boolean(
+    state.lookupId && state.lookupId.trim().length > 0,
+  );
 
   const copyLookupId = async () => {
     if (!canCopyLookupId) return;
@@ -48,7 +50,9 @@ export default function OrderCompletePage() {
           <p className="inline-flex rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-bold text-emerald-700">
             ORDER RECEIVED
           </p>
-          <h1 className="mt-3 font-heading text-3xl text-emerald-900">주문이 접수되었어요</h1>
+          <h1 className="mt-3 font-heading text-3xl text-emerald-900">
+            주문이 접수되었어요
+          </h1>
           <p className="mt-2 text-sm text-emerald-800">
             아래 입금 마감 시간 전까지 입금을 완료하면 주문이 확정됩니다.
           </p>
@@ -115,7 +119,10 @@ export default function OrderCompletePage() {
   );
 }
 
-function resolveDepositDeadlineText(raw: string | undefined, orderNo: string | undefined) {
+function resolveDepositDeadlineText(
+  raw: string | undefined,
+  orderNo: string | undefined,
+) {
   if (raw && raw.trim().length > 0) return formatDateTime(raw);
 
   const fromOrderNo = parseOrderNoDate(orderNo);

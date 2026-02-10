@@ -52,11 +52,8 @@ export const itemsApi = {
   getJournalDownloadUrl(itemId: string) {
     return api<
       ApiResult<ItemJournalDownloadResponse> | ItemJournalDownloadResponse
-    >(
-      withApiBase(`/items/${itemId}/journal/presign-get`),
-      {
-        method: 'POST',
-      },
-    ).then((res) => unwrapApiResult(res));
+    >(withApiBase(`/items/${itemId}/journal/presign-get`), {
+      method: 'POST',
+    }).then((res) => unwrapApiResult(res));
   },
 };

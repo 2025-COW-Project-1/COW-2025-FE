@@ -30,7 +30,9 @@ export default function OrderLookupPage() {
       setOrder(result);
     } catch (error) {
       setOrder(null);
-      toast.error(error instanceof Error ? error.message : '주문 조회에 실패했어요.');
+      toast.error(
+        error instanceof Error ? error.message : '주문 조회에 실패했어요.',
+      );
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,9 @@ export default function OrderLookupPage() {
     <div className="mx-auto max-w-4xl px-4 py-12">
       <Reveal>
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="font-heading text-3xl text-slate-900">비회원 주문 조회</h1>
+          <h1 className="font-heading text-3xl text-slate-900">
+            비회원 주문 조회
+          </h1>
           <p className="mt-2 text-sm text-slate-600">
             주문 시 설정한 조회 아이디와 비밀번호로 주문 상태를 확인하세요.
           </p>
