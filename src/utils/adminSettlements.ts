@@ -1,4 +1,5 @@
 import type { SettlementReport } from '../types/settlements';
+import { settlementReports } from '../data/settlements';
 
 const STORAGE_KEY = 'cow_admin_settlements_v1';
 
@@ -9,11 +10,11 @@ function createId(prefix: string) {
 export function loadAdminSettlements(): SettlementReport[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) return settlementReports;
     const parsed = JSON.parse(raw) as SettlementReport[];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed : settlementReports;
   } catch {
-    return [];
+    return settlementReports;
   }
 }
 

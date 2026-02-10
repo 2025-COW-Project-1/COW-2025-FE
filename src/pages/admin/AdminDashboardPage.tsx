@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import {
@@ -6,13 +6,13 @@ import {
   saveAdminContent,
   type AdminContent,
 } from '../../utils/adminContent';
-import { loadAdminSettlements } from '../../utils/adminSettlements';
-import type { SettlementReport } from '../../types/settlements';
+// import { loadAdminSettlements } from '../../utils/adminSettlements';
+// import type { SettlementReport } from '../../types/settlements';
 import AdminFeedbackFormSection from './sections/AdminFeedbackFormSection';
 import AdminFeedbackListSection from './sections/AdminFeedbackListSection';
 import AdminLinksSection from './sections/AdminLinksSection';
 import { saveLinksToApi } from './sections/linksSave';
-import AdminSettlementsSection from './sections/AdminSettlementsSection';
+// import AdminSettlementsSection from './sections/AdminSettlementsSection';
 import AdminEditSection from './sections/AdminEditSection';
 import AdminIntroduceEditorPage from './sections/AdminIntroduceEditorPage';
 import AdminProjectsSection from './sections/AdminProjectsSection';
@@ -42,10 +42,10 @@ export default function AdminDashboardPage() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
-  const [settlements, setSettlements] = useState<SettlementReport[]>(() =>
-    loadAdminSettlements(),
-  );
-  const [settlementsDirty, setSettlementsDirty] = useState(false);
+  // const [settlements, setSettlements] = useState<SettlementReport[]>(() =>
+  //   loadAdminSettlements(),
+  // );
+  // const [settlementsDirty, setSettlementsDirty] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -62,22 +62,22 @@ export default function AdminDashboardPage() {
     setSaveMsgTone(null);
   }, [section]);
 
-  const projectOptionsByTerm = useMemo(() => {
-    const map: Record<string, string[]> = {};
+  // const projectOptionsByTerm = useMemo(() => {
+  //   const map: Record<string, string[]> = {};
 
-    content.projectsIntro.forEach((project) => {
-      const term = project.term.trim();
-      const title = project.title.trim();
+  //   content.projectsIntro.forEach((project) => {
+  //     const term = project.term.trim();
+  //     const title = project.title.trim();
 
-      if (!term || !title) return;
+  //     if (!term || !title) return;
 
-      const list = map[term] ?? [];
-      if (!list.includes(title)) list.push(title);
-      map[term] = list;
-    });
+  //     const list = map[term] ?? [];
+  //     if (!list.includes(title)) list.push(title);
+  //     map[term] = list;
+  //   });
 
-    return map;
-  }, [content.projectsIntro]);
+  //   return map;
+  // }, [content.projectsIntro]);
 
   const updateContent = (next: AdminContent) => {
     setContent(next);
@@ -221,7 +221,7 @@ export default function AdminDashboardPage() {
         />
       )}
 
-      {section === 'settlements' && (
+      {/* {section === 'settlements' && (
         <AdminSettlementsSection
           settlements={settlements}
           setSettlements={setSettlements}
@@ -229,7 +229,7 @@ export default function AdminDashboardPage() {
           setSettlementsDirty={setSettlementsDirty}
           projectOptionsByTerm={projectOptionsByTerm}
         />
-      )}
+      )} */}
 
       {section === 'form' && (
         <AdminFeedbackFormSection

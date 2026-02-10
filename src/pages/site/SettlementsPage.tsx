@@ -153,7 +153,7 @@ export default function SettlementsPage() {
           delayMs={90}
           className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white"
         >
-          <div className="grid grid-cols-12 gap-0 border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-bold text-slate-600">
+          <div className="hidden grid-cols-12 gap-0 border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-bold text-slate-600 md:grid">
             <div className="col-span-4">프로젝트명</div>
             <div className="col-span-2">학기</div>
             <div className="col-span-2 text-right">매출</div>
@@ -163,70 +163,134 @@ export default function SettlementsPage() {
 
           {filtered.map((r) => {
             const c = calcReport(r);
-            const profitCls = c.profit >= 0 ? 'text-primary' : 'text-rose-600';
+            const profitCls =
+              c.profit >= 0 ? 'text-emerald-600' : 'text-rose-600';
 
             return (
               <details
                 key={r.id}
                 className="group border-b border-slate-200 last:border-b-0"
               >
-                <summary className="grid cursor-pointer grid-cols-12 items-center px-5 py-4 text-sm">
-                  <div className="col-span-4">
-                    <div className="font-bold text-slate-900">
-                      {r.projectTitle}
-                    </div>
-                    {r.instaHandle && (
-                      <div className="mt-1 text-xs text-slate-500">
-                        {r.instaHandle}
+                <summary className="cursor-pointer list-none px-5 py-5 text-sm [&::-webkit-details-marker]:hidden">
+                  {/* Desktop */}
+                  <div className="col-span-2 text-right">
+                    <div className="inline-block rounded-xl bg-emerald-50 px-3 py-2 text-right">
+                      <div className="text-[11px] text-emerald-700">매출</div>
+                      <div className="font-bold text-emerald-700">
+                        {money(c.salesTotal)}
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  <div className="col-span-2 text-slate-700">{r.term}</div>
-
-                  <div className="col-span-2 text-right font-bold text-slate-800">
-                    {money(c.salesTotal)}
+                  <div className="col-span-2 text-right">
+                    <div className="inline-block rounded-xl bg-rose-50 px-3 py-2 text-right">
+                      <div className="text-[11px] text-rose-700">지출</div>
+                      <div className="font-bold text-rose-700">
+                        {money(c.expenseTotal)}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="col-span-2 text-right font-bold text-slate-800">
-                    {money(c.expenseTotal)}
+                  <div className="col-span-2 text-right">
+                    <div className="inline-block rounded-xl bg-sky-50 px-3 py-2 text-right">
+                      <div className="text-[11px] text-sky-700">순이익</div>
+                      <div className="font-bold text-sky-700">
+                        {money(c.profit)}
+                      </div>
+                    </div>
                   </div>
 
-                  <div
-                    className={`col-span-2 text-right font-bold ${profitCls}`}
-                  >
-                    {money(c.profit)}
+                  {/* Mobile */}
+                  <div className="md:hidden">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-base font-bold text-slate-900">
+                          {r.projectTitle}
+                        </div>
+                      </div>
+                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600">
+                        {r.term}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-3 gap-3">
+                      <div className="rounded-xl bg-emerald-50 px-3 py-2">
+                        <div className="text-[10px] text-emerald-700">매출</div>
+                        <div className="text-xs font-semibold text-emerald-700">
+                          {money(c.salesTotal)}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl bg-rose-50 p-3">
+                        <div className="text-[11px] text-rose-700">지출</div>
+                        <div className="mt-1 text-sm font-bold text-rose-700">
+                          {money(c.expenseTotal)}
+                        </div>
+                      </div>
+                      <div className="rounded-2xl bg-sky-50 p-3">
+                        <div className="text-[11px] text-sky-700">순이익</div>
+                        <div className={`mt-1 text-sm font-bold ${profitCls}`}>
+                          {money(c.profit)}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </summary>
 
                 <div className="px-5 pb-6 text-sm text-slate-700">
-                  <div className="rounded-2xl bg-slate-50 p-4">
-                    <div className="text-xs font-bold text-slate-600">요약</div>
-                    <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
-                      <div className="rounded-xl bg-white p-3">
-                        <div className="text-xs text-slate-500">매출 합계</div>
-                        <div className="mt-1 font-bold">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-100/80 p-5 shadow-inner">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary/60" />
+                        <div className="text-sm font-bold text-slate-700">
+                          요약
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-slate-400">단위: 원</div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
+                        <div className="text-[11px] font-semibold text-slate-500">
+                          매출 합계
+                        </div>
+                        <div className="mt-2 text-lg font-bold text-slate-900">
                           {money(c.salesTotal)}
                         </div>
+                        <div className="mt-1 h-1 w-10 rounded-full bg-emerald-100" />
                       </div>
-                      <div className="rounded-xl bg-white p-3">
-                        <div className="text-xs text-slate-500">
+
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
+                        <div className="text-[11px] font-semibold text-slate-500">
                           지출 합계
+                        </div>
+                        <div className="mt-2 text-lg font-bold text-slate-900">
                           {money(c.expenseTotal)}
                         </div>
+                        <div className="mt-1 h-1 w-10 rounded-full bg-rose-100" />
                       </div>
-                      <div className="rounded-xl bg-white p-3">
-                        <div className="text-xs text-slate-500">수익률</div>
-                        <div className={`mt-1 font-bold ${profitCls}`}>
+
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
+                        <div className="text-[11px] font-semibold text-slate-500">
+                          수익률
+                        </div>
+                        <div className={`mt-2 text-lg font-bold ${profitCls}`}>
                           {c.profitRate.toFixed(2)}%
                         </div>
+                        <div className="mt-1 h-1 w-10 rounded-full bg-slate-200" />
                       </div>
                     </div>
 
                     <div className="mt-6">
-                      <div className="font-heading text-lg text-slate-900">
-                        매출
+                      <div className="flex items-center justify-between">
+                        <div className="font-heading text-lg text-slate-900">
+                          매출
+                        </div>
+                        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                          {money(sumItems(r.sales))}
+                        </span>
                       </div>
+
                       {r.sales.length === 0 ? (
                         <div className="mt-2 text-sm text-slate-500">
                           등록된 항목이 없어요.
@@ -236,28 +300,28 @@ export default function SettlementsPage() {
                           {r.sales.map((it) => (
                             <div
                               key={it.label}
-                              className="flex items-center justify-between"
+                              className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
                             >
-                              <div className="text-slate-700">{it.label}</div>
-                              <div className="font-bold text-slate-900">
+                              <div className="text-sm font-medium text-slate-700">
+                                {it.label}
+                              </div>
+                              <div className="text-sm font-bold text-slate-900">
                                 {money(getItemTotal(it))}
                               </div>
                             </div>
                           ))}
-                          <div className="mt-3 h-px bg-slate-200" />
-                          <div className="flex items-center justify-between">
-                            <div className="font-bold text-slate-900">합계</div>
-                            <div className="font-bold text-slate-900">
-                              {money(sumItems(r.sales))}
-                            </div>
-                          </div>
                         </div>
                       )}
                     </div>
 
                     <div className="mt-8">
-                      <div className="font-heading text-lg text-slate-900">
-                        지출
+                      <div className="flex items-center justify-between">
+                        <div className="font-heading text-lg text-slate-900">
+                          지출
+                        </div>
+                        <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700">
+                          {money(c.expenseTotal)}
+                        </span>
                       </div>
 
                       {r.expenseGroups.length === 0 ? (
@@ -265,19 +329,19 @@ export default function SettlementsPage() {
                           등록된 항목이 없어요.
                         </div>
                       ) : (
-                        <div className="mt-3 space-y-6">
+                        <div className="mt-3 space-y-4">
                           {r.expenseGroups.map((g) => {
                             const gTotal = sumItems(g.items);
                             return (
                               <div
                                 key={g.title}
-                                className="rounded-xl bg-white p-4"
+                                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md"
                               >
-                                <div className="flex items-end justify-between">
-                                  <div className="font-bold text-slate-900">
+                                <div className="flex items-center justify-between">
+                                  <div className="text-base font-bold text-slate-900">
                                     {g.title}
                                   </div>
-                                  <div className="font-bold text-slate-900">
+                                  <div className="text-sm font-bold text-slate-900">
                                     {money(gTotal)}
                                   </div>
                                 </div>
@@ -286,12 +350,12 @@ export default function SettlementsPage() {
                                   {g.items.map((it) => (
                                     <div
                                       key={`${g.title}-${it.label}`}
-                                      className="flex items-center justify-between"
+                                      className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 shadow-sm"
                                     >
-                                      <div className="text-slate-700">
+                                      <div className="text-sm text-slate-700">
                                         {it.label}
                                       </div>
-                                      <div className="font-bold text-slate-900">
+                                      <div className="text-sm font-semibold text-slate-900">
                                         {money(getItemTotal(it))}
                                       </div>
                                     </div>
