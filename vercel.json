@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://54.180.142.40/api/:path*"
+      "destination": "https://api.mju-craft.shop/api/:path*"
     },
     {
       "source": "/(.*)",
