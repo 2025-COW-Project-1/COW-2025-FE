@@ -1,16 +1,39 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { clearAuth } from '../utils/auth';
 import { showLogoutToast } from '../utils/LogoutToast';
 
 export default function HeaderMobile() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileProjectsOpen, setMobileProjectsOpen] = useState(false);
   const [mobileOrderOpen, setMobileOrderOpen] = useState(false);
 
   const { isLoggedIn, userName } = useAuth();
+
+  const pathname = location.pathname;
+
+  const isActive = useMemo(
+    () => ({
+      home: pathname === '/',
+      about: pathname.startsWith('/about'),
+      projects: pathname.startsWith('/projects'),
+      notices: pathname.startsWith('/notices'),
+      payouts: pathname.startsWith('/settlements'),
+      apply: pathname.startsWith('/apply'),
+      contact: pathname.startsWith('/contact'),
+      order: pathname.startsWith('/cart') || pathname.startsWith('/orders'),
+      mypage: pathname.startsWith('/mypage'),
+    }),
+    [pathname],
+  );
+
+  const menuBase =
+    'flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-colors';
+  const menuActive = 'bg-primary/10 text-primary';
+  const menuIdle = 'text-slate-800 hover:bg-slate-100';
 
   const displayName = isLoggedIn ? (
     <>
@@ -123,7 +146,7 @@ export default function HeaderMobile() {
             <Link
               to="/"
               onClick={closeAll}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              className={`${menuBase} ${isActive.home ? menuActive : menuIdle}`}
             >
               HOME
             </Link>
@@ -131,7 +154,7 @@ export default function HeaderMobile() {
             <Link
               to="/about"
               onClick={closeAll}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              className={`${menuBase} ${isActive.about ? menuActive : menuIdle}`}
             >
               ABOUT
             </Link>
@@ -140,7 +163,9 @@ export default function HeaderMobile() {
               type="button"
               aria-expanded={mobileProjectsOpen}
               onClick={() => setMobileProjectsOpen((v) => !v)}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              className={`${menuBase} ${
+                isActive.projects ? menuActive : menuIdle
+              }`}
             >
               COLLECTIONS
               <span
@@ -188,15 +213,16 @@ export default function HeaderMobile() {
             <Link
               to="/notices"
               onClick={closeAll}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              className={`${menuBase} ${isActive.notices ? menuActive : menuIdle}`}
             >
               NOTICES
             </Link>
+
             <button
               type="button"
               aria-expanded={mobileOrderOpen}
               onClick={() => setMobileOrderOpen((v) => !v)}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              className={`${menuBase} ${isActive.order ? menuActive : menuIdle}`}
             >
               ORDER
               <span
@@ -240,15 +266,19 @@ export default function HeaderMobile() {
             </div>
 
             {[
-              { label: 'APPLY', href: '/apply' },
-              { label: 'CONTACT', href: '/contact' },
-              { label: 'PAYOUTS', href: '/settlements' },
+              { label: 'APPLY', href: '/apply', active: isActive.apply },
+              { label: 'CONTACT', href: '/contact', active: isActive.contact },
+              {
+                label: 'PAYOUTS',
+                href: '/settlements',
+                active: isActive.payouts,
+              },
             ].map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
                 onClick={closeAll}
-                className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+                className={`${menuBase} ${item.active ? menuActive : menuIdle}`}
               >
                 {item.label}
               </Link>

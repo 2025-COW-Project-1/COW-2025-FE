@@ -1,22 +1,45 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 type MenuKey = 'projects' | 'order' | null;
 
 export default function HeaderDesktop() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState<MenuKey>(null);
   const isProjectsOpen = open === 'projects';
   const isOrderOpen = open === 'order';
   const { isLoggedIn } = useAuth();
+
+  const pathname = location.pathname;
+
+  const isActive = useMemo(
+    () => ({
+      home: pathname === '/',
+      about: pathname.startsWith('/about'),
+      projects: pathname.startsWith('/projects'),
+      notices: pathname.startsWith('/notices'),
+      payouts: pathname.startsWith('/settlements'),
+      apply: pathname.startsWith('/apply'),
+      contact: pathname.startsWith('/contact'),
+      order: pathname.startsWith('/cart') || pathname.startsWith('/orders'),
+      mypage: pathname.startsWith('/mypage'),
+    }),
+    [pathname],
+  );
+
+  const navBase =
+    'rounded-lg px-3 py-2 text-sm font-semibold transition-colors';
+  const navActive = 'bg-primary/10 text-primary';
+  const navIdle = 'text-slate-700 hover:bg-slate-100 hover:text-primary';
 
   return (
     <nav className="hidden items-center gap-1 md:flex justify-self-center">
       <Link
         to="/about"
         onClick={() => setOpen(null)}
-        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+        className={`${navBase} ${isActive.about ? navActive : navIdle}`}
       >
         ABOUT
       </Link>
@@ -25,7 +48,7 @@ export default function HeaderDesktop() {
         <button
           type="button"
           onClick={() => setOpen(isProjectsOpen ? null : 'projects')}
-          className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+          className={`${navBase} ${isActive.projects ? navActive : navIdle}`}
           aria-expanded={isProjectsOpen}
           aria-haspopup="menu"
         >
@@ -78,7 +101,7 @@ export default function HeaderDesktop() {
       <Link
         to="/notices"
         onClick={() => setOpen(null)}
-        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+        className={`${navBase} ${isActive.notices ? navActive : navIdle}`}
       >
         NOTICES
       </Link>
@@ -86,7 +109,7 @@ export default function HeaderDesktop() {
       <Link
         to="/settlements"
         onClick={() => setOpen(null)}
-        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+        className={`${navBase} ${isActive.payouts ? navActive : navIdle}`}
       >
         PAYOUTS
       </Link>
@@ -94,7 +117,7 @@ export default function HeaderDesktop() {
       <Link
         to="/apply"
         onClick={() => setOpen(null)}
-        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+        className={`${navBase} ${isActive.apply ? navActive : navIdle}`}
       >
         APPLY
       </Link>
@@ -102,7 +125,7 @@ export default function HeaderDesktop() {
       <Link
         to="/contact"
         onClick={() => setOpen(null)}
-        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+        className={`${navBase} ${isActive.contact ? navActive : navIdle}`}
       >
         CONTACT
       </Link>
@@ -111,7 +134,7 @@ export default function HeaderDesktop() {
         <button
           type="button"
           onClick={() => setOpen(isOrderOpen ? null : 'order')}
-          className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+          className={`${navBase} ${isActive.order ? navActive : navIdle}`}
           aria-expanded={isOrderOpen}
           aria-haspopup="menu"
         >
@@ -170,7 +193,7 @@ export default function HeaderDesktop() {
           }
           navigate('/mypage');
         }}
-        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
+        className={`${navBase} ${isActive.mypage ? navActive : navIdle}`}
       >
         MYPAGE
       </button>

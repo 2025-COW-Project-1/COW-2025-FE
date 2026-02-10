@@ -3,8 +3,10 @@ import SiteLayout from './components/SiteLayout';
 import AdminLayout from './components/AdminLayout';
 import MainPage from './pages/site/MainPage';
 import AboutPage from './pages/site/AboutPage';
-import FormPage from './pages/site/FormPage';
+import NoticesPage from './pages/site/NoticesPage';
+import NoticeDetailPage from './pages/site/NoticeDetailPage';
 import ContactPage from './pages/site/ContactPage';
+import ApplyPage from './pages/site/ApplyPage';
 import MyPage from './pages/site/MyPage';
 import ProjectsPage from './pages/site/ProjectsPage';
 import ProjectDetailPage from './pages/site/ProjectDetailPage';
@@ -36,7 +38,8 @@ export default function App() {
   const location = useLocation();
   const hideFloatingSns =
     location.pathname.startsWith('/order') ||
-    location.pathname.startsWith('/orders');
+    location.pathname.startsWith('/orders') ||
+    location.pathname.startsWith('/admin');
 
   return (
     <>
@@ -57,7 +60,9 @@ export default function App() {
           <Route path="/orders/view" element={<OrderViewPage />} />
           <Route path="/settlements" element={<SettlementsPage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/forms" element={<FormPage />} />
+          <Route path="/notices" element={<NoticesPage />} />
+          <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
+          <Route path="/apply" element={<ApplyPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
