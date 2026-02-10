@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { key: 'orders', label: '주문', href: '/admin/orders' },
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
   { key: 'applications', label: '지원서', href: '/admin/applications' },
-  { key: 'settlements', label: '정산', href: '/admin#settlements' },
+  // { key: 'settlements', label: '정산', href: '/admin#settlements' },
 ];
 
 export default function AdminHeaderMobile() {

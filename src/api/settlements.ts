@@ -1,6 +1,5 @@
 ﻿import { api, withApiBase } from './client';
 import { settlementReports } from '../data/settlements';
-import { loadAdminSettlements } from '../utils/adminSettlements';
 import type {
   SettlementReport,
   MoneyItem,
@@ -38,8 +37,7 @@ export function calcReport(r: SettlementReport) {
 export const settlementsApi = {
   async list(): Promise<SettlementReport[]> {
     if (USE_MOCK) {
-      const adminReports = loadAdminSettlements();
-      return adminReports.length ? adminReports : settlementReports;
+      return settlementReports;
     }
 
     const raw = await api<unknown>(withApiBase('/settlements'));
@@ -67,7 +65,7 @@ function mapReportDto(dto: SettlementReportDto): SettlementReport {
 
   const sales = toArray(dto.sales).map(mapItem);
   const expenseGroups = toArray(dto.expenseGroups ?? dto.expenses).map(
-    mapGroup
+    mapGroup,
   );
 
   return {
