@@ -30,7 +30,8 @@ function parseStored(raw: string | null): CartItem[] {
       if (!entry || typeof entry !== 'object') return acc;
       const item = entry as Partial<CartItem>;
       if (!item.itemId || !item.projectId || !item.name) return acc;
-      if (typeof item.price !== 'number' || !Number.isFinite(item.price)) return acc;
+      if (typeof item.price !== 'number' || !Number.isFinite(item.price))
+        return acc;
 
       acc.push({
         itemId: String(item.itemId),

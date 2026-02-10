@@ -42,7 +42,11 @@ function formatDateTime(value?: string) {
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
 }
 
-export default function OrderDetailCard({ order }: { order: OrderDetailResponse }) {
+export default function OrderDetailCard({
+  order,
+}: {
+  order: OrderDetailResponse;
+}) {
   const inferredTotalAmount = order.items.reduce((sum, item) => {
     if (typeof item.lineAmount === 'number') return sum + item.lineAmount;
     if (
@@ -54,18 +58,22 @@ export default function OrderDetailCard({ order }: { order: OrderDetailResponse 
     return sum;
   }, 0);
   const totalAmountToShow =
-    order.totalAmount !== undefined ? order.totalAmount : inferredTotalAmount || undefined;
+    order.totalAmount !== undefined
+      ? order.totalAmount
+      : inferredTotalAmount || undefined;
   const finalAmountToShow =
     order.finalAmount !== undefined
       ? order.finalAmount
       : totalAmountToShow !== undefined && order.shippingFee !== undefined
-      ? totalAmountToShow + order.shippingFee
-      : totalAmountToShow;
+        ? totalAmountToShow + order.shippingFee
+        : totalAmountToShow;
   const basicRows = [
     { label: '주문번호', value: order.orderNo },
     {
       label: '주문상태',
-      value: order.status ? STATUS_LABELS[order.status] ?? order.status : undefined,
+      value: order.status
+        ? (STATUS_LABELS[order.status] ?? order.status)
+        : undefined,
     },
     { label: '총 상품금액', value: formatMoney(totalAmountToShow) },
     { label: '배송비', value: formatMoney(order.shippingFee) },
@@ -79,7 +87,9 @@ export default function OrderDetailCard({ order }: { order: OrderDetailResponse 
         <h2 className="text-lg font-bold text-slate-900">주문 기본 정보</h2>
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 text-sm text-slate-700">
           {basicRows.length === 0 ? (
-            <div className="rounded-xl bg-slate-50 px-3 py-2">표시 가능한 기본 정보가 없어요.</div>
+            <div className="rounded-xl bg-slate-50 px-3 py-2">
+              표시 가능한 기본 정보가 없어요.
+            </div>
           ) : (
             basicRows.map((row) => (
               <div
@@ -96,7 +106,9 @@ export default function OrderDetailCard({ order }: { order: OrderDetailResponse 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h3 className="text-sm font-bold text-slate-900">주문 상품</h3>
         {order.items.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">주문 상품 정보가 없어요.</p>
+          <p className="mt-2 text-sm text-slate-500">
+            주문 상품 정보가 없어요.
+          </p>
         ) : (
           <div className="mt-3 space-y-2">
             {order.items.map((item, index) => (
@@ -105,7 +117,8 @@ export default function OrderDetailCard({ order }: { order: OrderDetailResponse 
                 className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
               >
                 <span className="text-slate-700">
-                  {item.itemName ?? `상품 #${item.projectItemId ?? '-'}`} x {item.quantity ?? '-'}
+                  {item.itemName ?? `상품 #${item.projectItemId ?? '-'}`} x{' '}
+                  {item.quantity ?? '-'}
                 </span>
                 <span className="font-semibold text-slate-900">
                   {formatMoney(item.lineAmount)}
@@ -125,20 +138,24 @@ export default function OrderDetailCard({ order }: { order: OrderDetailResponse 
           <div className="rounded-xl bg-slate-50 px-3 py-2">
             구매자 구분:{' '}
             {order.buyer?.buyerType
-              ? BUYER_TYPE_LABELS[order.buyer.buyerType] ?? order.buyer.buyerType
+              ? (BUYER_TYPE_LABELS[order.buyer.buyerType] ??
+                order.buyer.buyerType)
               : '-'}
           </div>
           <div className="rounded-xl bg-slate-50 px-3 py-2">
             캠퍼스:{' '}
             {order.buyer?.campus
-              ? CAMPUS_LABELS[order.buyer.campus] ?? order.buyer.campus
+              ? (CAMPUS_LABELS[order.buyer.campus] ?? order.buyer.campus)
               : '-'}
           </div>
-          <div className="rounded-xl bg-slate-50 px-3 py-2">연락처: {order.buyer?.phone ?? '-'}</div>
+          <div className="rounded-xl bg-slate-50 px-3 py-2">
+            연락처: {order.buyer?.phone ?? '-'}
+          </div>
           <div className="rounded-xl bg-slate-50 px-3 py-2">
             수령 방식:{' '}
             {order.fulfillment?.method
-              ? FULFILLMENT_LABELS[order.fulfillment.method] ?? order.fulfillment.method
+              ? (FULFILLMENT_LABELS[order.fulfillment.method] ??
+                order.fulfillment.method)
               : '-'}
           </div>
           <div className="rounded-xl bg-slate-50 px-3 py-2">
