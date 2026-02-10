@@ -1,6 +1,6 @@
-# COW-2025-FE
+﻿# MJU-CRAFT-FE
 
-명지대학교 2025 COW 프로젝트 프론트엔드
+명지대학교 중앙동아리 COW 1팀에서 개발한 COW X MJU_CRAFT 프로젝트 프론트엔드 레포지토리입니다.
 
 ## 기술 스택
 
@@ -9,164 +9,87 @@
 - Vite 7.2.4
 - Tailwind CSS 4.1.18
 - React Router DOM 7.11.0
-- Axios 1.13.2
+- @dnd-kit (drag & drop)
+- react-markdown + remark-gfm/remark-breaks
+- lucide-react (icons)
+- Fetch API 기반 커스텀 클라이언트 (`src/api/client.ts`)
+- ESLint 9 (flat config, react-hooks/refresh 포함)
+- Vercel 배포 (배포 및 리라이트 설정)
 
 ## 프로젝트 구조
 
-```
+```text
 src/
-├── api/              # API 서비스 함수들
-│   ├── axios.ts      # Axios 인스턴스 및 인터셉터 설정
-│   └── auth.ts       # 인증 관련 API 함수
-├── assets/           # 정적 파일 (이미지 등)
-├── components/       # 재사용 가능한 컴포넌트
-│   └── ProtectedRoute.tsx  # 인증이 필요한 라우트 보호
-├── contexts/         # React Context
-│   └── AuthContext.tsx      # 인증 상태 전역 관리
-├── hooks/            # 커스텀 훅
-├── pages/            # 페이지 컴포넌트
-│   ├── LoginPage.tsx
-│   ├── SignupPage.tsx
-│   └── MainPage.tsx
-├── types/            # TypeScript 타입 정의
-│   └── api.ts        # API 관련 타입
-└── utils/            # 유틸리티 함수
-    └── storage.ts    # 로컬 스토리지 관리
+├─ api/                 # API 요청 모듈
+├─ assets/              # 정적 자원 (로고, 폰트 등)
+├─ components/          # 공용 컴포넌트
+│  ├─ confirm/           # 전역 Confirm 모달
+│  ├─ toast/             # 전역 Toast
+│  └─ order/             # 주문 관련 컴포넌트
+├─ constants/           # 상수 정의
+├─ data/                # 정적 데이터
+├─ features/            # 도메인별 기능
+├─ hooks/               # 커스텀 훅
+├─ pages/               # 라우트 단위 페이지
+│  ├─ site/              # 사용자 영역
+│  └─ admin/             # 관리자 영역
+│     └─ sections/        # 관리자 하위 섹션
+├─ styles/              # 전역 스타일
+├─ types/               # 타입 정의
+└─ utils/               # 유틸 함수
 ```
 
-## 환경 변수 설정
+## 환경 변수
 
-프로젝트 루트에 `.env.local` 파일을 생성하고 다음 변수들을 설정하세요:
+프로젝트 루트에 `.env` 파일을 생성하고 값을 설정했습니다.
 
-```env
-# API Base URL
-VITE_API_BASE_URL=/api
+- 개발 서버에서 `/api`는 `vite.config.ts`의 프록시 설정을 따릅니다.
+- 배포 환경에서는 `vercel.json` 리라이트 규칙을 사용합니다.
 
-# API Timeout (ms)
-VITE_API_TIMEOUT=5000
-
-# Token Storage Key
-VITE_TOKEN_KEY=access_token
-```
-
-## 시작하기
-
-### 설치
+## 스크립트
 
 ```bash
-npm install
+npm run dev      # 개발 서버 실행
+npm run build    # 타입 체크 + 프로덕션 빌드
+npm run preview  # 빌드 결과 미리보기
+npm run lint     # ESLint 실행
 ```
 
-### 개발 서버 실행
+## 라우팅 개요
 
-```bash
-npm run dev
-```
+- 사용자 영역: `SiteLayout`
+- 관리자 영역: `AdminLayout`
+- 로그인/소셜 콜백 페이지 포함
 
-### 빌드
+자세한 라우트는 `src/App.tsx`를 참고하세요.
 
-```bash
-npm run build
-```
+## API 통신
 
-### 린트
+- `src/api/client.ts`의 Fetch 기반 클라이언트 사용
+- 토큰은 `localStorage`의 `VITE_TOKEN_KEY`로 관리
+- 필요 시 `Authorization: Bearer <token>` 자동 부착
 
-```bash
-npm run lint
-```
+## 인증/소셜 로그인
 
-## 백엔드 연동 준비사항
+- 카카오/네이버 OAuth 콜백 라우트 사용
+- 관련 API 모듈: `src/api/oauth.ts`
 
-### API 응답 형식
+## UI 공통 요소
 
-백엔드 API는 다음 형식을 따라야 합니다:
+- 전역 토스트: `src/components/toast/ToastProvider`
+- 전역 확인 모달: `src/components/confirm/ConfirmProvider`
 
-```typescript
-{
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-  code?: string | number;
-}
-```
+## 배포
 
-### 인증
+- `vercel.json`의 rewrite로 `/api` 요청을 백엔드로 프록시
+- 정적 SPA 라우팅을 위해 모든 경로를 `/`로 리라이트
 
-- JWT 토큰 기반 인증 사용
-- 토큰은 `localStorage`에 저장됩니다
-- 요청 시 `Authorization: Bearer {token}` 헤더 자동 추가
-- 401 에러 발생 시 자동으로 로그인 페이지로 리다이렉트
+## 코드 품질
 
-### API 엔드포인트
+- ESLint Flat Config 사용 (`eslint.config.js`)
+- TypeScript strict 모드 기반
 
-현재 준비된 엔드포인트:
+## 개발 메모
 
-- `POST /api/auth/login` - 로그인
-- `POST /api/auth/signup` - 회원가입
-- `GET /api/auth/me` - 현재 사용자 정보 조회
-- `POST /api/auth/logout` - 로그아웃
-
-## 주요 기능
-
-### 인증 시스템
-
-- 로그인/회원가입
-- JWT 토큰 관리
-- Protected Route (인증 필요 페이지 보호)
-- 자동 로그아웃 (토큰 만료 시)
-
-### API 통신
-
-- Axios 인터셉터를 통한 자동 토큰 추가
-- 공통 에러 처리
-- 타입 안전성 보장
-
-## 개발 가이드
-
-### 새로운 API 추가하기
-
-1. `src/types/api.ts`에 타입 정의 추가
-2. `src/api/` 폴더에 새로운 서비스 파일 생성
-3. `src/api/axios.ts`의 인스턴스 사용
-
-예시:
-
-```typescript
-// src/api/notice.ts
-import axiosInstance from './axios';
-import { ApiResponse } from '../types/api';
-
-export const getNotices = async () => {
-  const response = await axiosInstance.get<ApiResponse>('/notices');
-  return response.data;
-};
-```
-
-### Protected Route 사용하기
-
-```typescript
-<Route
-  path="/protected"
-  element={
-    <ProtectedRoute>
-      <YourComponent />
-    </ProtectedRoute>
-  }
-/>
-```
-
-### 인증 상태 사용하기
-
-```typescript
-import { useAuth } from '../contexts/AuthContext';
-
-const YourComponent = () => {
-  const { user, isAuthenticated, login, logout } = useAuth();
-  // ...
-};
-```
-
-## 라이선스
-
-MIT
+- Vite + Tailwind 구성이며 전역 스타일은 `src/index.css`에서 관리합니다.
+- 폰트는 `src/assets/fonts`와 `src/styles/font.css`에 정의되어 있습니다.
