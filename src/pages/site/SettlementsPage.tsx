@@ -14,6 +14,11 @@ function money(n: number) {
   return `${sign}${abs.toLocaleString()}원`;
 }
 
+function percent(n: number) {
+  const sign = n > 0 ? '+' : '';
+  return `${sign}${n.toFixed(2)}%`;
+}
+
 function TabButton({
   active,
   children,
@@ -163,47 +168,45 @@ export default function SettlementsPage() {
 
           {filtered.map((r) => {
             const c = calcReport(r);
-            const profitCls =
-              c.profit >= 0 ? 'text-emerald-600' : 'text-rose-600';
+            const profitRateCls =
+              c.profitRate >= 0 ? 'text-sky-600' : 'text-rose-600';
+            const profitCls = c.profit >= 0 ? 'text-sky-600' : 'text-rose-600';
 
             return (
               <details
                 key={r.id}
                 className="group border-b border-slate-200 last:border-b-0"
               >
-                <summary className="cursor-pointer list-none px-5 py-5 text-sm [&::-webkit-details-marker]:hidden">
+                <summary className="cursor-pointer list-none px-5 py-4 text-sm [&::-webkit-details-marker]:hidden">
                   {/* Desktop */}
-                  <div className="col-span-2 text-right">
-                    <div className="inline-block rounded-xl bg-emerald-50 px-3 py-2 text-right">
-                      <div className="text-[11px] text-emerald-700">매출</div>
-                      <div className="font-bold text-emerald-700">
-                        {money(c.salesTotal)}
+                  <div className="hidden items-center md:grid md:grid-cols-12">
+                    <div className="col-span-4">
+                      <div className="font-bold text-slate-900">
+                        {r.projectTitle}
                       </div>
                     </div>
-                  </div>
 
-                  <div className="col-span-2 text-right">
-                    <div className="inline-block rounded-xl bg-rose-50 px-3 py-2 text-right">
-                      <div className="text-[11px] text-rose-700">지출</div>
-                      <div className="font-bold text-rose-700">
-                        {money(c.expenseTotal)}
-                      </div>
+                    <div className="col-span-2 text-slate-700">{r.term}</div>
+
+                    <div className="col-span-2 text-right font-semibold text-emerald-600">
+                      {money(c.salesTotal)}
                     </div>
-                  </div>
 
-                  <div className="col-span-2 text-right">
-                    <div className="inline-block rounded-xl bg-sky-50 px-3 py-2 text-right">
-                      <div className="text-[11px] text-sky-700">순이익</div>
-                      <div className="font-bold text-sky-700">
-                        {money(c.profit)}
-                      </div>
+                    <div className="col-span-2 text-right font-semibold text-rose-600">
+                      {money(c.expenseTotal)}
+                    </div>
+
+                    <div
+                      className={`col-span-2 text-right font-semibold ${profitCls}`}
+                    >
+                      {money(c.profit)} ({percent(c.profitRate)})
                     </div>
                   </div>
 
                   {/* Mobile */}
                   <div className="md:hidden">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <div className="text-base font-bold text-slate-900">
                           {r.projectTitle}
                         </div>
@@ -213,24 +216,30 @@ export default function SettlementsPage() {
                       </span>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-3 gap-3">
-                      <div className="rounded-xl bg-emerald-50 px-3 py-2">
-                        <div className="text-[10px] text-emerald-700">매출</div>
-                        <div className="text-xs font-semibold text-emerald-700">
-                          {money(c.salesTotal)}
+                    <div className="mt-2 flex justify-end">
+                      <div className="grid grid-cols-3 gap-3 text-xs text-right">
+                        <div className="text-emerald-700">
+                          <div className="text-[10px]">매출</div>
+                          <div className="font-semibold leading-tight">
+                            {money(c.salesTotal)}
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="rounded-2xl bg-rose-50 p-3">
-                        <div className="text-[11px] text-rose-700">지출</div>
-                        <div className="mt-1 text-sm font-bold text-rose-700">
-                          {money(c.expenseTotal)}
+                        <div className="text-rose-700">
+                          <div className="text-[10px]">지출</div>
+                          <div className="font-semibold leading-tight">
+                            {money(c.expenseTotal)}
+                          </div>
                         </div>
-                      </div>
-                      <div className="rounded-2xl bg-sky-50 p-3">
-                        <div className="text-[11px] text-sky-700">순이익</div>
-                        <div className={`mt-1 text-sm font-bold ${profitCls}`}>
-                          {money(c.profit)}
+                        <div className={profitCls}>
+                          <div className="text-[10px]">순이익</div>
+                          <div className="font-semibold leading-tight">
+                            {money(c.profit)}
+                            <span
+                              className={`ml-1 text-[10px] ${profitRateCls}`}
+                            >
+                              ({percent(c.profitRate)})
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -238,7 +247,7 @@ export default function SettlementsPage() {
                 </summary>
 
                 <div className="px-5 pb-6 text-sm text-slate-700">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-100/80 p-5 shadow-inner">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-100/80 p-4 shadow-inner">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-primary/60" />
@@ -249,35 +258,30 @@ export default function SettlementsPage() {
                       <div className="text-[11px] text-slate-400">단위: 원</div>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
-                        <div className="text-[11px] font-semibold text-slate-500">
-                          매출 합계
-                        </div>
-                        <div className="mt-2 text-lg font-bold text-slate-900">
+                    <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <div className="text-[10px] text-slate-500">매출</div>
+                        <div className="text-sm font-bold text-emerald-600">
                           {money(c.salesTotal)}
                         </div>
-                        <div className="mt-1 h-1 w-10 rounded-full bg-emerald-100" />
                       </div>
-
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
-                        <div className="text-[11px] font-semibold text-slate-500">
-                          지출 합계
-                        </div>
-                        <div className="mt-2 text-lg font-bold text-slate-900">
+                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <div className="text-[10px] text-slate-500">지출</div>
+                        <div className="text-sm font-bold text-rose-600">
                           {money(c.expenseTotal)}
                         </div>
-                        <div className="mt-1 h-1 w-10 rounded-full bg-rose-100" />
                       </div>
-
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
-                        <div className="text-[11px] font-semibold text-slate-500">
-                          수익률
+                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <div className="text-[10px] text-slate-500">순이익</div>
+                        <div className={`text-sm font-bold ${profitCls}`}>
+                          {money(c.profit)}
                         </div>
-                        <div className={`mt-2 text-lg font-bold ${profitCls}`}>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <div className="text-[10px] text-slate-500">수익률</div>
+                        <div className={`text-sm font-bold ${profitRateCls}`}>
                           {c.profitRate.toFixed(2)}%
                         </div>
-                        <div className="mt-1 h-1 w-10 rounded-full bg-slate-200" />
                       </div>
                     </div>
 
