@@ -21,12 +21,24 @@ function toDateValue(value?: unknown) {
   return null;
 }
 
-function resolvePublicImageUrl(key?: string): string | null {
-  if (!key) return null;
-  if (key.startsWith('http')) return key;
-  const normalized = key.startsWith('/') ? key : `/${key}`;
-  const base = API_BASE.replace(/\/api\/?$/, '');
-  return base ? `${base}${normalized}` : normalized;
+const PUBLIC_ASSET_BASE = API_BASE.replace(/\/api\/?$/, '');
+
+function resolveLegacyImageUrl(key: string): string {
+  if (/^https?:\/\//i.test(key)) return key;
+  const normalized = key.replace(/^\/+/, '');
+  if (!normalized) return '';
+  return PUBLIC_ASSET_BASE
+    ? `${PUBLIC_ASSET_BASE}/${normalized}`
+    : `/${normalized}`;
+}
+
+function getNoticeImages(notice: AdminNoticeResponse | null): string[] {
+  if (!notice) return [];
+  const urls = notice.imageUrls?.filter(Boolean) ?? [];
+  if (urls.length > 0) return urls;
+  return (notice.imageKeys ?? [])
+    .map(resolveLegacyImageUrl)
+    .filter(Boolean);
 }
 
 export default function AdminNoticeDetailPage() {
@@ -73,11 +85,8 @@ export default function AdminNoticeDetailPage() {
   }, [notice?.createdAt, notice?.updatedAt]);
 
   const imageUrls = useMemo(() => {
-    const keys = notice?.imageKeys ?? [];
-    return keys
-      .map((key) => resolvePublicImageUrl(key))
-      .filter((url): url is string => Boolean(url));
-  }, [notice?.imageKeys]);
+    return getNoticeImages(notice);
+  }, [notice]);
 
   if (loading) {
     return (
@@ -186,4 +195,3 @@ export default function AdminNoticeDetailPage() {
     </div>
   );
 }
-

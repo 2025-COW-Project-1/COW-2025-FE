@@ -7,6 +7,7 @@ export type NoticeResponse = {
   title: string;
   content?: string | null;
   imageKeys?: string[] | null;
+  imageUrls?: string[] | null;
   createdAt?: string | number[] | null;
   updatedAt?: string | number[] | null;
 };

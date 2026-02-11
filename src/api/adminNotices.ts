@@ -7,6 +7,7 @@ export type AdminNoticeResponse = {
   title: string;
   content: string;
   imageKeys?: string[] | null;
+  imageUrls?: string[] | null;
   createdAt?: string | number[] | null;
   updatedAt?: string | number[] | null;
 };

@@ -5,18 +5,26 @@ import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import Reveal from '../../components/Reveal';
 import { noticesApi, type NoticeResponse } from '../../api/notices';
-import { formatYmd, parseDateLike } from '../../utils/date';
 import { API_BASE } from '../../api/client';
+import { formatYmd, parseDateLike } from '../../utils/date';
 
 const PUBLIC_ASSET_BASE = API_BASE.replace(/\/api\/?$/, '');
 
-function resolveNoticeImageUrl(key: string) {
+function resolveLegacyImageUrl(key: string) {
   if (/^https?:\/\//i.test(key)) return key;
   const normalized = key.replace(/^\/+/, '');
   if (!normalized) return '';
   return PUBLIC_ASSET_BASE
     ? `${PUBLIC_ASSET_BASE}/${normalized}`
     : `/${normalized}`;
+}
+
+function getNoticeImages(notice: NoticeResponse): string[] {
+  const urls = notice.imageUrls?.filter(Boolean) ?? [];
+  if (urls.length > 0) return urls;
+  return (notice.imageKeys ?? [])
+    .map(resolveLegacyImageUrl)
+    .filter(Boolean);
 }
 
 export default function NoticeDetailPage() {
@@ -96,9 +104,7 @@ export default function NoticeDetailPage() {
     );
   }
 
-  const images = (notice.imageKeys ?? [])
-    .map(resolveNoticeImageUrl)
-    .filter(Boolean);
+  const images = getNoticeImages(notice);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">

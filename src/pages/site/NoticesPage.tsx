@@ -2,8 +2,8 @@
 import { Link } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { noticesApi, type NoticeResponse } from '../../api/notices';
-import { formatYmd } from '../../utils/date';
 import { API_BASE } from '../../api/client';
+import { formatYmd } from '../../utils/date';
 
 const FILTER_OPTIONS = [
   { value: 'all', label: '전체' },
@@ -34,7 +34,7 @@ const PAGE_SIZE = 10;
 
 const PUBLIC_ASSET_BASE = API_BASE.replace(/\/api\/?$/, '');
 
-function resolveNoticeImageUrl(key: string) {
+function resolveLegacyImageUrl(key: string) {
   if (/^https?:\/\//i.test(key)) return key;
   const normalized = key.replace(/^\/+/, '');
   if (!normalized) return '';
@@ -45,6 +45,14 @@ function resolveNoticeImageUrl(key: string) {
 
 function escapeRegExp(input: string) {
   return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function getNoticeImages(notice: NoticeResponse): string[] {
+  const urls = notice.imageUrls?.filter(Boolean) ?? [];
+  if (urls.length > 0) return urls;
+  return (notice.imageKeys ?? [])
+    .map(resolveLegacyImageUrl)
+    .filter(Boolean);
 }
 
 function highlightText(text: string, query: string) {
@@ -101,7 +109,7 @@ export default function NoticesPage() {
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     const next = notices.filter((notice) => {
-      const hasImages = (notice.imageKeys?.length ?? 0) > 0;
+      const hasImages = getNoticeImages(notice).length > 0;
       if (imageFilter === 'with' && !hasImages) return false;
       if (imageFilter === 'without' && hasImages) return false;
 
@@ -239,8 +247,7 @@ export default function NoticesPage() {
         <div className="rounded-3xl">
           {pagedNotices.map((notice, index) => {
             const date = formatYmd(notice.updatedAt ?? notice.createdAt);
-            const imageKey = notice.imageKeys?.[0];
-            const imageUrl = imageKey ? resolveNoticeImageUrl(imageKey) : '';
+            const imageUrl = getNoticeImages(notice)[0] ?? '';
             const isLast = index === pagedNotices.length - 1;
             const displayIndex = (page - 1) * PAGE_SIZE + index + 1;
 
