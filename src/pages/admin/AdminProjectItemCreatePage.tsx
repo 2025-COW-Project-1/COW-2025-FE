@@ -394,6 +394,9 @@ export default function AdminProjectItemCreatePage() {
         }
         return null;
       }
+      if (!current.thumbnailKey?.trim()) {
+        return { field: 'thumbnail', message: '대표 이미지를 업로드해주세요' };
+      }
       if (!current.description.trim())
         return { field: 'description', message: '상세 설명을 입력해주세요' };
       if (!Number.isFinite(current.price) || current.price <= 0)
@@ -433,7 +436,7 @@ export default function AdminProjectItemCreatePage() {
       saleType: current.saleType,
       status: current.status,
       journalFileKey: null,
-      thumbnailKey: current.thumbnailKey?.trim() || undefined,
+      thumbnailKey: current.thumbnailKey?.trim() ?? '',
       targetQty: current.saleType === 'GROUPBUY' ? Number(current.targetQty ?? 0) || null : null,
       fundedQty: current.saleType === 'GROUPBUY' ? Number(current.fundedQty ?? 0) : null,
       stockQty:
@@ -533,19 +536,23 @@ export default function AdminProjectItemCreatePage() {
   );
 
   const uploadThumbnail = useCallback(
-    async (itemId: string, file: File) => {
+    async (file: File, options?: { itemId?: string }) => {
       updateItem({ isUploadingThumbnail: true, thumbnailUploadError: null });
       try {
         const contentType = file.type?.trim() || 'application/octet-stream';
-        const res = await adminItemsApi.presignThumbnail(itemId, {
-          files: [{ fileName: file.name, contentType }],
-        });
+        const res = options?.itemId
+          ? await adminItemsApi.presignThumbnail(options.itemId, {
+              files: [{ fileName: file.name, contentType }],
+            })
+          : await adminProjectsApi.presignThumbnail({
+              files: [{ fileName: file.name, contentType }],
+            });
         const target = res.items?.[0];
         if (!target) throw new Error('업로드 URL이 없어요');
         await uploadToPresignedUrl(target.uploadUrl, file, contentType, {
           key: target.key,
         });
-        updateItem({ thumbnailKey: target.key });
+        updateItem({ thumbnailKey: target.key, validationError: null });
         pendingThumbnailRef.current = null;
         return target.key;
       } catch (err) {
@@ -582,9 +589,7 @@ export default function AdminProjectItemCreatePage() {
 
       pendingThumbnailRef.current = file;
 
-      if (item.id) {
-        await uploadThumbnail(item.id, file);
-      }
+      await uploadThumbnail(file, { itemId: item.id });
     },
     [createPreviewUrl, item, revokePreviewUrl, toast, updateItem, uploadThumbnail],
   );
@@ -734,6 +739,7 @@ export default function AdminProjectItemCreatePage() {
       thumbnailUrl: undefined,
       thumbnailPreviewUrl: undefined,
     });
+    pendingThumbnailRef.current = null;
 
     if (!item.id) {
       toast.success('삭제했어요');
@@ -864,7 +870,18 @@ export default function AdminProjectItemCreatePage() {
             stockQty: undefined,
           }
         : normalizedBase;
-    const validation = getValidation(normalized);
+    let nextForSave: AdminItemForm = normalized;
+    if (normalized.itemType === 'PHYSICAL' && !normalized.thumbnailKey?.trim()) {
+      const pendingFile = pendingThumbnailRef.current;
+      if (pendingFile) {
+        const uploadedKey = await uploadThumbnail(pendingFile, { itemId: normalized.id });
+        if (uploadedKey) {
+          nextForSave = { ...normalized, thumbnailKey: uploadedKey };
+        }
+      }
+    }
+
+    const validation = getValidation(nextForSave);
     if (validation) {
       updateItem({ validationError: validation.message });
       return;
@@ -874,41 +891,18 @@ export default function AdminProjectItemCreatePage() {
     setError(null);
 
     try {
-      const payload = buildPayload(normalized);
+      const payload = buildPayload(nextForSave);
       let saved: AdminItemResponse;
 
-      if (!normalized.id) {
-        saved = await adminItemsApi.createItem(projectId, {
-          ...payload,
-          thumbnailKey: normalized.thumbnailKey?.trim() || undefined,
-        });
+      if (!nextForSave.id) {
+        saved = await adminItemsApi.createItem(projectId, payload);
         updateItem({ id: String(saved.id) });
       } else {
-        const thumbnailKey = normalized.thumbnailKey?.trim() || undefined;
-        if (normalized.itemType === 'PHYSICAL' && !thumbnailKey) {
-          updateItem({ validationError: '대표 이미지를 등록해주세요.' });
-          setSaving(false);
-          return;
-        }
-        saved = await adminItemsApi.updateItem(normalized.id, {
-          ...payload,
-          thumbnailKey,
-        });
-      }
-
-      if (pendingThumbnailRef.current) {
-        const key = await uploadThumbnail(String(saved.id), pendingThumbnailRef.current);
-        if (key) {
-          await adminItemsApi.updateItem(String(saved.id), {
-            ...payload,
-            thumbnailKey: key,
-          });
-          updateItem({ thumbnailKey: key });
-        }
+        saved = await adminItemsApi.updateItem(nextForSave.id, payload);
       }
 
       const current = itemRef.current;
-      if (current && normalized.itemType === 'PHYSICAL') {
+      if (current && nextForSave.itemType === 'PHYSICAL') {
         const pendingImages = current.images
           .filter((img) => img.file && !img.imageId)
           .map((img) => ({ id: img.id, file: img.file as File }));
@@ -1003,18 +997,19 @@ export default function AdminProjectItemCreatePage() {
     journalUploading;
   const isDetailUploading = Boolean(item?.images.some((img) => img.isUploading));
   const isCreateMode = !item?.id;
-  const hasThumbnail = Boolean(item?.thumbnailPreviewUrl || item?.thumbnailKey || item?.thumbnailUrl);
+  const hasThumbnailKey = Boolean(item?.thumbnailKey?.trim());
   const hasAnyInput =
     Boolean(item?.itemType === 'DIGITAL_JOURNAL') ||
     Boolean(item?.name.trim()) ||
     Boolean(item?.summary?.trim()) ||
     Boolean(item?.description.trim()) ||
     normalizeDigits(priceInput) !== '' ||
-    hasThumbnail ||
+    hasThumbnailKey ||
     hasJournalFile ||
     Boolean(item?.images.length);
   const hasPrice = isJournalItem ? true : normalizeDigits(priceInput) !== '';
-  const isFormValid = Boolean(item?.name.trim()) && hasPrice && (isJournalItem ? hasJournalFile : hasThumbnail);
+  const isFormValid =
+    Boolean(item?.name.trim()) && hasPrice && (isJournalItem ? hasJournalFile : hasThumbnailKey);
   const isSaveEnabled =
     !saving && !isUploading && isFormValid && (isCreateMode ? hasAnyInput : isDirty);
 
@@ -1317,12 +1312,6 @@ export default function AdminProjectItemCreatePage() {
                 </div>
 
                 <p className="mt-1 text-[11px] text-slate-400">대표 이미지는 1개만 등록할 수 있어요</p>
-                {!item.id && item.thumbnailPreviewUrl && !item.isUploadingThumbnail && (
-                  <p className="mt-1 text-[11px] font-semibold text-amber-600">
-                    임시 선택됨. 저장 시 업로드됩니다.
-                  </p>
-                )}
-
                 {!thumbnailSrc && (
                   <label
                     onDragOver={(e) => e.preventDefault()}
