@@ -30,6 +30,12 @@ function toDateValue(value?: unknown) {
   return null;
 }
 
+function getImageCount(notice: AdminNoticeResponse) {
+  const urlCount = notice.imageUrls?.length ?? 0;
+  if (urlCount > 0) return urlCount;
+  return notice.imageKeys?.length ?? 0;
+}
+
 export default function AdminNoticesListPage() {
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -66,7 +72,7 @@ export default function AdminNoticesListPage() {
     const normalized = query.trim().toLowerCase();
 
     const next = notices.filter((notice) => {
-      const hasImages = (notice.imageKeys?.length ?? 0) > 0;
+      const hasImages = getImageCount(notice) > 0;
       if (imageFilter === 'with' && !hasImages) return false;
       if (imageFilter === 'without' && hasImages) return false;
 
@@ -222,7 +228,7 @@ export default function AdminNoticesListPage() {
                     </p>
                   </div>
                   <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500">
-                    이미지 {notice.imageKeys?.length ?? 0}개
+                    이미지 {getImageCount(notice)}개
                   </span>
                 </div>
                 <p className="mt-3 text-sm text-slate-600">

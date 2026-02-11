@@ -55,21 +55,30 @@ function createEmpty(): NoticeForm {
 }
 
 function toForm(notice: AdminNoticeResponse): NoticeForm {
+  const keys = notice.imageKeys ?? [];
+  const urls = notice.imageUrls ?? [];
+  const length = Math.max(keys.length, urls.length);
+
   return {
     id: String(notice.id),
     title: notice.title ?? '',
     content: notice.content ?? '',
-    images: (notice.imageKeys ?? []).map((key, idx) => ({
-      id: `server-${key}-${idx}`,
-      key,
-    })),
+    images: Array.from({ length }).map((_, idx) => {
+      const key = keys[idx];
+      const previewUrl = urls[idx];
+      return {
+        id: `server-${key ?? previewUrl ?? idx}-${idx}`,
+        key,
+        previewUrl,
+      };
+    }),
     isDirty: false,
   };
 }
 
 const PUBLIC_ASSET_BASE = API_BASE.replace(/\/api\/?$/, '');
 
-function resolveNoticeImageUrl(key: string) {
+function resolveLegacyImageUrl(key: string) {
   if (/^https?:\/\//i.test(key)) return key;
   const normalized = key.replace(/^\/+/, '');
   if (!normalized) return '';
@@ -106,7 +115,7 @@ function SortableImageCard({
   } as const;
 
   const src =
-    item.previewUrl || (item.key ? resolveNoticeImageUrl(item.key) : '');
+    item.previewUrl || (item.key ? resolveLegacyImageUrl(item.key) : '');
 
   return (
     <div
