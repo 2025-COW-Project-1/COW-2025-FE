@@ -27,7 +27,8 @@ export default function Reveal({
           io.unobserve(el);
         }
       },
-      { threshold: 0.15 }
+      // Tall sections can fail to reach high intersection ratios and stay hidden.
+      { threshold: 0.01 }
     );
 
     io.observe(el);
