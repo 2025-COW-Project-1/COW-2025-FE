@@ -100,18 +100,25 @@ export default function SiteLayout() {
     <div className="min-h-screen flex flex-col bg-app-bg text-slate-900 font-body">
       <Header />
 
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-16" style={{ overflowAnchor: 'none' }}>
         {showBanner && (
-          <div className="border-b border-slate-200 bg-lineart-to-r from-primary/10 via-white to-primary/5">
-            <div className="mx-auto max-w-6xl px-4 py-3">
-              <div className="relative h-[96px] overflow-hidden rounded-3xl border border-primary/10 bg-white/80 shadow-[0_10px_30px_-22px_rgba(15,23,42,0.35)] backdrop-blur md:h-[104px]">
+          <div
+            className="border-b border-slate-100 bg-slate-50/50"
+            style={{ overflowAnchor: 'none' }}
+          >
+            <div className="mx-auto max-w-6xl px-4 py-2.5">
+              <div
+                className="relative flex h-14 items-center overflow-hidden rounded-xl border border-slate-200/80 bg-white md:h-16"
+                role="region"
+                aria-label="공지"
+              >
                 <div
-                  className="flex h-full"
+                  className="flex h-full shrink-0"
                   style={{
                     width: `${slides.length * 100}%`,
                     transform: `translateX(-${(slideIndex / slides.length) * 100}%)`,
                     transition: enableTransition
-                      ? 'transform 800ms cubic-bezier(0.16, 1, 0.3, 1)'
+                      ? 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1)'
                       : 'none',
                   }}
                 >
@@ -124,34 +131,26 @@ export default function SiteLayout() {
                       <Link
                         key={`${notice.id ?? 'notice'}-${idx}`}
                         to={`/notices/${notice.id}`}
-                        className="flex h-full w-full shrink-0 flex-col justify-center px-4 py-3"
+                        className="flex h-full w-full shrink-0 items-center gap-4 px-4 md:px-5"
                         style={{ width: `${100 / slides.length}%` }}
                       >
-                        <div className="flex flex-nowrap items-center justify-between gap-2">
-                          <div className="flex min-w-0 shrink items-center gap-2 text-xs font-semibold text-slate-500">
-                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
-                              공지
-                            </span>
-                            <span className="truncate">
-                              최신 공지사항
-                              {label && ` · ${label}`}
-                            </span>
-                          </div>
-                          <span className="shrink-0 text-xs font-semibold text-slate-400">
-                            눌러서 확인 →
-                          </span>
-                        </div>
+                        <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600">
+                          공지
+                        </span>
                         <p
-                          className="mt-1.5 line-clamp-2 min-h-[2.5em] text-center text-base font-bold leading-tight text-slate-900 md:text-xl"
-                          style={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                          }}
+                          className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 md:text-base"
+                          title={notice.title ?? ''}
                         >
                           {notice.title}
                         </p>
+                        {label && (
+                          <span className="shrink-0 text-xs text-slate-400">
+                            {label}
+                          </span>
+                        )}
+                        <span className="shrink-0 text-slate-300" aria-hidden>
+                          →
+                        </span>
                       </Link>
                     );
                   })}
