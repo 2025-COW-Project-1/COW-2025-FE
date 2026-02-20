@@ -34,15 +34,8 @@ import AdminApplicationsListPage from './pages/admin/AdminApplicationsListPage';
 import AdminApplicationDetailPage from './pages/admin/AdminApplicationDetailPage';
 import AdminFormsListPage from './pages/admin/AdminFormsListPage';
 import AdminFormDetailPage from './pages/admin/AdminFormDetailPage';
-import FloatingSns from './components/FloatingSns';
 
 export default function App() {
-  const location = useLocation();
-  const hideFloatingSns =
-    location.pathname.startsWith('/order') ||
-    location.pathname.startsWith('/orders') ||
-    location.pathname.startsWith('/admin');
-
   return (
     <>
       <Routes>
@@ -124,7 +117,6 @@ export default function App() {
           />
         </Route>
       </Routes>
-      {!hideFloatingSns && <FloatingSns />}
     </>
   );
 }
