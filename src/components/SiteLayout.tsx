@@ -104,11 +104,12 @@ export default function SiteLayout() {
         {showBanner && (
           <div className="border-b border-slate-200 bg-lineart-to-r from-primary/10 via-white to-primary/5">
             <div className="mx-auto max-w-6xl px-4 py-3">
-              <div className="relative flex h-[96px] items-center overflow-hidden rounded-3xl border border-primary/10 bg-white/80 shadow-[0_10px_30px_-22px_rgba(15,23,42,0.35)] backdrop-blur md:h-[104px]">
+              <div className="relative h-[96px] overflow-hidden rounded-3xl border border-primary/10 bg-white/80 shadow-[0_10px_30px_-22px_rgba(15,23,42,0.35)] backdrop-blur md:h-[104px]">
                 <div
-                  className="flex"
+                  className="flex h-full"
                   style={{
-                    transform: `translateX(-${slideIndex * 100}%)`,
+                    width: `${slides.length * 100}%`,
+                    transform: `translateX(-${(slideIndex / slides.length) * 100}%)`,
                     transition: enableTransition
                       ? 'transform 800ms cubic-bezier(0.16, 1, 0.3, 1)'
                       : 'none',
@@ -123,28 +124,25 @@ export default function SiteLayout() {
                       <Link
                         key={`${notice.id ?? 'notice'}-${idx}`}
                         to={`/notices/${notice.id}`}
-                        className="block h-full w-full shrink-0 px-4"
+                        className="flex h-full w-full shrink-0 flex-col justify-center px-4 py-3"
+                        style={{ width: `${100 / slides.length}%` }}
                       >
-                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+                        <div className="flex flex-nowrap items-center justify-between gap-2">
+                          <div className="flex min-w-0 shrink items-center gap-2 text-xs font-semibold text-slate-500">
+                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
                               공지
                             </span>
-                            <span>최신 공지사항</span>
-                            {label && (
-                              <span className="text-[11px] text-slate-400">
-                                {label}
-                              </span>
-                            )}
+                            <span className="truncate">
+                              최신 공지사항
+                              {label && ` · ${label}`}
+                            </span>
                           </div>
-
-                          <span className="text-xs font-semibold text-slate-400">
+                          <span className="shrink-0 text-xs font-semibold text-slate-400">
                             눌러서 확인 →
                           </span>
                         </div>
-
                         <p
-                          className="mt-1 px-1 text-center text-base font-bold text-slate-900 md:text-xl"
+                          className="mt-1.5 line-clamp-2 min-h-[2.5em] text-center text-base font-bold leading-tight text-slate-900 md:text-xl"
                           style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
