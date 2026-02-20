@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import { unwrapApiResult } from './types';
-import type { ApiResult } from './types';
 
 export type AdminProjectStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
 export type AdminProjectCategory = 'GOODS' | 'JOURNAL';
@@ -99,35 +97,35 @@ export async function uploadToPresignedUrl(
 
 export const adminProjectsApi = {
   list() {
-    return api<ApiResult<AdminProjectResponse[]> | AdminProjectResponse[]>(
+    return api<AdminProjectResponse[]>(
       withApiBase('/admin/projects'),
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   getById(projectId: string) {
-    return api<ApiResult<AdminProjectResponse> | AdminProjectResponse>(
+    return api<AdminProjectResponse>(
       withApiBase(`/admin/projects/${projectId}`),
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   createProject(body: AdminProjectUpsertRequest) {
-    return api<ApiResult<AdminProjectResponse> | AdminProjectResponse>(
+    return api<AdminProjectResponse>(
       withApiBase('/admin/projects'),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   updateProject(projectId: string, body: AdminProjectUpsertRequest) {
-    return api<ApiResult<AdminProjectResponse> | AdminProjectResponse>(
+    return api<AdminProjectResponse>(
       withApiBase(`/admin/projects/${projectId}`),
       {
         method: 'PUT',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   deleteProject(projectId: string) {
@@ -137,33 +135,33 @@ export const adminProjectsApi = {
   },
 
   presignThumbnail(body: PresignPutRequest) {
-    return api<ApiResult<PresignPutResponse> | PresignPutResponse>(
+    return api<PresignPutResponse>(
       withApiBase('/admin/projects/thumbnail/presign-put'),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   presignImages(body: PresignPutRequest) {
-    return api<ApiResult<PresignPutResponse> | PresignPutResponse>(
+    return api<PresignPutResponse>(
       withApiBase('/admin/projects/images/presign-put'),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   presignJournal(projectId: string, body: PresignPutRequest) {
-    return api<ApiResult<PresignPutResponse> | PresignPutResponse>(
+    return api<PresignPutResponse>(
       withApiBase(`/admin/projects/${projectId}/journals/presign-put`),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   updateOrder(body: AdminProjectOrderRequest) {

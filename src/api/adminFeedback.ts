@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import { unwrapApiResult } from './types';
-import type { ApiResult } from './types';
 
 export type AdminFeedbackStatus = 'RECEIVED' | 'ANSWERED' | string;
 
@@ -21,11 +19,10 @@ export type AdminFeedbackUpdateRequest = {
 
 export const adminFeedbackApi = {
   list() {
-    return api<AdminFeedbackResponse[] | ApiResult<AdminFeedbackResponse[]>>(
+    return api<AdminFeedbackResponse[]>(
       withApiBase('/admin/feedback'),
     ).then((res) => {
-      const data = unwrapApiResult(res);
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(res) ? res : [];
     });
   },
 

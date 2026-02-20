@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import { unwrapApiResult } from './types';
-import type { ApiResult } from './types';
 
 export type AdminApplicationResultStatus = 'PASS' | 'FAIL' | 'NOT_PUBLISHED';
 
@@ -39,17 +37,15 @@ export type AdminApplicationResultUpdateRequest = {
 
 export const adminApplicationsApi = {
   list(formId: string) {
-    return api<
-      ApiResult<AdminApplicationListItem[]> | AdminApplicationListItem[]
-    >(withApiBase(`/admin/forms/${formId}/applications`)).then((res) =>
-      unwrapApiResult(res),
+    return api<AdminApplicationListItem[]>(
+      withApiBase(`/admin/forms/${formId}/applications`),
     );
   },
 
   getById(formId: string, applicationId: string) {
-    return api<ApiResult<AdminApplicationDetail> | AdminApplicationDetail>(
+    return api<AdminApplicationDetail>(
       withApiBase(`/admin/forms/${formId}/applications/${applicationId}`),
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   updateResult(

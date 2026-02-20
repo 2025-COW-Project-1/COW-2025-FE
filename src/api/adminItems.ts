@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import { unwrapApiResult } from './types';
-import type { ApiResult } from './types';
 
 export type AdminItemSaleType = 'NORMAL' | 'GROUPBUY';
 export type AdminItemStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
@@ -81,35 +79,35 @@ export type JournalPresignGetResponse = {
 
 export const adminItemsApi = {
   listByProject(projectId: string) {
-    return api<ApiResult<AdminItemResponse[]> | AdminItemResponse[]>(
+    return api<AdminItemResponse[]>(
       withApiBase(`/admin/projects/${projectId}/items`),
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   getById(itemId: string) {
-    return api<ApiResult<AdminItemResponse> | AdminItemResponse>(
+    return api<AdminItemResponse>(
       withApiBase(`/admin/items/${itemId}`),
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   createItem(projectId: string, body: AdminItemUpsertRequest) {
-    return api<ApiResult<AdminItemResponse> | AdminItemResponse>(
+    return api<AdminItemResponse>(
       withApiBase(`/admin/projects/${projectId}/items`),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   updateItem(itemId: string, body: AdminItemUpsertRequest) {
-    return api<ApiResult<AdminItemResponse> | AdminItemResponse>(
+    return api<AdminItemResponse>(
       withApiBase(`/admin/items/${itemId}`),
       {
         method: 'PUT',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   deleteItem(itemId: string) {
@@ -119,13 +117,13 @@ export const adminItemsApi = {
   },
 
   presignThumbnail(itemId: string, body: PresignPutRequest) {
-    return api<ApiResult<PresignPutResponse> | PresignPutResponse>(
+    return api<PresignPutResponse>(
       withApiBase(`/admin/items/${itemId}/thumbnail/presign-put`),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   deleteThumbnail(itemId: string) {
@@ -135,26 +133,26 @@ export const adminItemsApi = {
   },
 
   presignImages(itemId: string, body: PresignPutRequest) {
-    return api<ApiResult<PresignPutResponse> | PresignPutResponse>(
+    return api<PresignPutResponse>(
       withApiBase(`/admin/items/${itemId}/images/presign-put`),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   addImages(
     itemId: string,
     body: { images: Array<{ imageKey: string; sortOrder: number }> },
   ) {
-    return api<ApiResult<AdminItemImage[]> | AdminItemImage[]>(
+    return api<AdminItemImage[]>(
       withApiBase(`/admin/items/${itemId}/images`),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   updateImagesOrder(itemId: string, body: AdminItemImageOrderRequest) {
@@ -171,9 +169,9 @@ export const adminItemsApi = {
   },
 
   getJournalDownloadUrl(itemId: string) {
-    return api<ApiResult<JournalPresignGetResponse> | JournalPresignGetResponse>(
+    return api<JournalPresignGetResponse>(
       withApiBase(`/admin/items/${itemId}/journal/presign-get`),
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   deleteJournal(itemId: string) {

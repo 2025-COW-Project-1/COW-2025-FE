@@ -32,25 +32,8 @@ export type MyPageProfile = {
   address?: AddressPayload | null;
 };
 
-export type ApiResponse<T> = {
-  resultType?: string;
-  httpStatusCode?: number;
-  message?: string;
-  data?: T;
-};
-
-const unwrap = <T>(
-  raw: ApiResponse<T> | T
-): { data: T; message?: string; statusCode?: number } => {
-  if (raw && typeof raw === 'object' && raw !== null && 'data' in raw) {
-    const r = raw as ApiResponse<T>;
-    return {
-      data: r.data as T,
-      message: r.message,
-      statusCode: r.httpStatusCode,
-    };
-  }
-  return { data: raw as T };
+const wrapData = <T>(data: T): { data: T; message?: string; statusCode?: number } => {
+  return { data };
 };
 
 export const mypageApi = {
@@ -59,41 +42,39 @@ export const mypageApi = {
     message?: string;
     statusCode?: number;
   }> {
-    const raw = await api<ApiResponse<MyPageProfile> | MyPageProfile>(
-      withApiBase('/mypage')
-    );
-    return unwrap(raw);
+    const data = await api<MyPageProfile>(withApiBase('/mypage'));
+    return wrapData(data);
   },
 
   async updateProfile(payload: Partial<MyPageProfile>) {
-    const raw = await api<ApiResponse<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase('/mypage'),
       { method: 'PUT', body: payload }
     );
-    return unwrap(raw);
+    return wrapData(data);
   },
 
   async createAddress(payload: AddressPayload) {
-    const raw = await api<ApiResponse<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase('/mypage/address'),
       { method: 'POST', body: payload }
     );
-    return unwrap(raw);
+    return wrapData(data);
   },
 
   async updateAddress(payload: AddressPayload) {
-    const raw = await api<ApiResponse<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase('/mypage/address'),
       { method: 'PUT', body: payload }
     );
-    return unwrap(raw);
+    return wrapData(data);
   },
 
   async deleteAddress() {
-    const raw = await api<ApiResponse<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase('/mypage/address'),
       { method: 'DELETE' }
     );
-    return unwrap(raw);
+    return wrapData(data);
   },
 };

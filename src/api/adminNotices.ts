@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import { unwrapApiResult } from './types';
-import type { ApiResult } from './types';
 
 export type AdminNoticeResponse = {
   id: number;
@@ -31,35 +29,35 @@ export type NoticePresignResponse = {
 
 export const adminNoticesApi = {
   list() {
-    return api<ApiResult<AdminNoticeResponse[]> | AdminNoticeResponse[]>(
+    return api<AdminNoticeResponse[]>(
       withApiBase('/admin/notices')
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   getById(noticeId: string) {
-    return api<ApiResult<AdminNoticeResponse> | AdminNoticeResponse>(
+    return api<AdminNoticeResponse>(
       withApiBase(`/admin/notices/${noticeId}`)
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   create(body: AdminNoticeUpsertRequest) {
-    return api<ApiResult<AdminNoticeResponse> | AdminNoticeResponse>(
+    return api<AdminNoticeResponse>(
       withApiBase('/admin/notices'),
       {
         method: 'POST',
         body,
       }
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   update(noticeId: string, body: AdminNoticeUpsertRequest) {
-    return api<ApiResult<AdminNoticeResponse> | AdminNoticeResponse>(
+    return api<AdminNoticeResponse>(
       withApiBase(`/admin/notices/${noticeId}`),
       {
         method: 'PUT',
         body,
       }
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   delete(noticeId: string) {
@@ -69,12 +67,12 @@ export const adminNoticesApi = {
   },
 
   presignImage(body: NoticePresignRequest) {
-    return api<ApiResult<NoticePresignResponse> | NoticePresignResponse>(
+    return api<NoticePresignResponse>(
       withApiBase('/admin/notices/presign-put/images'),
       {
         method: 'POST',
         body,
       }
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 };

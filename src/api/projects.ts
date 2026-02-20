@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import type { ApiResult } from './types';
-import { unwrapApiResult } from './types';
 export type ProjectStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
 
 export type Project = {
@@ -110,23 +108,17 @@ function toProject(
 
 export const projectsApi = {
   async list(): Promise<Project[]> {
-    const data = await api<
-      ApiResult<ProjectListItemResponseDto[]> | ProjectListItemResponseDto[]
-    >(
+    const items = await api<ProjectListItemResponseDto[]>(
       withApiBase('/projects'),
     );
-    const items = unwrapApiResult(data);
     return Array.isArray(items) ? items.map(toProject) : [];
   },
 
   async getById(id: string): Promise<Project | undefined> {
     try {
-      const data = await api<
-        ApiResult<ProjectDetailResponseDto> | ProjectDetailResponseDto
-      >(
+      const item = await api<ProjectDetailResponseDto>(
         withApiBase(`/projects/${id}`),
       );
-      const item = unwrapApiResult(data);
       return item ? toProject(item) : undefined;
     } catch (e) {
       console.error(e);

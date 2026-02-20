@@ -30,6 +30,15 @@ type RequestOptions = {
   headers?: Record<string, string>;
 };
 
+type ApiResultType = 'SUCCESS' | 'FAIL';
+
+type ApiEnvelope<T> = {
+  resultType: ApiResultType;
+  httpStatusCode: number;
+  message: string;
+  data: T | null;
+};
+
 export async function api<T>(
   path: string,
   opts: RequestOptions = {},
@@ -50,7 +59,7 @@ export async function api<T>(
     method,
     headers,
     body: hasBody ? JSON.stringify(opts.body) : undefined,
-    credentials: 'include', // 쿠키 삭제 응답 처리 가능
+    credentials: 'include',
   });
 
   if (res.status === 204) return undefined as T;
@@ -67,6 +76,17 @@ export async function api<T>(
           : JSON.stringify(data, null, 2);
     }
     throw new ApiError(res.status, data, msg);
+  }
+
+  if (isApiEnvelope(data)) {
+    if (data.resultType === 'FAIL') {
+      throw new ApiError(
+        res.status,
+        data,
+        data.message || 'Request failed',
+      );
+    }
+    return data.data as T;
   }
 
   return data as T;
@@ -95,4 +115,20 @@ function extractErrorMessage(data: unknown): string | undefined {
   }
 
   return undefined;
+}
+
+function isApiEnvelope(data: unknown): data is ApiEnvelope<unknown> {
+  if (!data || typeof data !== 'object') return false;
+
+  const record = data as Record<string, unknown>;
+  const resultType = record['resultType'];
+  const httpStatusCode = record['httpStatusCode'];
+  const message = record['message'];
+
+  return (
+    (resultType === 'SUCCESS' || resultType === 'FAIL') &&
+    typeof httpStatusCode === 'number' &&
+    typeof message === 'string' &&
+    'data' in record
+  );
 }

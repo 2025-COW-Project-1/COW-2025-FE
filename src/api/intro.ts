@@ -50,10 +50,6 @@ export type IntroduceSnsItem = {
   active?: boolean;
 };
 
-type ApiResult<T> = {
-  data?: T;
-};
-
 function safeGet<T>(promise: Promise<T>) {
   return promise.catch((err) => {
     if (err instanceof ApiError && err.status === 404) {
@@ -66,25 +62,25 @@ function safeGet<T>(promise: Promise<T>) {
 export const introApi = {
   getDetail(): Promise<IntroduceDetailPayload | null> {
     return safeGet(
-      api<ApiResult<IntroduceDetailPayload>>(withApiBase('/introduce')).then(
-        (res) => res?.data ?? null
-      )
+      api<IntroduceDetailPayload>(withApiBase('/introduce')).then(
+        (res) => res ?? null,
+      ),
     );
   },
 
   getMain(): Promise<IntroduceMainSummary | null> {
     return safeGet(
-      api<ApiResult<IntroduceMainSummary>>(withApiBase('/introduce/main')).then(
-        (res) => res?.data ?? null
-      )
+      api<IntroduceMainSummary>(withApiBase('/introduce/main')).then(
+        (res) => res ?? null,
+      ),
     );
   },
 
   getSns(): Promise<IntroduceSnsItem[]> {
     return safeGet(
-      api<ApiResult<IntroduceSnsItem[]>>(withApiBase('/introduce/sns')).then(
-        (res) => res?.data ?? []
-      )
+      api<IntroduceSnsItem[]>(withApiBase('/introduce/sns')).then(
+        (res) => res ?? [],
+      ),
     );
   },
 };

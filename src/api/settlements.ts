@@ -49,11 +49,13 @@ type SettlementReportDto = Record<string, unknown>;
 
 function normalizeReportsResponse(raw: unknown): SettlementReportDto[] {
   if (Array.isArray(raw)) return raw as SettlementReportDto[];
+
   if (raw && typeof raw === 'object') {
     const r = raw as Record<string, unknown>;
-    const items = r.items ?? r.data ?? r.results;
+    const items = r.items ?? r.results;
     if (Array.isArray(items)) return items as SettlementReportDto[];
   }
+
   return [];
 }
 
