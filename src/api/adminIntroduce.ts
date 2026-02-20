@@ -6,10 +6,6 @@ export type PresignPutResponse = {
   expiresInSeconds: number;
 };
 
-type ApiResult<T> = {
-  data?: T;
-};
-
 function safeGet<T>(promise: Promise<T>) {
   return promise.catch((err) => {
     if (err instanceof ApiError && err.status === 404) return null as T;
@@ -95,9 +91,9 @@ export type AdminIntroduceDetailUpdateRequest = {
 export const adminIntroduceApi = {
   getMain(): Promise<AdminIntroduceMainResponse | null> {
     return safeGet(
-      api<ApiResult<AdminIntroduceMainResponse>>(
-        withApiBase('/admin/introduce/main')
-      ).then((raw) => raw?.data ?? null)
+      api<AdminIntroduceMainResponse>(
+        withApiBase('/admin/introduce/main'),
+      ).then((raw) => raw ?? null),
     );
   },
 
@@ -109,20 +105,20 @@ export const adminIntroduceApi = {
   },
 
   presignHeroLogos(body: { fileName: string; contentType: string }) {
-    return api<ApiResult<PresignPutResponse>>(
+    return api<PresignPutResponse>(
       withApiBase('/admin/introduce/presign-put/hero-logos'),
       {
         method: 'POST',
         body,
-      }
-    ).then((raw) => raw?.data as PresignPutResponse | undefined);
+      },
+    ).then((raw) => raw as PresignPutResponse | undefined);
   },
 
   getDetail(): Promise<AdminIntroduceDetailResponse | null> {
     return safeGet(
-      api<ApiResult<AdminIntroduceDetailResponse>>(
-        withApiBase('/admin/introduce')
-      ).then((raw) => raw?.data ?? null)
+      api<AdminIntroduceDetailResponse>(
+        withApiBase('/admin/introduce'),
+      ).then((raw) => raw ?? null),
     );
   },
 
@@ -134,12 +130,12 @@ export const adminIntroduceApi = {
   },
 
   presignSectionAssets(body: { fileName: string; contentType: string }) {
-    return api<ApiResult<PresignPutResponse>>(
+    return api<PresignPutResponse>(
       withApiBase('/admin/introduce/presign-put/sections'),
       {
         method: 'POST',
         body,
-      }
-    ).then((raw) => raw?.data as PresignPutResponse | undefined);
+      },
+    ).then((raw) => raw as PresignPutResponse | undefined);
   },
 };

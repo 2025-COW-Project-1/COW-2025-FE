@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import type { ApiResult } from './types';
-import { unwrapApiResult } from './types';
 
 type DateArray = [number, number, number, number?, number?, number?, number?];
 
@@ -324,10 +322,9 @@ function toDetail(raw: unknown): AdminOrderDetail {
 export const adminOrdersApi = {
   async list(status?: AdminOrderStatus) {
     const query = status ? `?status=${encodeURIComponent(status)}` : '';
-    const data = await api<ApiResult<unknown> | unknown>(
+    const parsed = await api<unknown>(
       withApiBase(`/admin/orders${query}`),
     );
-    const parsed = unwrapApiResult(data);
     if (!Array.isArray(parsed)) return [];
     return parsed
       .map((item) => toListItem(item))
@@ -335,10 +332,10 @@ export const adminOrdersApi = {
   },
 
   async getById(orderId: number) {
-    const data = await api<ApiResult<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase(`/admin/orders/${orderId}`),
     );
-    return toDetail(unwrapApiResult(data));
+    return toDetail(data);
   },
 
   async cancelOrRequestRefund(orderId: number, reason?: string) {
@@ -348,14 +345,14 @@ export const adminOrdersApi = {
         ? { reason: normalizedReason.slice(0, 500) }
         : undefined;
 
-    await api<ApiResult<unknown> | unknown>(
+    await api<unknown>(
       withApiBase(`/admin/orders/${orderId}/cancel`),
       body ? { method: 'POST', body } : { method: 'POST' },
     );
   },
 
   async confirmPaid(orderId: number) {
-    await api<ApiResult<unknown> | unknown>(
+    await api<unknown>(
       withApiBase(`/admin/orders/${orderId}/confirm-paid`),
       {
         method: 'POST',
@@ -364,7 +361,7 @@ export const adminOrdersApi = {
   },
 
   async confirmRefund(orderId: number) {
-    await api<ApiResult<unknown> | unknown>(
+    await api<unknown>(
       withApiBase(`/admin/orders/${orderId}/confirm-refund`),
       {
         method: 'POST',

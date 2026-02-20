@@ -102,51 +102,49 @@ export type PresignFileResponse = {
 
 export const applicationsApi = {
   getForm() {
-    return api<ApiResult<ApplicationFormResponse> | ApplicationFormResponse>(
+    return api<ApplicationFormResponse>(
       withApiBase('/application/form'),
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   create(body: ApplicationCreateRequest) {
-    return api<ApiResult<void> | void>(withApiBase('/application'), {
+    return api<void>(withApiBase('/application'), {
       method: 'POST',
       body,
-    }).then((res) => unwrapApiResult(res));
+    });
   },
 
   update(body: ApplicationUpdateRequest) {
-    return api<ApiResult<void> | void>(withApiBase('/application'), {
+    return api<void>(withApiBase('/application'), {
       method: 'PUT',
       body,
-    }).then((res) => unwrapApiResult(res));
+    });
   },
 
   read(body: ApplicationReadRequest) {
-    return api<ApiResult<ApplicationReadResponse> | ApplicationReadResponse>(
+    return api<ApplicationReadResponse>(
       withApiBase('/application/read'),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   getResult(body: ApplicationResultRequest) {
-    return api<
-      ApiResult<ApplicationResultResponse> | ApplicationResultResponse
-    >(withApiBase('/result'), {
+    return api<ApplicationResultResponse>(withApiBase('/result'), {
       method: 'POST',
       body,
-    }).then((res) => unwrapApiResult(res));
+    });
   },
 
   presignFiles(body: PresignFileRequest) {
-    return api<ApiResult<PresignFileResponse> | PresignFileResponse>(
+    return api<PresignFileResponse>(
       withApiBase('/forms/files'),
       {
         method: 'POST',
         body,
       },
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 };

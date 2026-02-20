@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import { unwrapApiResult } from './types';
-import type { ApiResult } from './types';
 
 export type ItemSaleType = 'NORMAL' | 'GROUPBUY';
 export type ItemStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
@@ -32,28 +30,26 @@ export type ItemJournalDownloadResponse = {
 
 export const itemsApi = {
   listByProject(projectId: string) {
-    return api<ApiResult<ItemResponse[]> | ItemResponse[]>(
+    return api<ItemResponse[]>(
       withApiBase(`/projects/${projectId}/items`),
-    ).then((res) => unwrapApiResult(res));
+    );
   },
 
   async getById(projectId: string, itemId: string) {
     try {
-      return await api<ApiResult<ItemResponse> | ItemResponse>(
+      return await api<ItemResponse>(
         withApiBase(`/projects/${projectId}/items/${itemId}`),
-      ).then((res) => unwrapApiResult(res));
+      );
     } catch {
-      return api<ApiResult<ItemResponse> | ItemResponse>(
+      return api<ItemResponse>(
         withApiBase(`/items/${itemId}`),
-      ).then((res) => unwrapApiResult(res));
+      );
     }
   },
 
   getJournalDownloadUrl(itemId: string) {
-    return api<
-      ApiResult<ItemJournalDownloadResponse> | ItemJournalDownloadResponse
-    >(withApiBase(`/items/${itemId}/journal/presign-get`), {
+    return api<ItemJournalDownloadResponse>(withApiBase(`/items/${itemId}/journal/presign-get`), {
       method: 'POST',
-    }).then((res) => unwrapApiResult(res));
+    });
   },
 };
