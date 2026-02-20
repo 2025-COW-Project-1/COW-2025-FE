@@ -9,9 +9,8 @@ export default function HeaderMobile() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileProjectsOpen, setMobileProjectsOpen] = useState(false);
-  const [mobileOrderOpen, setMobileOrderOpen] = useState(false);
 
-  const { isLoggedIn, userName } = useAuth();
+  const { isLoggedIn } = useAuth();
 
   const pathname = location.pathname;
 
@@ -24,8 +23,8 @@ export default function HeaderMobile() {
       payouts: pathname.startsWith('/settlements'),
       apply: pathname.startsWith('/apply'),
       contact: pathname.startsWith('/contact'),
-      order: pathname.startsWith('/cart') || pathname.startsWith('/orders'),
-      mypage: pathname.startsWith('/mypage'),
+      cart: pathname.startsWith('/cart'),
+      orderLookup: pathname.startsWith('/orders'),
     }),
     [pathname],
   );
@@ -35,24 +34,9 @@ export default function HeaderMobile() {
   const menuActive = 'bg-primary/10 text-primary';
   const menuIdle = 'text-slate-800 hover:bg-slate-100';
 
-  const displayName = isLoggedIn ? (
-    <>
-      {userName || 'USER'}님,
-      <br />
-      안녕하세요!
-    </>
-  ) : (
-    <>
-      로그인 후
-      <br />
-      이용해주세요.
-    </>
-  );
-
   const closeAll = () => {
     setMobileOpen(false);
     setMobileProjectsOpen(false);
-    setMobileOrderOpen(false);
   };
 
   const handleLogout = () => {
@@ -70,7 +54,6 @@ export default function HeaderMobile() {
           onClick={() => {
             setMobileOpen((v) => !v);
             setMobileProjectsOpen(false);
-            setMobileOrderOpen(false);
           }}
           className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm"
           aria-label="Open menu"
@@ -117,23 +100,6 @@ export default function HeaderMobile() {
           </div>
 
           <div className="flex-1 space-y-2 overflow-y-auto bg-white px-5 py-5">
-            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm font-semibold text-slate-800 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <Link
-                  to={isLoggedIn ? '/mypage' : '/login'}
-                  onClick={closeAll}
-                  className="flex-1 text-left hover:opacity-90"
-                >
-                  <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                    MYPAGE
-                  </div>
-                  <div className="mt-1 text-base font-bold text-slate-800">
-                    {displayName}
-                  </div>
-                </Link>
-              </div>
-            </div>
-
             <Link
               to="/"
               onClick={closeAll}
@@ -209,52 +175,21 @@ export default function HeaderMobile() {
               NOTICES
             </Link>
 
-            <button
-              type="button"
-              aria-expanded={mobileOrderOpen}
-              onClick={() => setMobileOrderOpen((v) => !v)}
-              className={`${menuBase} ${isActive.order ? menuActive : menuIdle}`}
+            <Link
+              to="/cart"
+              onClick={closeAll}
+              className={`${menuBase} ${isActive.cart ? menuActive : menuIdle}`}
             >
-              ORDER
-              <span
-                className={[
-                  'text-slate-400 transition-transform',
-                  mobileOrderOpen ? 'rotate-90' : 'rotate-0',
-                ].join(' ')}
-              >
-                ›
-              </span>
-            </button>
+              CART
+            </Link>
 
-            <div
-              className={[
-                'ml-2 overflow-hidden transition-all duration-200',
-                mobileOrderOpen ? 'mt-2 max-h-28' : 'mt-0 max-h-0',
-              ].join(' ')}
+            <Link
+              to="/orders/lookup"
+              onClick={closeAll}
+              className={`${menuBase} ${isActive.orderLookup ? menuActive : menuIdle}`}
             >
-              <div
-                className={[
-                  'space-y-1 rounded-xl border bg-slate-50',
-                  mobileOrderOpen
-                    ? 'border-slate-200 p-2 opacity-100'
-                    : 'border-transparent p-0 opacity-0',
-                ].join(' ')}
-              >
-                {[
-                  { label: 'CART', href: '/cart' },
-                  { label: 'ORDER LOOKUP', href: '/orders/lookup' },
-                ].map((item) => (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    onClick={closeAll}
-                    className="block rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-white"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
+              ORDER LOOKUP
+            </Link>
 
             {[
               { label: 'APPLY', href: '/apply', active: isActive.apply },
