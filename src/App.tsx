@@ -32,6 +32,8 @@ import AdminNoticeEditorPage from './pages/admin/AdminNoticeEditorPage';
 import AdminNoticeDetailPage from './pages/admin/AdminNoticeDetailPage';
 import AdminApplicationsListPage from './pages/admin/AdminApplicationsListPage';
 import AdminApplicationDetailPage from './pages/admin/AdminApplicationDetailPage';
+import AdminFormsListPage from './pages/admin/AdminFormsListPage';
+import AdminFormDetailPage from './pages/admin/AdminFormDetailPage';
 import FloatingSns from './components/FloatingSns';
 
 export default function App() {
@@ -106,6 +108,11 @@ export default function App() {
           <Route
             path="/admin/notices/:noticeId/edit"
             element={<AdminNoticeEditorPage />}
+          />
+          <Route path="/admin/forms" element={<AdminFormsListPage />} />
+          <Route
+            path="/admin/forms/:formId"
+            element={<AdminFormDetailPage />}
           />
           <Route
             path="/admin/applications"
