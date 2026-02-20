@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import type { ApiResult } from './types';
-import { unwrapApiResult } from './types';
 
 type DateArray = [number, number, number, number?, number?, number?, number?];
 
@@ -446,41 +444,41 @@ function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
 export const ordersApi = {
   async checkLookupIdAvailability(lookupId: string) {
     const trimmed = lookupId.trim();
-    const data = await api<ApiResult<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase(
         `/orders/lookup-id/availability?lookupId=${encodeURIComponent(trimmed)}`,
       ),
     );
-    return toLookupAvailability(trimmed, unwrapApiResult(data));
+    return toLookupAvailability(trimmed, data);
   },
 
   async createOrder(payload: OrderCreateRequest) {
-    const data = await api<ApiResult<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase('/orders'),
       {
         method: 'POST',
         body: payload,
       },
     );
-    return toOrderCreateResponse(unwrapApiResult(data));
+    return toOrderCreateResponse(data);
   },
 
   async lookupOrder(payload: OrderLookupRequest) {
-    const data = await api<ApiResult<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase('/orders/lookup'),
       {
         method: 'POST',
         body: payload,
       },
     );
-    return toOrderDetailResponse(unwrapApiResult(data));
+    return toOrderDetailResponse(data);
   },
 
   async viewOrder(token: string) {
     const trimmed = token.trim();
-    const data = await api<ApiResult<unknown> | unknown>(
+    const data = await api<unknown>(
       withApiBase(`/orders/view?token=${encodeURIComponent(trimmed)}`),
     );
-    return toOrderDetailResponse(unwrapApiResult(data));
+    return toOrderDetailResponse(data);
   },
 };
