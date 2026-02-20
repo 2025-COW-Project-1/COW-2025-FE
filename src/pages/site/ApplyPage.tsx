@@ -6,6 +6,8 @@ import {
   type ApplicationQuestion,
 } from '../../api/applications';
 import { uploadToPresignedUrl } from '../../api/adminProjects';
+import { DEPARTMENT_OPTIONS } from '../../types/recruit';
+import type { DepartmentType } from '../../types/recruit';
 
 type AnswerValue = string | string[] | null;
 
@@ -56,8 +58,8 @@ export default function ApplyPage() {
 
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
-  const [firstDepartment, setFirstDepartment] = useState('');
-  const [secondDepartment, setSecondDepartment] = useState('');
+  const [firstDepartment, setFirstDepartment] = useState<DepartmentType | ''>('');
+  const [secondDepartment, setSecondDepartment] = useState<DepartmentType | ''>('');
 
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({});
   const [files, setFiles] = useState<Record<number, FileState>>({});
@@ -139,11 +141,11 @@ export default function ApplyPage() {
       setValidationError('학번과 비밀번호를 입력해주세요.');
       return;
     }
-    if (!firstDepartment.trim() || !secondDepartment.trim()) {
-      setValidationError('1지망/2지망을 모두 입력해주세요.');
+    if (!firstDepartment || !secondDepartment) {
+      setValidationError('1지망/2지망을 모두 선택해주세요.');
       return;
     }
-    if (firstDepartment.trim() === secondDepartment.trim()) {
+    if (firstDepartment === secondDepartment) {
       setValidationError('1지망과 2지망은 서로 달라야 해요.');
       return;
     }
@@ -186,8 +188,8 @@ export default function ApplyPage() {
       await applicationsApi.create({
         studentId: studentId.trim(),
         password: password.trim(),
-        firstDepartment: firstDepartment.trim(),
-        secondDepartment: secondDepartment.trim(),
+        firstDepartment,
+        secondDepartment,
         answers: payloadAnswers,
       });
       alert('지원서가 제출되었습니다.');
@@ -256,19 +258,37 @@ export default function ApplyPage() {
           </div>
           <div>
             <label className="text-sm font-bold text-slate-700">1지망</label>
-            <input
+            <select
               value={firstDepartment}
-              onChange={(e) => setFirstDepartment(e.target.value)}
+              onChange={(e) =>
+                setFirstDepartment((e.target.value || '') as DepartmentType | '')
+              }
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
-            />
+            >
+              <option value="">선택하세요</option>
+              {DEPARTMENT_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-sm font-bold text-slate-700">2지망</label>
-            <input
+            <select
               value={secondDepartment}
-              onChange={(e) => setSecondDepartment(e.target.value)}
+              onChange={(e) =>
+                setSecondDepartment((e.target.value || '') as DepartmentType | '')
+              }
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
-            />
+            >
+              <option value="">선택하세요</option>
+              {DEPARTMENT_OPTIONS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </Reveal>

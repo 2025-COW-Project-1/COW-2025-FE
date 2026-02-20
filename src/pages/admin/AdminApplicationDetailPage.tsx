@@ -10,6 +10,7 @@ import {
   type AdminApplicationResultStatus,
 } from '../../api/adminApplications';
 import { formatYmd, parseDateLike } from '../../utils/date';
+import { getDepartmentLabel } from '../../types/recruit';
 
 const RESULT_OPTIONS: Array<{
   value: AdminApplicationResultStatus;
@@ -171,7 +172,7 @@ export default function AdminApplicationDetailPage() {
         </div>
 
         <div className="mt-4 text-sm text-slate-600">
-          1지망: {detail.firstDepartment} / 2지망: {detail.secondDepartment}
+          1지망: {getDepartmentLabel(detail.firstDepartment)} / 2지망: {getDepartmentLabel(detail.secondDepartment)}
         </div>
       </Reveal>
 

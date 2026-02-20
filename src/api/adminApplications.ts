@@ -1,14 +1,15 @@
 import { api, withApiBase } from './client';
 import { unwrapApiResult } from './types';
 import type { ApiResult } from './types';
+import type { DepartmentType } from '../types/recruit';
 
 export type AdminApplicationResultStatus = 'PASS' | 'FAIL' | 'NOT_PUBLISHED';
 
 export type AdminApplicationListItem = {
   applicationId: number;
   studentId: string;
-  firstDepartment: string;
-  secondDepartment: string;
+  firstDepartment: DepartmentType;
+  secondDepartment: DepartmentType;
   resultStatus: AdminApplicationResultStatus;
   createdAt?: string | number[] | null;
   updatedAt?: string | number[] | null;
@@ -17,8 +18,8 @@ export type AdminApplicationListItem = {
 export type AdminApplicationDetail = {
   applicationId: number;
   studentId: string;
-  firstDepartment: string;
-  secondDepartment: string;
+  firstDepartment: DepartmentType;
+  secondDepartment: DepartmentType;
   resultStatus: AdminApplicationResultStatus;
   createdAt?: string | number[] | null;
   updatedAt?: string | number[] | null;

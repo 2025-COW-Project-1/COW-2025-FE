@@ -1,3 +1,4 @@
+
 import {
   useCallback,
   useEffect,
@@ -16,10 +17,10 @@ import {
   type AdminFormQuestionCreateRequest,
   type AdminFormNoticeCreateRequest,
 } from '../../api/adminForms';
+import { DEPARTMENT_OPTIONS, getDepartmentLabel } from '../../types/recruit';
 
 const ANSWER_TYPES = ['TEXT', 'SELECT'] as const;
 const SECTION_TYPES = ['COMMON', 'DEPARTMENT'] as const;
-const DEPARTMENT_TYPES = ['기획', '디자인'] as const;
 
 const defaultQuestionPayload = (order: number): AdminFormQuestionCreateRequest => ({
   label: '',
@@ -842,10 +843,10 @@ function QuestionForm({
             }
             className="rounded-lg border border-slate-200 px-2 py-1 text-sm"
           >
-            <option value="">학과 선택</option>
-            {DEPARTMENT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            <option value="">부서 선택</option>
+            {DEPARTMENT_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </select>
@@ -922,10 +923,10 @@ function NoticeForm({
             }
             className="rounded-lg border border-slate-200 px-2 py-1 text-sm"
           >
-            <option value="">학과</option>
-            {DEPARTMENT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
+            <option value="">부서</option>
+            {DEPARTMENT_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </select>
@@ -1007,7 +1008,7 @@ function NoticeRow({
         <p className="font-semibold text-slate-900">{notice.title}</p>
         <p className="mt-1 text-xs text-slate-500">
           {notice.sectionType}
-          {notice.departmentType ? ` · ${notice.departmentType}` : ''}
+          {notice.departmentType ? ` · ${getDepartmentLabel(notice.departmentType)}` : ''}
         </p>
         <p className="mt-2 text-sm text-slate-600">{notice.content}</p>
       </div>

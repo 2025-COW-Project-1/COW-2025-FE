@@ -9,6 +9,7 @@ import {
   type AdminApplicationResultStatus,
 } from '../../api/adminApplications';
 import { formatYmd, parseDateLike } from '../../utils/date';
+import { getDepartmentLabel } from '../../types/recruit';
 
 const RESULT_OPTIONS: Array<{
   value: AdminApplicationResultStatus | 'all';
@@ -213,8 +214,8 @@ export default function AdminApplicationsListPage() {
                   </p>
                   <p className="mt-1 text-xs text-slate-500">{date}</p>
                   <p className="mt-1 text-xs text-slate-500">
-                    1지망: {item.firstDepartment} / 2지망:{' '}
-                    {item.secondDepartment}
+                    1지망: {getDepartmentLabel(item.firstDepartment)} / 2지망:{' '}
+                    {getDepartmentLabel(item.secondDepartment)}
                   </p>
                 </div>
                 <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
