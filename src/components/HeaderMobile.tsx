@@ -65,15 +65,6 @@ export default function HeaderMobile() {
   return (
     <>
       <div className="fixed right-4 top-3 z-90 flex items-center gap-2 md:hidden">
-        {!isLoggedIn && (
-          <Link
-            to="/login"
-            className="rounded-xl bg-primary px-3 py-2 text-sm font-bold text-white"
-          >
-            LOGIN
-          </Link>
-        )}
-
         <button
           type="button"
           onClick={() => {
@@ -167,7 +158,7 @@ export default function HeaderMobile() {
                 isActive.projects ? menuActive : menuIdle
               }`}
             >
-              COLLECTIONS
+              PROJECTS
               <span
                 className={[
                   'text-slate-400 transition-transform',
@@ -267,7 +258,7 @@ export default function HeaderMobile() {
 
             {[
               { label: 'APPLY', href: '/apply', active: isActive.apply },
-              { label: 'CONTACT', href: '/contact', active: isActive.contact },
+              { label: 'FEEDBACK', href: '/contact', active: isActive.contact },
               {
                 label: 'PAYOUTS',
                 href: '/settlements',
