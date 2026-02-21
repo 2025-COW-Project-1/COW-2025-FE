@@ -1,7 +1,8 @@
 import { api, withApiBase } from './client';
+import type { ProjectLifecycleStatus } from '../types/status';
 
 export type ItemSaleType = 'NORMAL' | 'GROUPBUY';
-export type ItemStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
+export type ItemStatus = ProjectLifecycleStatus;
 export type ItemType = 'PHYSICAL' | 'DIGITAL_JOURNAL';
 
 export type ItemResponse = {

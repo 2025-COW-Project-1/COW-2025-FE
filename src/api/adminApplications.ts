@@ -1,6 +1,4 @@
 import { api, withApiBase } from './client';
-import { unwrapApiResult } from './types';
-import type { ApiResult } from './types';
 import type { DepartmentType } from '../types/recruit';
 
 export type AdminApplicationResultStatus = 'PASS' | 'FAIL' | 'NOT_PUBLISHED';

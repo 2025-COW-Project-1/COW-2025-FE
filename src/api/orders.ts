@@ -1,6 +1,5 @@
 import { api, withApiBase } from './client';
-
-type DateArray = [number, number, number, number?, number?, number?, number?];
+import type { DateTimeArray } from '../types/order';
 
 export type LookupIdAvailabilityResponse = {
   lookupId: string;
@@ -211,7 +210,7 @@ function normalizeDateValue(input: unknown): string | undefined {
   if (input.length < 3) return undefined;
 
   const [year, month, day, hour = 0, minute = 0, second = 0] =
-    input as DateArray;
+    input as DateTimeArray;
   if (
     !Number.isFinite(year) ||
     !Number.isFinite(month) ||
