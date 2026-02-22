@@ -1,12 +1,12 @@
-export type Campus = 'SEOUL' | 'YONGIN' | '';
-export type AcademicStatus =
-  | 'ENROLLED'
-  | 'LEAVE'
-  | 'GRADUATED'
-  | 'STAFF'
-  | 'EXTERNAL'
-  | '';
-export type Gender = 'MALE' | 'FEMALE' | 'NONE' | '';
+import type {
+  AcademicStatus as BaseAcademicStatus,
+  Campus as BaseCampus,
+  Gender as BaseGender,
+} from '../../types/mypage';
+
+export type Campus = BaseCampus | '';
+export type AcademicStatus = BaseAcademicStatus | '';
+export type Gender = BaseGender | '';
 
 export type AddressForm = {
   recipientName: string;

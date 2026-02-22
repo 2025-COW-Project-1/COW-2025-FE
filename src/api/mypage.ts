@@ -1,13 +1,10 @@
 import { api, withApiBase } from './client';
-
-export type Campus = 'SEOUL' | 'YONGIN';
-export type AcademicStatus =
-  | 'ENROLLED'
-  | 'LEAVE'
-  | 'GRADUATED'
-  | 'STAFF'
-  | 'EXTERNAL';
-export type Gender = 'MALE' | 'FEMALE' | 'NONE';
+import type {
+  AcademicStatus,
+  Campus,
+  Gender,
+} from '../types/mypage';
+export type { AcademicStatus, Campus, Gender };
 
 export type AddressPayload = {
   recipientName: string;

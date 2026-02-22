@@ -100,17 +100,25 @@ export default function SiteLayout() {
     <div className="min-h-screen flex flex-col bg-app-bg text-slate-900 font-body">
       <Header />
 
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-16" style={{ overflowAnchor: 'none' }}>
         {showBanner && (
-          <div className="border-b border-slate-200 bg-lineart-to-r from-primary/10 via-white to-primary/5">
-            <div className="mx-auto max-w-6xl px-4 py-3">
-              <div className="relative overflow-hidden rounded-3xl border border-primary/10 bg-white/80 shadow-[0_10px_30px_-22px_rgba(15,23,42,0.35)] backdrop-blur">
+          <div
+            className="border-b border-slate-100 bg-slate-50/50"
+            style={{ overflowAnchor: 'none' }}
+          >
+            <div className="mx-auto max-w-6xl px-4 py-2.5">
+              <div
+                className="relative flex h-14 items-center overflow-hidden rounded-xl border border-slate-200/80 bg-white md:h-16"
+                role="region"
+                aria-label="공지"
+              >
                 <div
-                  className="flex"
+                  className="flex h-full shrink-0"
                   style={{
-                    transform: `translateX(-${slideIndex * 100}%)`,
+                    width: `${slides.length * 100}%`,
+                    transform: `translateX(-${(slideIndex / slides.length) * 100}%)`,
                     transition: enableTransition
-                      ? 'transform 800ms cubic-bezier(0.16, 1, 0.3, 1)'
+                      ? 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1)'
                       : 'none',
                   }}
                 >
@@ -123,29 +131,26 @@ export default function SiteLayout() {
                       <Link
                         key={`${notice.id ?? 'notice'}-${idx}`}
                         to={`/notices/${notice.id}`}
-                        className="block w-full shrink-0 px-4 py-2"
+                        className="flex h-full w-full shrink-0 items-center gap-4 px-4 md:px-5"
+                        style={{ width: `${100 / slides.length}%` }}
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
-                              공지
-                            </span>
-                            <span>최신 공지사항</span>
-                            {label && (
-                              <span className="text-[11px] text-slate-400">
-                                {label}
-                              </span>
-                            )}
-                          </div>
-
-                          <span className="text-xs font-semibold text-slate-400">
-                            눌러서 확인 →
-                          </span>
-                        </div>
-
-                        <p className="mt-0 pb-2 text-center text-base font-bold text-slate-900 md:text-xl">
+                        <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600">
+                          공지
+                        </span>
+                        <p
+                          className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800 md:text-base"
+                          title={notice.title ?? ''}
+                        >
                           {notice.title}
                         </p>
+                        {label && (
+                          <span className="shrink-0 text-xs text-slate-400">
+                            {label}
+                          </span>
+                        )}
+                        <span className="shrink-0 text-slate-300" aria-hidden>
+                          →
+                        </span>
                       </Link>
                     );
                   })}
@@ -160,12 +165,120 @@ export default function SiteLayout() {
 
       <footer className="mt-20 border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-slate-600">
-          <div className="font-heading text-base text-primary">명지공방</div>
-          <div className="mt-2">
-            제작: 명지대학교 IT 서비스 개발 중앙 동아리 COW
+          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+            <div>
+              <div className="font-heading text-lg text-primary">
+                명지공방 MJU Craft Studio
+              </div>
+              <p className="mt-2 max-w-md text-xs text-slate-500">
+                명지대학교 학생들의 창작 활동과 프로젝트를 연결하는 공방형
+                커뮤니티입니다. 공방 안팎의 다양한 작업과 이야기를 이곳에서
+                만나보세요.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 text-xs md:grid-cols-3">
+              <div>
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Studio
+                </h2>
+                <ul className="mt-3 space-y-1">
+                  <li>
+                    <Link
+                      to="/about"
+                      className="text-slate-600 hover:text-primary"
+                    >
+                      소개
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/projects"
+                      className="text-slate-600 hover:text-primary"
+                    >
+                      컬렉션
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/notices"
+                      className="text-slate-600 hover:text-primary"
+                    >
+                      공지사항
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Recruit
+                </h2>
+                <ul className="mt-3 space-y-1">
+                  <li>
+                    <Link
+                      to="/apply"
+                      className="text-slate-600 hover:text-primary"
+                    >
+                      모집 안내
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/settlements"
+                      className="text-slate-600 hover:text-primary"
+                    >
+                      정산 안내
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Contact
+                </h2>
+                <ul className="mt-3 space-y-1">
+                  <li>
+                    <Link
+                      to="/contact"
+                      className="text-slate-600 hover:text-primary"
+                    >
+                      문의하기
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Admin
+                </h2>
+                <ul className="mt-3 space-y-1">
+                  <li>
+                    <Link
+                      to="/login"
+                      className="text-slate-500 hover:text-primary"
+                    >
+                      관리자 로그인
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <div className="mt-1">
-            © {new Date().getFullYear()} MJU Craft Studio
+
+          <div className="mt-8 flex flex-col items-start justify-between gap-2 border-t border-slate-100 pt-4 text-[11px] text-slate-400 md:flex-row md:items-center">
+            <p>
+              © {new Date().getFullYear()} MJU Craft Studio. All rights
+              reserved.
+            </p>
+            <p>
+              Designed &amp; built by{' '}
+              <span className="font-semibold text-slate-500">
+                COW, 명지대학교 IT 서비스 개발 중앙 동아리
+              </span>
+            </p>
           </div>
         </div>
       </footer>

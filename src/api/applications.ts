@@ -1,4 +1,5 @@
 import { api, withApiBase } from './client';
+import type { DepartmentType } from '../types/recruit';
 
 export type ApplicationNotice = {
   noticeId: number | string;
@@ -35,8 +36,8 @@ export type ApplicationAnswer = {
 export type ApplicationCreateRequest = {
   studentId: string;
   password: string;
-  firstDepartment: string;
-  secondDepartment: string;
+  firstDepartment: DepartmentType;
+  secondDepartment: DepartmentType;
   answers: ApplicationAnswer[];
 };
 
@@ -51,8 +52,8 @@ export type ApplicationReadResponse = {
   editable?: boolean | null;
   applicationId?: number | string | null;
   studentId?: string | null;
-  firstDepartment?: string | null;
-  secondDepartment?: string | null;
+  firstDepartment?: DepartmentType | string | null;
+  secondDepartment?: DepartmentType | string | null;
   createdAt?: string | number[] | null;
   updatedAt?: string | number[] | null;
   commonNotice?: { title?: string | null; content?: string | null } | null;

@@ -1,7 +1,8 @@
 import { api, withApiBase } from './client';
+import type { ProjectLifecycleStatus } from '../types/status';
 
 export type AdminItemSaleType = 'NORMAL' | 'GROUPBUY';
-export type AdminItemStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
+export type AdminItemStatus = ProjectLifecycleStatus;
 export type AdminItemType = 'PHYSICAL' | 'DIGITAL_JOURNAL';
 
 export type AdminItemImage = {

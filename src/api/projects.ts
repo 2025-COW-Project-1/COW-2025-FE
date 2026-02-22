@@ -1,5 +1,6 @@
 import { api, withApiBase } from './client';
-export type ProjectStatus = 'PREPARING' | 'OPEN' | 'CLOSED';
+import type { ProjectLifecycleStatus } from '../types/status';
+export type ProjectStatus = ProjectLifecycleStatus;
 
 export type Project = {
   id: string;

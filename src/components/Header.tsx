@@ -23,7 +23,7 @@ export default function Header() {
           <HeaderMobile />
 
           <div className="justify-self-end hidden md:flex items-center gap-2">
-            {isLoggedIn ? (
+            {isLoggedIn && (
               <button
                 type="button"
                 onClick={() => {
@@ -35,13 +35,6 @@ export default function Header() {
               >
                 LOGOUT
               </button>
-            ) : (
-              <Link
-                to="/login"
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                LOGIN/SIGNUP
-              </Link>
             )}
           </div>
         </div>

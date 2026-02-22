@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { key: 'projects', label: '프로젝트/상품', href: '/admin/projects' },
   { key: 'orders', label: '주문', href: '/admin/orders' },
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
+  { key: 'forms', label: '모집 Form', href: '/admin/forms' },
   { key: 'applications', label: '지원서', href: '/admin/applications' },
   // { key: 'settlements', label: '정산', href: '/admin#settlements' },
 ];
