@@ -236,12 +236,12 @@ export default function SiteLayout() {
 
               <div>
                 <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Contact
+                  FEEDBACK
                 </h2>
                 <ul className="mt-3 space-y-1">
                   <li>
                     <Link
-                      to="/contact"
+                      to="/feedback"
                       className="text-slate-600 hover:text-primary"
                     >
                       문의하기

@@ -22,7 +22,7 @@ export default function HeaderMobile() {
       notices: pathname.startsWith('/notices'),
       payouts: pathname.startsWith('/settlements'),
       apply: pathname.startsWith('/apply'),
-      contact: pathname.startsWith('/contact'),
+      feedback: pathname.startsWith('/feedback'),
       cart: pathname.startsWith('/cart'),
       orderLookup: pathname.startsWith('/orders'),
     }),
@@ -193,7 +193,11 @@ export default function HeaderMobile() {
 
             {[
               { label: 'APPLY', href: '/apply', active: isActive.apply },
-              { label: 'FEEDBACK', href: '/contact', active: isActive.contact },
+              {
+                label: 'FEEDBACK',
+                href: '/feedback',
+                active: isActive.feedback,
+              },
               {
                 label: 'PAYOUTS',
                 href: '/settlements',
