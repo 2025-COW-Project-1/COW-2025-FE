@@ -52,7 +52,7 @@ export default function HeaderDesktop() {
           aria-expanded={isProjectsOpen}
           aria-haspopup="menu"
         >
-          COLLECTIONS <span className="ml-1 text-slate-400">▾</span>
+          PROJECTS <span className="ml-1 text-slate-400">▾</span>
         </button>
 
         {isProjectsOpen && (

@@ -167,7 +167,7 @@ export default function HeaderMobile() {
                 isActive.projects ? menuActive : menuIdle
               }`}
             >
-              COLLECTIONS
+              PROJECTS
               <span
                 className={[
                   'text-slate-400 transition-transform',
