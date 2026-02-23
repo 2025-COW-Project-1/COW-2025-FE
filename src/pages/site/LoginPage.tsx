@@ -33,7 +33,6 @@ export default function LoginPage() {
     }
   };
 
-
   const validateAdmin = () => {
     if (!userId.trim()) return '아이디를 입력해 주세요.';
     if (!password.trim()) return '비밀번호를 입력해 주세요.';
@@ -138,85 +137,84 @@ export default function LoginPage() {
       <Reveal className={panel} delayMs={120}>
         <div className={body}>
           <Reveal>
-              <div className="space-y-6">
-                <div>
-                  <h2 className="font-heading text-lg text-slate-900 sm:text-xl">
-                    관리자 로그인
-                  </h2>
-                  <p className="mt-2 text-sm text-slate-600">
-                    관리자 계정으로 로그인하면 관리 페이지에 접근할 수 있어요.
-                  </p>
-                </div>
-
-                <form onSubmit={handleAdminSubmit} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-900">
-                      아이디
-                    </label>
-                    <input
-                      value={userId}
-                      onChange={(e) => {
-                        setUserId(e.target.value);
-                        clearMessage();
-                      }}
-                      autoComplete="username"
-                      className={input}
-                      placeholder="아이디를 입력해주세요."
-                      disabled={isSubmitting}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-slate-900">
-                      비밀번호
-                    </label>
-                    <input
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        clearMessage();
-                      }}
-                      type="password"
-                      autoComplete="current-password"
-                      className={input}
-                      placeholder="비밀번호를 입력해주세요."
-                      disabled={isSubmitting}
-                      required
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-xs text-slate-500 sm:max-w-[70%]">
-                      보안상 공용 기기에서는 로그아웃을 꼭 해주세요.
-                    </p>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className={primaryBtn}
-                    >
-                      {isSubmitting ? '로그인 중...' : '관리자 로그인'}
-                    </button>
-                  </div>
-                </form>
-
-                <div className="flex items-center justify-between gap-4 sm:justify-end">
-                  <Link
-                    to="/"
-                    className="text-xs font-semibold text-slate-700 hover:underline"
-                  >
-                    메인으로
-                  </Link>
-                  <Link
-                    to="/contact"
-                    className="text-xs font-semibold text-primary hover:underline"
-                  >
-                    문의하기
-                  </Link>
-                </div>
+            <div className="space-y-6">
+              <div>
+                <h2 className="font-heading text-lg text-slate-900 sm:text-xl">
+                  관리자 로그인
+                </h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  관리자 계정으로 로그인하면 관리 페이지에 접근할 수 있어요.
+                </p>
               </div>
-            </Reveal>
 
+              <form onSubmit={handleAdminSubmit} className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-900">
+                    아이디
+                  </label>
+                  <input
+                    value={userId}
+                    onChange={(e) => {
+                      setUserId(e.target.value);
+                      clearMessage();
+                    }}
+                    autoComplete="username"
+                    className={input}
+                    placeholder="아이디를 입력해주세요."
+                    disabled={isSubmitting}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-slate-900">
+                    비밀번호
+                  </label>
+                  <input
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      clearMessage();
+                    }}
+                    type="password"
+                    autoComplete="current-password"
+                    className={input}
+                    placeholder="비밀번호를 입력해주세요."
+                    disabled={isSubmitting}
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs text-slate-500 sm:max-w-[70%]">
+                    보안상 공용 기기에서는 로그아웃을 꼭 해주세요.
+                  </p>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={primaryBtn}
+                  >
+                    {isSubmitting ? '로그인 중...' : '관리자 로그인'}
+                  </button>
+                </div>
+              </form>
+
+              <div className="flex items-center justify-between gap-4 sm:justify-end">
+                <Link
+                  to="/"
+                  className="text-xs font-semibold text-slate-700 hover:underline"
+                >
+                  메인으로
+                </Link>
+                <Link
+                  to="/feedback"
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
+                  문의하기
+                </Link>
+              </div>
+            </div>
+          </Reveal>
 
           <div className="mt-6 min-h-5.5">
             {status === 'error' && errorMsg && (

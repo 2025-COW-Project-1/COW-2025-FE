@@ -19,7 +19,7 @@ export default function HeaderDesktop() {
       notices: pathname.startsWith('/notices'),
       payouts: pathname.startsWith('/settlements'),
       apply: pathname.startsWith('/apply'),
-      contact: pathname.startsWith('/contact'),
+      feedback: pathname.startsWith('/feedback'),
       cart: pathname.startsWith('/cart'),
       orderLookup: pathname.startsWith('/orders'),
     }),
@@ -120,9 +120,9 @@ export default function HeaderDesktop() {
       </Link>
 
       <Link
-        to="/contact"
+        to="/feedback"
         onClick={() => setOpen(null)}
-        className={`${navBase} ${isActive.contact ? navActive : navIdle}`}
+        className={`${navBase} ${isActive.feedback ? navActive : navIdle}`}
       >
         FEEDBACK
       </Link>

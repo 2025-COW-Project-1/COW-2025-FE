@@ -5,7 +5,7 @@ import MainPage from './pages/site/MainPage';
 import AboutPage from './pages/site/AboutPage';
 import NoticesPage from './pages/site/NoticesPage';
 import NoticeDetailPage from './pages/site/NoticeDetailPage';
-import ContactPage from './pages/site/ContactPage';
+import FeedbackPage from './pages/site/FeedbackPage';
 import ApplyPage from './pages/site/ApplyPage';
 import MyPage from './pages/site/MyPage';
 import ProjectsPage from './pages/site/ProjectsPage';
@@ -65,7 +65,7 @@ export default function App() {
           <Route path="/notices" element={<NoticesPage />} />
           <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
           <Route path="/apply" element={<ApplyPage />} />
-          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/oauth/kakao/callback" element={<OAuthCallbackPage />} />

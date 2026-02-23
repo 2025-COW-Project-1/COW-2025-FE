@@ -1,4 +1,10 @@
-export type LinkKind = 'instagram' | 'kakao' | 'notion' | 'drive' | 'form' | 'link';
+export type LinkKind =
+  | 'instagram'
+  | 'kakao'
+  | 'notion'
+  | 'drive'
+  | 'form'
+  | 'link';
 
 export type LinkItem = {
   id: string;
@@ -93,7 +99,7 @@ export function getDefaultAdminContent(): AdminContent {
       {
         id: createId('link'),
         title: '명지공방 피드백 제출 폼',
-        url: '/contact#feedback',
+        url: '/feedback#feedback',
         kind: 'form',
         description: '의견을 자유롭게 남겨 주세요.',
       },
