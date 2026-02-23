@@ -144,7 +144,7 @@ export default function FeedbackPage() {
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
       <Reveal>
         <h1 className="font-heading text-2xl text-primary sm:text-3xl">
-          FEEDBACK
+          피드백
         </h1>
         <p className="mt-2 text-sm text-slate-600 sm:text-base">
           더 나은 서비스를 위해 피드백을 제출해주세요!
