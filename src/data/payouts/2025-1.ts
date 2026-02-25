@@ -1,6 +1,6 @@
-import type { SettlementReport } from '../../types/settlements';
+import type { PayoutReport } from '../../types/payouts';
 
-const report: SettlementReport = {
+const report: PayoutReport = {
   id: '2025_1',
   term: '2025-1',
   projectTitle: '인하 — 명지의 여름을 채우다',

@@ -1,12 +1,10 @@
-// src/data/settlements/2025-2.ts
-import type { SettlementReport } from '../../types/settlements';
+import type { PayoutReport } from '../../types/payouts';
 
-const report: SettlementReport = {
+const report: PayoutReport = {
   id: '2025_2',
   term: '2025-2',
   projectTitle: '감바람 — 명지에 가을바람을 불다',
 
-  // 매출(총계 3,071,713)
   sales: [
     { label: '스티커(73개)', amount: 219_000 },
     { label: '뱃지(73개)', amount: 328_500 },
@@ -17,7 +15,6 @@ const report: SettlementReport = {
     { label: '기타 수입', amount: 213 },
   ],
 
-  // 지출(총계 3,214,900)
   expenseGroups: [
     {
       title: '제작비',

@@ -1,8 +1,10 @@
 export type MoneyItem = {
+  id?: string | number;
   label: string;
   amount: number;
   unitPrice?: number;
   quantity?: number;
+  category?: string;
 };
 
 export type ExpenseGroup = {
@@ -10,7 +12,7 @@ export type ExpenseGroup = {
   items: MoneyItem[];
 };
 
-export type SettlementReport = {
+export type PayoutReport = {
   id: string;
   term: string;
   projectTitle: string;
