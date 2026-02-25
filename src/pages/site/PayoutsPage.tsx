@@ -3,20 +3,15 @@ import Reveal from '../../components/Reveal';
 import {
   calcReport,
   getItemTotal,
-  settlementsApi,
+  payoutsApi,
   sumItems,
-} from '../../api/settlements';
-import type { SettlementReport } from '../../types/settlements';
+} from '../../api/payouts';
+import type { PayoutReport } from '../../types/payouts';
 
 function money(n: number) {
   const sign = n < 0 ? '-' : '';
   const abs = Math.abs(n);
   return `${sign}${abs.toLocaleString()}원`;
-}
-
-function percent(n: number) {
-  const sign = n > 0 ? '+' : '';
-  return `${sign}${n.toFixed(2)}%`;
 }
 
 function TabButton({
@@ -44,8 +39,8 @@ function TabButton({
   );
 }
 
-export default function SettlementsPage() {
-  const [reports, setReports] = useState<SettlementReport[]>([]);
+export default function PayoutsPage() {
+  const [reports, setReports] = useState<PayoutReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +48,7 @@ export default function SettlementsPage() {
   const mountedRef = useRef(true);
 
   const load = useCallback(() => {
-    settlementsApi
+    payoutsApi
       .list()
       .then((data) => {
         if (!mountedRef.current) return;
@@ -89,7 +84,7 @@ export default function SettlementsPage() {
   }, [reports, term]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <div className="mx-auto max-w-4xl px-4 py-12">
       <Reveal>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -98,17 +93,6 @@ export default function SettlementsPage() {
               학기별 정산 내역을 확인할 수 있어요.
             </p>
           </div>
-
-          <button
-            onClick={() => {
-              setLoading(true);
-              setError(null);
-              load();
-            }}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-          >
-            새로고침
-          </button>
         </div>
       </Reveal>
 
@@ -132,7 +116,7 @@ export default function SettlementsPage() {
       {!loading && error && (
         <Reveal className="mt-6 rounded-3xl border border-rose-200 bg-white p-8">
           <div className="text-sm font-bold text-rose-700">
-            정산 내역을 불러오지 못했습니다: {error}
+            정산 내역을 불러오지 못했습니다. {error}
           </div>
           <button
             onClick={() => {
@@ -149,7 +133,7 @@ export default function SettlementsPage() {
 
       {!loading && !error && filtered.length === 0 && (
         <Reveal className="mt-6 rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">
-          등록된 정산 내역이 없어요. 테이블 헤더
+          등록된 정산 내역이 없어요.
         </Reveal>
       )}
 
@@ -158,19 +142,15 @@ export default function SettlementsPage() {
           delayMs={90}
           className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white"
         >
-          <div className="hidden grid-cols-12 gap-0 border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-bold text-slate-600 md:grid">
+          <div className="hidden grid-cols-10 gap-0 border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-bold text-slate-600 md:grid">
             <div className="col-span-4">프로젝트명</div>
             <div className="col-span-2">학기</div>
             <div className="col-span-2 text-right">매출</div>
             <div className="col-span-2 text-right">지출</div>
-            <div className="col-span-2 text-right">순이익</div>
           </div>
 
           {filtered.map((r) => {
             const c = calcReport(r);
-            const profitRateCls =
-              c.profitRate >= 0 ? 'text-sky-600' : 'text-rose-600';
-            const profitCls = c.profit >= 0 ? 'text-sky-600' : 'text-rose-600';
 
             return (
               <details
@@ -178,8 +158,7 @@ export default function SettlementsPage() {
                 className="group border-b border-slate-200 last:border-b-0"
               >
                 <summary className="cursor-pointer list-none px-5 py-4 text-sm [&::-webkit-details-marker]:hidden">
-                  {/* Desktop */}
-                  <div className="hidden items-center md:grid md:grid-cols-12">
+                  <div className="hidden items-center md:grid md:grid-cols-10">
                     <div className="col-span-4">
                       <div className="font-bold text-slate-900">
                         {r.projectTitle}
@@ -195,29 +174,21 @@ export default function SettlementsPage() {
                     <div className="col-span-2 text-right font-semibold text-rose-600">
                       {money(c.expenseTotal)}
                     </div>
-
-                    <div
-                      className={`col-span-2 text-right font-semibold ${profitCls}`}
-                    >
-                      {money(c.profit)} ({percent(c.profitRate)})
-                    </div>
                   </div>
 
-                  {/* Mobile */}
                   <div className="md:hidden">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-base font-bold text-slate-900">
-                          {r.projectTitle}
-                        </div>
+                    <div className="min-w-0 pl-1">
+                      <div className="text-base font-bold text-slate-900">
+                        {r.projectTitle}
                       </div>
-                      <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600">
-                        {r.term}
-                      </span>
                     </div>
 
-                    <div className="mt-2 flex justify-end">
-                      <div className="grid grid-cols-3 gap-3 text-xs text-right">
+                    <div className="mt-2 flex items-start justify-between gap-3">
+                      <span className="mt-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600">
+                        {r.term}
+                      </span>
+
+                      <div className="grid grid-cols-2 gap-3 text-xs text-right">
                         <div className="text-emerald-700">
                           <div className="text-[10px]">매출</div>
                           <div className="font-semibold leading-tight">
@@ -228,17 +199,6 @@ export default function SettlementsPage() {
                           <div className="text-[10px]">지출</div>
                           <div className="font-semibold leading-tight">
                             {money(c.expenseTotal)}
-                          </div>
-                        </div>
-                        <div className={profitCls}>
-                          <div className="text-[10px]">순이익</div>
-                          <div className="font-semibold leading-tight">
-                            {money(c.profit)}
-                            <span
-                              className={`ml-1 text-[10px] ${profitRateCls}`}
-                            >
-                              ({percent(c.profitRate)})
-                            </span>
                           </div>
                         </div>
                       </div>
@@ -258,7 +218,7 @@ export default function SettlementsPage() {
                       <div className="text-[11px] text-slate-400">단위: 원</div>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <div className="text-[10px] text-slate-500">매출</div>
                         <div className="text-sm font-bold text-emerald-600">
@@ -269,18 +229,6 @@ export default function SettlementsPage() {
                         <div className="text-[10px] text-slate-500">지출</div>
                         <div className="text-sm font-bold text-rose-600">
                           {money(c.expenseTotal)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                        <div className="text-[10px] text-slate-500">순이익</div>
-                        <div className={`text-sm font-bold ${profitCls}`}>
-                          {money(c.profit)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                        <div className="text-[10px] text-slate-500">수익률</div>
-                        <div className={`text-sm font-bold ${profitRateCls}`}>
-                          {c.profitRate.toFixed(2)}%
                         </div>
                       </div>
                     </div>
@@ -301,9 +249,9 @@ export default function SettlementsPage() {
                         </div>
                       ) : (
                         <div className="mt-3 space-y-2">
-                          {r.sales.map((it) => (
+                          {r.sales.map((it, idx) => (
                             <div
-                              key={it.label}
+                              key={String(it.id ?? `${it.label}-${idx}`)}
                               className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
                             >
                               <div className="text-sm font-medium text-slate-700">
@@ -334,11 +282,11 @@ export default function SettlementsPage() {
                         </div>
                       ) : (
                         <div className="mt-3 space-y-4">
-                          {r.expenseGroups.map((g) => {
+                          {r.expenseGroups.map((g, groupIdx) => {
                             const gTotal = sumItems(g.items);
                             return (
                               <div
-                                key={g.title}
+                                key={`${g.title}-${groupIdx}`}
                                 className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md"
                               >
                                 <div className="flex items-center justify-between">
@@ -351,9 +299,9 @@ export default function SettlementsPage() {
                                 </div>
 
                                 <div className="mt-3 space-y-2">
-                                  {g.items.map((it) => (
+                                  {g.items.map((it, itemIdx) => (
                                     <div
-                                      key={`${g.title}-${it.label}`}
+                                      key={`${g.title}-${String(it.id ?? `${it.label}-${itemIdx}`)}`}
                                       className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 shadow-sm"
                                     >
                                       <div className="text-sm text-slate-700">

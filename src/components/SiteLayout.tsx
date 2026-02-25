@@ -225,7 +225,7 @@ export default function SiteLayout() {
                   </li>
                   <li>
                     <Link
-                      to="/settlements"
+                      to="/payouts"
                       className="text-slate-600 hover:text-primary"
                     >
                       정산 안내

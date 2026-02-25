@@ -17,7 +17,7 @@ export default function HeaderDesktop() {
       about: pathname.startsWith('/about'),
       projects: pathname.startsWith('/projects'),
       notices: pathname.startsWith('/notices'),
-      payouts: pathname.startsWith('/settlements'),
+      payouts: pathname.startsWith('/payouts'),
       apply: pathname.startsWith('/apply'),
       feedback: pathname.startsWith('/feedback'),
       cart: pathname.startsWith('/cart'),
@@ -104,7 +104,7 @@ export default function HeaderDesktop() {
       </Link>
 
       <Link
-        to="/settlements"
+        to="/payouts"
         onClick={() => setOpen(null)}
         className={`${navBase} ${isActive.payouts ? navActive : navIdle}`}
       >

@@ -6,13 +6,11 @@ import {
   saveAdminContent,
   type AdminContent,
 } from '../../utils/adminContent';
-// import { loadAdminSettlements } from '../../utils/adminSettlements';
-// import type { SettlementReport } from '../../types/settlements';
 import AdminFeedbackFormSection from './sections/AdminFeedbackFormSection';
 import AdminFeedbackListSection from './sections/AdminFeedbackListSection';
 import AdminLinksSection from './sections/AdminLinksSection';
 import { saveLinksToApi } from './sections/linksSave';
-// import AdminSettlementsSection from './sections/AdminSettlementsSection';
+import AdminPayoutsSection from './sections/AdminPayoutsSection';
 import AdminEditSection from './sections/AdminEditSection';
 import AdminIntroduceEditorPage from './sections/AdminIntroduceEditorPage';
 import AdminProjectsSection from './sections/AdminProjectsSection';
@@ -41,12 +39,6 @@ export default function AdminDashboardPage() {
   const [entries, setEntries] = useState<AdminFeedbackResponse[]>([]);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
-
-  // const [settlements, setSettlements] = useState<SettlementReport[]>(() =>
-  //   loadAdminSettlements(),
-  // );
-  // const [settlementsDirty, setSettlementsDirty] = useState(false);
-
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveMsgTone, setSaveMsgTone] = useState<'success' | 'error' | null>(
@@ -61,23 +53,6 @@ export default function AdminDashboardPage() {
     setSaveMsg(null);
     setSaveMsgTone(null);
   }, [section]);
-
-  // const projectOptionsByTerm = useMemo(() => {
-  //   const map: Record<string, string[]> = {};
-
-  //   content.projectsIntro.forEach((project) => {
-  //     const term = project.term.trim();
-  //     const title = project.title.trim();
-
-  //     if (!term || !title) return;
-
-  //     const list = map[term] ?? [];
-  //     if (!list.includes(title)) list.push(title);
-  //     map[term] = list;
-  //   });
-
-  //   return map;
-  // }, [content.projectsIntro]);
 
   const updateContent = (next: AdminContent) => {
     setContent(next);
@@ -221,15 +196,7 @@ export default function AdminDashboardPage() {
         />
       )}
 
-      {/* {section === 'settlements' && (
-        <AdminSettlementsSection
-          settlements={settlements}
-          setSettlements={setSettlements}
-          settlementsDirty={settlementsDirty}
-          setSettlementsDirty={setSettlementsDirty}
-          projectOptionsByTerm={projectOptionsByTerm}
-        />
-      )} */}
+      {section === 'payouts' && <AdminPayoutsSection />}
 
       {section === 'form' && (
         <AdminFeedbackFormSection
