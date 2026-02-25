@@ -20,7 +20,7 @@ export default function HeaderMobile() {
       about: pathname.startsWith('/about'),
       projects: pathname.startsWith('/projects'),
       notices: pathname.startsWith('/notices'),
-      payouts: pathname.startsWith('/settlements'),
+      payouts: pathname.startsWith('/payouts'),
       apply: pathname.startsWith('/apply'),
       feedback: pathname.startsWith('/feedback'),
       cart: pathname.startsWith('/cart'),
@@ -200,7 +200,7 @@ export default function HeaderMobile() {
               },
               {
                 label: 'PAYOUTS',
-                href: '/settlements',
+                href: '/payouts',
                 active: isActive.payouts,
               },
             ].map((item) => (

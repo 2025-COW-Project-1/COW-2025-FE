@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
   { key: 'forms', label: '모집 Form', href: '/admin/forms' },
   { key: 'applications', label: '지원서', href: '/admin/applications' },
-  // { key: 'settlements', label: '정산', href: '/admin#settlements' },
+  { key: 'payouts', label: '정산', href: '/admin#payouts' },
   { key: 'feedback', label: '피드백', href: '/admin#feedback' },
 ];
 
