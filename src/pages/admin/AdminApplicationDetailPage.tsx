@@ -9,6 +9,7 @@ import {
   type AdminApplicationDetail,
   type AdminApplicationResultStatus,
 } from '../../api/adminApplications';
+import { adminFormsApi, type AdminFormQuestion } from '../../api/adminForms';
 import { formatYmd, parseDateLike } from '../../utils/date';
 import { getDepartmentLabel } from '../../types/recruit';
 
@@ -21,6 +22,114 @@ const RESULT_OPTIONS: Array<{
   { value: 'FAIL', label: '불합격' },
 ];
 
+type AnswerItem = {
+  formQuestionId: number;
+  value: string | null;
+};
+
+function isLikelyUrl(value: string) {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function isLikelyFileKey(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (isLikelyUrl(trimmed)) return false;
+  return (
+    trimmed.includes('/') ||
+    /\.(pdf|docx?|pptx?|xlsx?|zip|hwp|png|jpe?g|webp)$/i.test(trimmed)
+  );
+}
+
+function getQuestionLabel(
+  questionMap: Record<number, AdminFormQuestion>,
+  formQuestionId: number,
+) {
+  const q = questionMap[formQuestionId];
+  if (!q) return `Q#${formQuestionId}`;
+  return q.label?.trim() || `Q#${formQuestionId}`;
+}
+
+function getQuestionAnswerType(
+  questionMap: Record<number, AdminFormQuestion>,
+  formQuestionId: number,
+) {
+  return (questionMap[formQuestionId]?.answerType ?? '').toUpperCase();
+}
+
+function AnswerCard({
+  answer,
+  questionMap,
+}: {
+  answer: AnswerItem;
+  questionMap: Record<number, AdminFormQuestion>;
+}) {
+  const toast = useToast();
+  const value = answer.value?.trim() ?? '';
+  const answerType = getQuestionAnswerType(questionMap, answer.formQuestionId);
+  const fileLike =
+    answerType.includes('FILE') || isLikelyUrl(value) || isLikelyFileKey(value);
+
+  const handleCopy = async () => {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success('파일 키를 복사했습니다.');
+    } catch {
+      toast.error('복사에 실패했습니다.');
+    }
+  };
+
+  return (
+    <div className="rounded-xl bg-slate-50 px-3 py-3">
+      <p className="text-xs font-semibold text-slate-500">
+        {getQuestionLabel(questionMap, answer.formQuestionId)}
+      </p>
+      <p className="mt-0.5 text-[11px] text-slate-400">
+        Q#{answer.formQuestionId}
+      </p>
+
+      {!value ? (
+        <p className="mt-2 text-sm text-slate-500">응답 없음</p>
+      ) : fileLike ? (
+        <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
+          <p className="truncate text-xs text-slate-500">{value}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {isLikelyUrl(value) ? (
+              <a
+                href={value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                파일 열기/다운로드
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleCopy()}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                파일 키 복사
+              </button>
+            )}
+          </div>
+          {!isLikelyUrl(value) && (
+            <p className="mt-2 text-[11px] text-amber-600">
+              현재 응답값은 파일 키입니다. 다운로드 링크 API가 있으면 관리자
+              화면에 바로 연결할 수 있습니다.
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+          {value}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function AdminApplicationDetailPage() {
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -28,6 +137,9 @@ export default function AdminApplicationDetailPage() {
   const { formId, applicationId } = useParams();
 
   const [detail, setDetail] = useState<AdminApplicationDetail | null>(null);
+  const [questionMap, setQuestionMap] = useState<
+    Record<number, AdminFormQuestion>
+  >({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -35,8 +147,19 @@ export default function AdminApplicationDetailPage() {
     if (!formId || !applicationId) return;
     setLoading(true);
     try {
-      const data = await adminApplicationsApi.getById(formId, applicationId);
-      setDetail(data ?? null);
+      const [detailData, questionData] = await Promise.all([
+        adminApplicationsApi.getById(formId, applicationId),
+        adminFormsApi.getQuestions(formId).catch(() => []),
+      ]);
+      setDetail(detailData ?? null);
+
+      const map = (questionData ?? []).reduce<
+        Record<number, AdminFormQuestion>
+      >((acc, q) => {
+        acc[q.formQuestionId] = q;
+        return acc;
+      }, {});
+      setQuestionMap(map);
     } finally {
       setLoading(false);
     }
@@ -60,10 +183,10 @@ export default function AdminApplicationDetailPage() {
         await adminApplicationsApi.updateResult(String(detail.applicationId), {
           resultStatus: status,
         });
-        toast.success('결과를 저장했어요');
+        toast.success('결과를 저장했습니다.');
         await load();
       } catch {
-        toast.error('저장에 실패했어요');
+        toast.error('저장에 실패했습니다.');
       } finally {
         setSaving(false);
       }
@@ -83,10 +206,10 @@ export default function AdminApplicationDetailPage() {
 
     try {
       await adminApplicationsApi.delete(String(detail.applicationId));
-      toast.success('삭제했어요');
+      toast.success('삭제되었습니다.');
       navigate(`/admin/applications?formId=${formId}`);
     } catch {
-      toast.error('삭제에 실패했어요');
+      toast.error('삭제에 실패했습니다.');
     }
   }, [confirm, detail, formId, navigate, toast]);
 
@@ -101,7 +224,7 @@ export default function AdminApplicationDetailPage() {
   if (!detail) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <p className="text-sm text-rose-600">지원서를 찾을 수 없어요.</p>
+        <p className="text-sm text-rose-600">지원서를 찾을 수 없습니다.</p>
       </div>
     );
   }
@@ -123,7 +246,7 @@ export default function AdminApplicationDetailPage() {
               지원서 상세
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              지원서 정보를 확인하고 결과를 입력할 수 있어요
+              지원서 정보 확인 및 결과 입력
             </p>
           </div>
           <button
@@ -172,7 +295,8 @@ export default function AdminApplicationDetailPage() {
         </div>
 
         <div className="mt-4 text-sm text-slate-600">
-          1지망: {getDepartmentLabel(detail.firstDepartment)} / 2지망: {getDepartmentLabel(detail.secondDepartment)}
+          1지망 {getDepartmentLabel(detail.firstDepartment)} / 2지망{' '}
+          {getDepartmentLabel(detail.secondDepartment)}
         </div>
       </Reveal>
 
@@ -182,63 +306,51 @@ export default function AdminApplicationDetailPage() {
       >
         <div className="space-y-6">
           <section>
-            <h2 className="text-sm font-bold text-slate-700">공통 답변</h2>
+            <h2 className="text-sm font-bold text-slate-700">공통 질문</h2>
             <div className="mt-2 space-y-2 text-sm text-slate-600">
               {(detail.commonAnswers ?? []).length === 0 ? (
-                <p>답변이 없어요.</p>
+                <p>응답이 없습니다.</p>
               ) : (
                 detail.commonAnswers?.map((ans) => (
-                  <div
+                  <AnswerCard
                     key={`common-${ans.formQuestionId}`}
-                    className="rounded-xl bg-slate-50 px-3 py-2"
-                  >
-                    <span className="text-xs text-slate-400">
-                      Q#{ans.formQuestionId}
-                    </span>
-                    <p className="mt-1">{ans.value ?? '-'}</p>
-                  </div>
+                    answer={ans}
+                    questionMap={questionMap}
+                  />
                 ))
               )}
             </div>
           </section>
 
           <section>
-            <h2 className="text-sm font-bold text-slate-700">1지망 답변</h2>
+            <h2 className="text-sm font-bold text-slate-700">1지망 질문</h2>
             <div className="mt-2 space-y-2 text-sm text-slate-600">
               {(detail.firstDepartmentAnswers ?? []).length === 0 ? (
-                <p>답변이 없어요.</p>
+                <p>응답이 없습니다.</p>
               ) : (
                 detail.firstDepartmentAnswers?.map((ans) => (
-                  <div
+                  <AnswerCard
                     key={`first-${ans.formQuestionId}`}
-                    className="rounded-xl bg-slate-50 px-3 py-2"
-                  >
-                    <span className="text-xs text-slate-400">
-                      Q#{ans.formQuestionId}
-                    </span>
-                    <p className="mt-1">{ans.value ?? '-'}</p>
-                  </div>
+                    answer={ans}
+                    questionMap={questionMap}
+                  />
                 ))
               )}
             </div>
           </section>
 
           <section>
-            <h2 className="text-sm font-bold text-slate-700">2지망 답변</h2>
+            <h2 className="text-sm font-bold text-slate-700">2지망 질문</h2>
             <div className="mt-2 space-y-2 text-sm text-slate-600">
               {(detail.secondDepartmentAnswers ?? []).length === 0 ? (
-                <p>답변이 없어요.</p>
+                <p>응답이 없습니다.</p>
               ) : (
                 detail.secondDepartmentAnswers?.map((ans) => (
-                  <div
+                  <AnswerCard
                     key={`second-${ans.formQuestionId}`}
-                    className="rounded-xl bg-slate-50 px-3 py-2"
-                  >
-                    <span className="text-xs text-slate-400">
-                      Q#{ans.formQuestionId}
-                    </span>
-                    <p className="mt-1">{ans.value ?? '-'}</p>
-                  </div>
+                    answer={ans}
+                    questionMap={questionMap}
+                  />
                 ))
               )}
             </div>
