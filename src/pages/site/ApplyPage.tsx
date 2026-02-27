@@ -3,6 +3,7 @@ import Reveal from '../../components/Reveal';
 import {
   applicationsApi,
   type ApplicationFormResponse,
+  type ApplicationNotice,
   type ApplicationQuestion,
 } from '../../api/applications';
 import { uploadToPresignedUrl } from '../../api/adminProjects';
@@ -17,6 +18,14 @@ type FileState = {
   error?: string | null;
 };
 
+type PortfolioState = {
+  fileName?: string;
+  fileSize?: number;
+  key?: string | null;
+  uploading?: boolean;
+  error?: string | null;
+};
+
 function parseOptions(raw?: string | null): string[] {
   if (!raw) return [];
   const trimmed = raw.trim();
@@ -26,7 +35,7 @@ function parseOptions(raw?: string | null): string[] {
       const parsed = JSON.parse(trimmed);
       if (Array.isArray(parsed)) return parsed.map((x) => String(x));
     } catch {
-      // fallthrough
+      // ignore
     }
   }
   return trimmed
@@ -49,6 +58,48 @@ function getAnswerType(raw?: string | null) {
   return (raw ?? '').toUpperCase();
 }
 
+function normalizeDepartment(value: string): DepartmentType | '' {
+  const hit = DEPARTMENT_OPTIONS.find((opt) => opt.value === value);
+  return hit ? hit.value : '';
+}
+
+function isCommonSection(sectionType?: string | null) {
+  return (sectionType ?? '').toUpperCase().includes('COMMON');
+}
+
+function isDepartmentSection(sectionType?: string | null) {
+  return (sectionType ?? '').toUpperCase().includes('DEPARTMENT');
+}
+
+function normalizeDeptType(value?: string | null): DepartmentType | '' {
+  const upper = (value ?? '').toUpperCase();
+  return normalizeDepartment(upper);
+}
+
+function shouldShowByDepartment(
+  sectionType: string | null | undefined,
+  departmentType: string | null | undefined,
+  selected: Set<DepartmentType>,
+) {
+  if (isCommonSection(sectionType)) return true;
+  if (isDepartmentSection(sectionType)) {
+    const dept = normalizeDeptType(departmentType);
+    return dept ? selected.has(dept) : false;
+  }
+  return true;
+}
+
+function formatBytes(size: number) {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function hasPortfolioKeyword(q: ApplicationQuestion) {
+  const text = `${q.content ?? ''} ${q.description ?? ''}`.toLowerCase();
+  return text.includes('포트폴리오') || text.includes('portfolio');
+}
+
 export default function ApplyPage() {
   const [form, setForm] = useState<ApplicationFormResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,11 +109,18 @@ export default function ApplyPage() {
 
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
-  const [firstDepartment, setFirstDepartment] = useState<DepartmentType | ''>('');
-  const [secondDepartment, setSecondDepartment] = useState<DepartmentType | ''>('');
+  const [firstDepartment, setFirstDepartment] = useState<DepartmentType | ''>(
+    '',
+  );
+  const [secondDepartment, setSecondDepartment] = useState<DepartmentType | ''>(
+    '',
+  );
 
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({});
   const [files, setFiles] = useState<Record<number, FileState>>({});
+
+  const [portfolio, setPortfolio] = useState<PortfolioState>({});
+  const [dragOverPortfolio, setDragOverPortfolio] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,15 +139,47 @@ export default function ApplyPage() {
     void load();
   }, [load]);
 
+  const selectedDepartments = useMemo(() => {
+    const set = new Set<DepartmentType>();
+    if (firstDepartment) set.add(firstDepartment);
+    if (secondDepartment) set.add(secondDepartment);
+    return set;
+  }, [firstDepartment, secondDepartment]);
+
   const questions = useMemo(() => {
-    return (form?.questions ?? []).slice().sort((a, b) => {
+    const list = (form?.questions ?? []).slice().sort((a, b) => {
       const ao = a.questionOrder ?? 0;
       const bo = b.questionOrder ?? 0;
       return ao - bo;
     });
-  }, [form?.questions]);
 
-  const notices = useMemo(() => form?.notices ?? [], [form?.notices]);
+    return list.filter((q) =>
+      shouldShowByDepartment(
+        q.sectionType,
+        q.departmentType,
+        selectedDepartments,
+      ),
+    );
+  }, [form?.questions, selectedDepartments]);
+
+  const notices = useMemo(() => {
+    const list = (form?.notices ?? []) as ApplicationNotice[];
+    return list.filter((n) =>
+      shouldShowByDepartment(
+        n.sectionType,
+        n.departmentType,
+        selectedDepartments,
+      ),
+    );
+  }, [form?.notices, selectedDepartments]);
+
+  // 포트폴리오 전용 FILE 질문만 매핑(없으면 자동 연결하지 않음)
+  const portfolioQuestion = useMemo(() => {
+    return questions.find(
+      (q) =>
+        getAnswerType(q.answerType).includes('FILE') && hasPortfolioKeyword(q),
+    );
+  }, [questions]);
 
   const handleAnswerChange = (id: number, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -109,8 +199,10 @@ export default function ApplyPage() {
           contentType: file.type || 'application/octet-stream',
         },
       ]);
+
       const target = res.items?.[0];
       if (!target) throw new Error('업로드 URL이 없어요.');
+
       await uploadToPresignedUrl(
         target.uploadUrl,
         file,
@@ -134,6 +226,62 @@ export default function ApplyPage() {
     }
   };
 
+  const handlePortfolioUpload = async (file: File | null) => {
+    if (!file) return;
+
+    setPortfolio({
+      fileName: file.name,
+      fileSize: file.size,
+      key: null,
+      uploading: true,
+      error: null,
+    });
+
+    try {
+      const res = await applicationsApi.presignFiles([
+        {
+          fileName: file.name,
+          contentType: file.type || 'application/octet-stream',
+        },
+      ]);
+
+      const target = res.items?.[0];
+      if (!target) throw new Error('업로드 URL이 없어요.');
+
+      await uploadToPresignedUrl(
+        target.uploadUrl,
+        file,
+        file.type || 'application/octet-stream',
+      );
+
+      setPortfolio({
+        fileName: file.name,
+        fileSize: file.size,
+        key: target.key,
+        uploading: false,
+        error: null,
+      });
+
+      // 포트폴리오 전용 FILE 질문이 있으면 자동으로 해당 답변에 연결
+      if (portfolioQuestion) {
+        handleAnswerChange(portfolioQuestion.formQuestionId, target.key);
+      }
+    } catch {
+      setPortfolio((prev) => ({
+        ...prev,
+        uploading: false,
+        error: '포트폴리오 업로드에 실패했어요.',
+      }));
+    }
+  };
+
+  const handleRemovePortfolio = () => {
+    setPortfolio({});
+    if (portfolioQuestion) {
+      handleAnswerChange(portfolioQuestion.formQuestionId, null);
+    }
+  };
+
   const handleSubmit = async () => {
     setValidationError(null);
 
@@ -151,16 +299,21 @@ export default function ApplyPage() {
     }
 
     for (const q of questions) {
+      const isOptionalPortfolioQuestion =
+        portfolioQuestion?.formQuestionId === q.formQuestionId;
+
       const val = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
-      if (q.required && !val) {
+
+      if (q.required && !val && !isOptionalPortfolioQuestion) {
         setValidationError(
           `필수 질문을 입력해주세요: ${q.content ?? ''}`.trim(),
         );
         return;
       }
+
       if (getAnswerType(q.answerType).includes('FILE')) {
         const f = files[q.formQuestionId];
-        if (q.required && (!f || !f.key)) {
+        if (q.required && (!f || !f.key) && !isOptionalPortfolioQuestion) {
           setValidationError(
             `필수 파일을 업로드해주세요: ${q.content ?? ''}`.trim(),
           );
@@ -171,7 +324,14 @@ export default function ApplyPage() {
 
     const payloadAnswers = questions
       .map((q) => {
+        const isOptionalPortfolioQuestion =
+          portfolioQuestion?.formQuestionId === q.formQuestionId;
         const value = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
+
+        if (isOptionalPortfolioQuestion && !value) {
+          return null;
+        }
+
         return value
           ? { formQuestionId: q.formQuestionId, value }
           : q.required
@@ -247,6 +407,7 @@ export default function ApplyPage() {
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
             />
           </div>
+
           <div>
             <label className="text-sm font-bold text-slate-700">비밀번호</label>
             <input
@@ -256,13 +417,16 @@ export default function ApplyPage() {
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
             />
           </div>
+
           <div>
             <label className="text-sm font-bold text-slate-700">1지망</label>
             <select
               value={firstDepartment}
-              onChange={(e) =>
-                setFirstDepartment((e.target.value || '') as DepartmentType | '')
-              }
+              onChange={(e) => {
+                const next = normalizeDepartment(e.target.value);
+                setFirstDepartment(next);
+                if (next && secondDepartment === next) setSecondDepartment('');
+              }}
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
             >
               <option value="">선택하세요</option>
@@ -273,18 +437,23 @@ export default function ApplyPage() {
               ))}
             </select>
           </div>
+
           <div>
             <label className="text-sm font-bold text-slate-700">2지망</label>
             <select
               value={secondDepartment}
               onChange={(e) =>
-                setSecondDepartment((e.target.value || '') as DepartmentType | '')
+                setSecondDepartment(normalizeDepartment(e.target.value))
               }
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
             >
               <option value="">선택하세요</option>
               {DEPARTMENT_OPTIONS.map(({ value, label }) => (
-                <option key={value} value={value}>
+                <option
+                  key={value}
+                  value={value}
+                  disabled={value === firstDepartment}
+                >
                   {label}
                 </option>
               ))}
@@ -316,7 +485,95 @@ export default function ApplyPage() {
       )}
 
       <Reveal
-        delayMs={240}
+        delayMs={220}
+        className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
+        <h2 className="text-base font-bold text-slate-900">
+          포트폴리오 첨부 (선택)
+        </h2>
+        <p className="mt-1 text-xs text-slate-500">
+          파일을 드래그하거나 클릭해서 업로드할 수 있어요.
+        </p>
+
+        <label
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOverPortfolio(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            setDragOverPortfolio(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOverPortfolio(false);
+            const file = e.dataTransfer.files?.[0] ?? null;
+            void handlePortfolioUpload(file);
+          }}
+          className={[
+            'mt-3 flex min-h-[120px] cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed px-4 py-6 text-center transition',
+            dragOverPortfolio
+              ? 'border-primary bg-primary/5'
+              : 'border-slate-300 bg-slate-50/50 hover:border-primary/60',
+          ].join(' ')}
+        >
+          <input
+            type="file"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              void handlePortfolioUpload(file);
+            }}
+          />
+          <div>
+            <p className="text-sm font-semibold text-slate-700">
+              {portfolio.fileName ??
+                '드래그 & 드롭하거나 선택해서 업로드할 수 있어요.'}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              {portfolio.fileSize
+                ? formatBytes(portfolio.fileSize)
+                : 'PDF, PNG, JPG, JPEG 등 파일 업로드 가능'}
+            </p>
+          </div>
+        </label>
+
+        {portfolio.uploading && (
+          <p className="mt-2 text-xs text-slate-500">파일 업로드 중...</p>
+        )}
+        {portfolio.key && !portfolio.uploading && (
+          <p className="mt-2 text-xs font-semibold text-emerald-600">
+            파일 업로드 완료
+          </p>
+        )}
+        {portfolio.error && (
+          <p className="mt-2 text-xs font-semibold text-rose-600">
+            {portfolio.error}
+          </p>
+        )}
+
+        {portfolio.fileName && (
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              onClick={handleRemovePortfolio}
+              className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+            >
+              파일 제거
+            </button>
+          </div>
+        )}
+
+        {!portfolioQuestion && (
+          <p className="mt-3 text-xs text-slate-500">
+            현재 모집 폼에 포트폴리오 전용 파일 질문이 없어, 업로드 파일은 제출
+            답변에 자동 연결되지 않습니다.
+          </p>
+        )}
+      </Reveal>
+
+      <Reveal
+        delayMs={260}
         className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <h2 className="text-base font-bold text-slate-900">질문</h2>
@@ -333,6 +590,7 @@ export default function ApplyPage() {
                   {q.content}
                   {q.required && <span className="ml-1 text-rose-500">*</span>}
                 </label>
+
                 {q.description && (
                   <p className="text-xs text-slate-400">{q.description}</p>
                 )}
