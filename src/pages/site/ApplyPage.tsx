@@ -14,14 +14,8 @@ type AnswerValue = string | string[] | null;
 
 type FileState = {
   key?: string | null;
-  uploading?: boolean;
-  error?: string | null;
-};
-
-type PortfolioState = {
   fileName?: string;
   fileSize?: number;
-  key?: string | null;
   uploading?: boolean;
   error?: string | null;
 };
@@ -95,11 +89,6 @@ function formatBytes(size: number) {
   return `${(size / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function hasPortfolioKeyword(q: ApplicationQuestion) {
-  const text = `${q.content ?? ''} ${q.description ?? ''}`.toLowerCase();
-  return text.includes('포트폴리오') || text.includes('portfolio');
-}
-
 export default function ApplyPage() {
   const [form, setForm] = useState<ApplicationFormResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,9 +107,9 @@ export default function ApplyPage() {
 
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({});
   const [files, setFiles] = useState<Record<number, FileState>>({});
-
-  const [portfolio, setPortfolio] = useState<PortfolioState>({});
-  const [dragOverPortfolio, setDragOverPortfolio] = useState(false);
+  const [dragOverByQuestion, setDragOverByQuestion] = useState<
+    Record<number, boolean>
+  >({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -173,14 +162,6 @@ export default function ApplyPage() {
     );
   }, [form?.notices, selectedDepartments]);
 
-  // 포트폴리오 전용 FILE 질문만 매핑(없으면 자동 연결하지 않음)
-  const portfolioQuestion = useMemo(() => {
-    return questions.find(
-      (q) =>
-        getAnswerType(q.answerType).includes('FILE') && hasPortfolioKeyword(q),
-    );
-  }, [questions]);
-
   const handleAnswerChange = (id: number, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
   };
@@ -189,7 +170,13 @@ export default function ApplyPage() {
     const qid = q.formQuestionId;
     setFiles((prev) => ({
       ...prev,
-      [qid]: { ...prev[qid], uploading: true, error: null },
+      [qid]: {
+        ...prev[qid],
+        fileName: file.name,
+        fileSize: file.size,
+        uploading: true,
+        error: null,
+      },
     }));
 
     try {
@@ -211,8 +198,14 @@ export default function ApplyPage() {
 
       setFiles((prev) => ({
         ...prev,
-        [qid]: { key: target.key, uploading: false, error: null },
+        [qid]: {
+          ...prev[qid],
+          key: target.key,
+          uploading: false,
+          error: null,
+        },
       }));
+
       handleAnswerChange(qid, target.key);
     } catch {
       setFiles((prev) => ({
@@ -223,63 +216,22 @@ export default function ApplyPage() {
           error: '파일 업로드에 실패했어요.',
         },
       }));
+      handleAnswerChange(qid, null);
     }
   };
 
-  const handlePortfolioUpload = async (file: File | null) => {
-    if (!file) return;
-
-    setPortfolio({
-      fileName: file.name,
-      fileSize: file.size,
-      key: null,
-      uploading: true,
-      error: null,
-    });
-
-    try {
-      const res = await applicationsApi.presignFiles([
-        {
-          fileName: file.name,
-          contentType: file.type || 'application/octet-stream',
-        },
-      ]);
-
-      const target = res.items?.[0];
-      if (!target) throw new Error('업로드 URL이 없어요.');
-
-      await uploadToPresignedUrl(
-        target.uploadUrl,
-        file,
-        file.type || 'application/octet-stream',
-      );
-
-      setPortfolio({
-        fileName: file.name,
-        fileSize: file.size,
-        key: target.key,
+  const handleRemoveQuestionFile = (qid: number) => {
+    setFiles((prev) => ({
+      ...prev,
+      [qid]: {
+        key: null,
+        fileName: undefined,
+        fileSize: undefined,
         uploading: false,
         error: null,
-      });
-
-      // 포트폴리오 전용 FILE 질문이 있으면 자동으로 해당 답변에 연결
-      if (portfolioQuestion) {
-        handleAnswerChange(portfolioQuestion.formQuestionId, target.key);
-      }
-    } catch {
-      setPortfolio((prev) => ({
-        ...prev,
-        uploading: false,
-        error: '포트폴리오 업로드에 실패했어요.',
-      }));
-    }
-  };
-
-  const handleRemovePortfolio = () => {
-    setPortfolio({});
-    if (portfolioQuestion) {
-      handleAnswerChange(portfolioQuestion.formQuestionId, null);
-    }
+      },
+    }));
+    handleAnswerChange(qid, null);
   };
 
   const handleSubmit = async () => {
@@ -299,39 +251,39 @@ export default function ApplyPage() {
     }
 
     for (const q of questions) {
-      const isOptionalPortfolioQuestion =
-        portfolioQuestion?.formQuestionId === q.formQuestionId;
-
+      const type = getAnswerType(q.answerType);
       const val = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
 
-      if (q.required && !val && !isOptionalPortfolioQuestion) {
-        setValidationError(
-          `필수 질문을 입력해주세요: ${q.content ?? ''}`.trim(),
-        );
-        return;
-      }
-
-      if (getAnswerType(q.answerType).includes('FILE')) {
-        const f = files[q.formQuestionId];
-        if (q.required && (!f || !f.key) && !isOptionalPortfolioQuestion) {
+      if (type.includes('FILE')) {
+        const fileKey = files[q.formQuestionId]?.key ?? null;
+        if (q.required && !fileKey) {
           setValidationError(
             `필수 파일을 업로드해주세요: ${q.content ?? ''}`.trim(),
           );
           return;
         }
+        continue;
+      }
+
+      if (q.required && !val) {
+        setValidationError(
+          `필수 질문을 입력해주세요: ${q.content ?? ''}`.trim(),
+        );
+        return;
       }
     }
 
     const payloadAnswers = questions
       .map((q) => {
-        const isOptionalPortfolioQuestion =
-          portfolioQuestion?.formQuestionId === q.formQuestionId;
-        const value = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
+        const type = getAnswerType(q.answerType);
 
-        if (isOptionalPortfolioQuestion && !value) {
-          return null;
+        if (type.includes('FILE')) {
+          const fileKey = files[q.formQuestionId]?.key ?? null;
+          if (!fileKey) return null;
+          return { formQuestionId: q.formQuestionId, value: fileKey };
         }
 
+        const value = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
         return value
           ? { formQuestionId: q.formQuestionId, value }
           : q.required
@@ -488,94 +440,6 @@ export default function ApplyPage() {
         delayMs={220}
         className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
-        <h2 className="text-base font-bold text-slate-900">
-          포트폴리오 첨부 (선택)
-        </h2>
-        <p className="mt-1 text-xs text-slate-500">
-          파일을 드래그하거나 클릭해서 업로드할 수 있어요.
-        </p>
-
-        <label
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOverPortfolio(true);
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault();
-            setDragOverPortfolio(false);
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOverPortfolio(false);
-            const file = e.dataTransfer.files?.[0] ?? null;
-            void handlePortfolioUpload(file);
-          }}
-          className={[
-            'mt-3 flex min-h-[120px] cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed px-4 py-6 text-center transition',
-            dragOverPortfolio
-              ? 'border-primary bg-primary/5'
-              : 'border-slate-300 bg-slate-50/50 hover:border-primary/60',
-          ].join(' ')}
-        >
-          <input
-            type="file"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0] ?? null;
-              void handlePortfolioUpload(file);
-            }}
-          />
-          <div>
-            <p className="text-sm font-semibold text-slate-700">
-              {portfolio.fileName ??
-                '드래그 & 드롭하거나 선택해서 업로드할 수 있어요.'}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              {portfolio.fileSize
-                ? formatBytes(portfolio.fileSize)
-                : 'PDF, PNG, JPG, JPEG 등 파일 업로드 가능'}
-            </p>
-          </div>
-        </label>
-
-        {portfolio.uploading && (
-          <p className="mt-2 text-xs text-slate-500">파일 업로드 중...</p>
-        )}
-        {portfolio.key && !portfolio.uploading && (
-          <p className="mt-2 text-xs font-semibold text-emerald-600">
-            파일 업로드 완료
-          </p>
-        )}
-        {portfolio.error && (
-          <p className="mt-2 text-xs font-semibold text-rose-600">
-            {portfolio.error}
-          </p>
-        )}
-
-        {portfolio.fileName && (
-          <div className="mt-3 flex justify-end">
-            <button
-              type="button"
-              onClick={handleRemovePortfolio}
-              className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
-            >
-              파일 제거
-            </button>
-          </div>
-        )}
-
-        {!portfolioQuestion && (
-          <p className="mt-3 text-xs text-slate-500">
-            현재 모집 폼에 포트폴리오 전용 파일 질문이 없어, 업로드 파일은 제출
-            답변에 자동 연결되지 않습니다.
-          </p>
-        )}
-      </Reveal>
-
-      <Reveal
-        delayMs={260}
-        className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-      >
         <h2 className="text-base font-bold text-slate-900">질문</h2>
 
         <div className="mt-4 space-y-5">
@@ -583,6 +447,7 @@ export default function ApplyPage() {
             const type = getAnswerType(q.answerType);
             const value = answers[q.formQuestionId] ?? '';
             const options = parseOptions(q.selectOptions);
+            const file = files[q.formQuestionId];
 
             return (
               <div key={q.formQuestionId} className="space-y-2">
@@ -596,28 +461,86 @@ export default function ApplyPage() {
                 )}
 
                 {type.includes('FILE') ? (
-                  <div className="flex flex-col gap-2">
-                    <input
-                      type="file"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) void handleFileUpload(q, file);
+                  <div className="space-y-2">
+                    <label
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: true,
+                        }));
                       }}
-                      className="text-sm"
-                    />
-                    {files[q.formQuestionId]?.uploading && (
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: false,
+                        }));
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: false,
+                        }));
+                        const dropped = e.dataTransfer.files?.[0] ?? null;
+                        if (dropped) void handleFileUpload(q, dropped);
+                      }}
+                      className={[
+                        'flex min-h-[100px] cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed px-4 py-5 text-center transition',
+                        dragOverByQuestion[q.formQuestionId]
+                          ? 'border-primary bg-primary/5'
+                          : 'border-slate-300 bg-slate-50/50 hover:border-primary/60',
+                      ].join(' ')}
+                    >
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const selected = e.target.files?.[0] ?? null;
+                          if (selected) void handleFileUpload(q, selected);
+                        }}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">
+                          {file?.fileName
+                            ? file.fileName
+                            : '드래그 & 드롭하거나 클릭해서 파일을 업로드하세요.'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {file?.fileSize
+                            ? formatBytes(file.fileSize)
+                            : '파일 형식 제한 없음'}
+                        </p>
+                      </div>
+                    </label>
+
+                    {file?.uploading && (
                       <span className="text-xs text-slate-500">
                         업로드 중...
                       </span>
                     )}
-                    {files[q.formQuestionId]?.key && (
-                      <span className="text-xs text-emerald-600">
-                        업로드 완료
-                      </span>
+                    {file?.key && !file?.uploading && (
+                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <p className="truncate text-xs text-slate-500">
+                          {file.key}
+                        </p>
+                        <div className="mt-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveQuestionFile(q.formQuestionId)
+                            }
+                            className="rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                          >
+                            파일 제거
+                          </button>
+                        </div>
+                      </div>
                     )}
-                    {files[q.formQuestionId]?.error && (
+                    {file?.error && (
                       <span className="text-xs text-rose-600">
-                        {files[q.formQuestionId]?.error}
+                        {file.error}
                       </span>
                     )}
                   </div>

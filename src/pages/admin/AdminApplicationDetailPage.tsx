@@ -8,6 +8,7 @@ import {
   adminApplicationsApi,
   type AdminApplicationDetail,
   type AdminApplicationResultStatus,
+  type AdminApplicationAnswerItem,
 } from '../../api/adminApplications';
 import { adminFormsApi, type AdminFormQuestion } from '../../api/adminForms';
 import { formatYmd, parseDateLike } from '../../utils/date';
@@ -21,11 +22,6 @@ const RESULT_OPTIONS: Array<{
   { value: 'PASS', label: '합격' },
   { value: 'FAIL', label: '불합격' },
 ];
-
-type AnswerItem = {
-  formQuestionId: number;
-  value: string | null;
-};
 
 function isLikelyUrl(value: string) {
   return /^https?:\/\//i.test(value.trim());
@@ -61,14 +57,18 @@ function AnswerCard({
   answer,
   questionMap,
 }: {
-  answer: AnswerItem;
+  answer: AdminApplicationAnswerItem;
   questionMap: Record<number, AdminFormQuestion>;
 }) {
   const toast = useToast();
   const value = answer.value?.trim() ?? '';
   const answerType = getQuestionAnswerType(questionMap, answer.formQuestionId);
+
   const fileLike =
     answerType.includes('FILE') || isLikelyUrl(value) || isLikelyFileKey(value);
+
+  const fileUrl = (answer.fileUrl ?? '').trim();
+  const hasFileUrl = /^https?:\/\//i.test(fileUrl);
 
   const handleCopy = async () => {
     if (!value) return;
@@ -94,8 +94,18 @@ function AnswerCard({
       ) : fileLike ? (
         <div className="mt-2 rounded-lg border border-slate-200 bg-white p-3">
           <p className="truncate text-xs text-slate-500">{value}</p>
+
           <div className="mt-2 flex flex-wrap gap-2">
-            {isLikelyUrl(value) ? (
+            {hasFileUrl ? (
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                파일 열기/다운로드
+              </a>
+            ) : isLikelyUrl(value) ? (
               <a
                 href={value}
                 target="_blank"
@@ -114,10 +124,10 @@ function AnswerCard({
               </button>
             )}
           </div>
-          {!isLikelyUrl(value) && (
+
+          {!hasFileUrl && !isLikelyUrl(value) && (
             <p className="mt-2 text-[11px] text-amber-600">
-              현재 응답값은 파일 키입니다. 다운로드 링크 API가 있으면 관리자
-              화면에 바로 연결할 수 있습니다.
+              fileUrl이 없어 파일 키만 표시합니다.
             </p>
           )}
         </div>
@@ -151,6 +161,7 @@ export default function AdminApplicationDetailPage() {
         adminApplicationsApi.getById(formId, applicationId),
         adminFormsApi.getQuestions(formId).catch(() => []),
       ]);
+
       setDetail(detailData ?? null);
 
       const map = (questionData ?? []).reduce<
@@ -196,12 +207,14 @@ export default function AdminApplicationDetailPage() {
 
   const handleDelete = useCallback(async () => {
     if (!detail) return;
+
     const ok = await confirm.open({
       title: '지원서 삭제',
       description: `지원서(${detail.applicationId})를 삭제할까요?`,
       danger: true,
       confirmText: '삭제',
     });
+
     if (!ok) return;
 
     try {
@@ -249,6 +262,7 @@ export default function AdminApplicationDetailPage() {
               지원서 정보 확인 및 결과 입력
             </p>
           </div>
+
           <button
             type="button"
             onClick={handleDelete}
@@ -311,7 +325,7 @@ export default function AdminApplicationDetailPage() {
               {(detail.commonAnswers ?? []).length === 0 ? (
                 <p>응답이 없습니다.</p>
               ) : (
-                detail.commonAnswers?.map((ans) => (
+                (detail.commonAnswers ?? []).map((ans) => (
                   <AnswerCard
                     key={`common-${ans.formQuestionId}`}
                     answer={ans}
@@ -328,7 +342,7 @@ export default function AdminApplicationDetailPage() {
               {(detail.firstDepartmentAnswers ?? []).length === 0 ? (
                 <p>응답이 없습니다.</p>
               ) : (
-                detail.firstDepartmentAnswers?.map((ans) => (
+                (detail.firstDepartmentAnswers ?? []).map((ans) => (
                   <AnswerCard
                     key={`first-${ans.formQuestionId}`}
                     answer={ans}
@@ -345,7 +359,7 @@ export default function AdminApplicationDetailPage() {
               {(detail.secondDepartmentAnswers ?? []).length === 0 ? (
                 <p>응답이 없습니다.</p>
               ) : (
-                detail.secondDepartmentAnswers?.map((ans) => (
+                (detail.secondDepartmentAnswers ?? []).map((ans) => (
                   <AnswerCard
                     key={`second-${ans.formQuestionId}`}
                     answer={ans}
