@@ -3,6 +3,7 @@ import Reveal from '../../components/Reveal';
 import {
   applicationsApi,
   type ApplicationFormResponse,
+  type ApplicationNotice,
   type ApplicationQuestion,
 } from '../../api/applications';
 import { uploadToPresignedUrl } from '../../api/adminProjects';
@@ -13,6 +14,8 @@ type AnswerValue = string | string[] | null;
 
 type FileState = {
   key?: string | null;
+  fileName?: string;
+  fileSize?: number;
   uploading?: boolean;
   error?: string | null;
 };
@@ -26,7 +29,7 @@ function parseOptions(raw?: string | null): string[] {
       const parsed = JSON.parse(trimmed);
       if (Array.isArray(parsed)) return parsed.map((x) => String(x));
     } catch {
-      // fallthrough
+      // ignore
     }
   }
   return trimmed
@@ -49,6 +52,43 @@ function getAnswerType(raw?: string | null) {
   return (raw ?? '').toUpperCase();
 }
 
+function normalizeDepartment(value: string): DepartmentType | '' {
+  const hit = DEPARTMENT_OPTIONS.find((opt) => opt.value === value);
+  return hit ? hit.value : '';
+}
+
+function isCommonSection(sectionType?: string | null) {
+  return (sectionType ?? '').toUpperCase().includes('COMMON');
+}
+
+function isDepartmentSection(sectionType?: string | null) {
+  return (sectionType ?? '').toUpperCase().includes('DEPARTMENT');
+}
+
+function normalizeDeptType(value?: string | null): DepartmentType | '' {
+  const upper = (value ?? '').toUpperCase();
+  return normalizeDepartment(upper);
+}
+
+function shouldShowByDepartment(
+  sectionType: string | null | undefined,
+  departmentType: string | null | undefined,
+  selected: Set<DepartmentType>,
+) {
+  if (isCommonSection(sectionType)) return true;
+  if (isDepartmentSection(sectionType)) {
+    const dept = normalizeDeptType(departmentType);
+    return dept ? selected.has(dept) : false;
+  }
+  return true;
+}
+
+function formatBytes(size: number) {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 export default function ApplyPage() {
   const [form, setForm] = useState<ApplicationFormResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,11 +98,18 @@ export default function ApplyPage() {
 
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
-  const [firstDepartment, setFirstDepartment] = useState<DepartmentType | ''>('');
-  const [secondDepartment, setSecondDepartment] = useState<DepartmentType | ''>('');
+  const [firstDepartment, setFirstDepartment] = useState<DepartmentType | ''>(
+    '',
+  );
+  const [secondDepartment, setSecondDepartment] = useState<DepartmentType | ''>(
+    '',
+  );
 
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({});
   const [files, setFiles] = useState<Record<number, FileState>>({});
+  const [dragOverByQuestion, setDragOverByQuestion] = useState<
+    Record<number, boolean>
+  >({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,15 +128,39 @@ export default function ApplyPage() {
     void load();
   }, [load]);
 
+  const selectedDepartments = useMemo(() => {
+    const set = new Set<DepartmentType>();
+    if (firstDepartment) set.add(firstDepartment);
+    if (secondDepartment) set.add(secondDepartment);
+    return set;
+  }, [firstDepartment, secondDepartment]);
+
   const questions = useMemo(() => {
-    return (form?.questions ?? []).slice().sort((a, b) => {
+    const list = (form?.questions ?? []).slice().sort((a, b) => {
       const ao = a.questionOrder ?? 0;
       const bo = b.questionOrder ?? 0;
       return ao - bo;
     });
-  }, [form?.questions]);
 
-  const notices = useMemo(() => form?.notices ?? [], [form?.notices]);
+    return list.filter((q) =>
+      shouldShowByDepartment(
+        q.sectionType,
+        q.departmentType,
+        selectedDepartments,
+      ),
+    );
+  }, [form?.questions, selectedDepartments]);
+
+  const notices = useMemo(() => {
+    const list = (form?.notices ?? []) as ApplicationNotice[];
+    return list.filter((n) =>
+      shouldShowByDepartment(
+        n.sectionType,
+        n.departmentType,
+        selectedDepartments,
+      ),
+    );
+  }, [form?.notices, selectedDepartments]);
 
   const handleAnswerChange = (id: number, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -99,7 +170,13 @@ export default function ApplyPage() {
     const qid = q.formQuestionId;
     setFiles((prev) => ({
       ...prev,
-      [qid]: { ...prev[qid], uploading: true, error: null },
+      [qid]: {
+        ...prev[qid],
+        fileName: file.name,
+        fileSize: file.size,
+        uploading: true,
+        error: null,
+      },
     }));
 
     try {
@@ -109,8 +186,10 @@ export default function ApplyPage() {
           contentType: file.type || 'application/octet-stream',
         },
       ]);
+
       const target = res.items?.[0];
       if (!target) throw new Error('업로드 URL이 없어요.');
+
       await uploadToPresignedUrl(
         target.uploadUrl,
         file,
@@ -119,8 +198,14 @@ export default function ApplyPage() {
 
       setFiles((prev) => ({
         ...prev,
-        [qid]: { key: target.key, uploading: false, error: null },
+        [qid]: {
+          ...prev[qid],
+          key: target.key,
+          uploading: false,
+          error: null,
+        },
       }));
+
       handleAnswerChange(qid, target.key);
     } catch {
       setFiles((prev) => ({
@@ -131,7 +216,22 @@ export default function ApplyPage() {
           error: '파일 업로드에 실패했어요.',
         },
       }));
+      handleAnswerChange(qid, null);
     }
+  };
+
+  const handleRemoveQuestionFile = (qid: number) => {
+    setFiles((prev) => ({
+      ...prev,
+      [qid]: {
+        key: null,
+        fileName: undefined,
+        fileSize: undefined,
+        uploading: false,
+        error: null,
+      },
+    }));
+    handleAnswerChange(qid, null);
   };
 
   const handleSubmit = async () => {
@@ -151,26 +251,38 @@ export default function ApplyPage() {
     }
 
     for (const q of questions) {
+      const type = getAnswerType(q.answerType);
       const val = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
+
+      if (type.includes('FILE')) {
+        const fileKey = files[q.formQuestionId]?.key ?? null;
+        if (q.required && !fileKey) {
+          setValidationError(
+            `필수 파일을 업로드해주세요: ${q.content ?? ''}`.trim(),
+          );
+          return;
+        }
+        continue;
+      }
+
       if (q.required && !val) {
         setValidationError(
           `필수 질문을 입력해주세요: ${q.content ?? ''}`.trim(),
         );
         return;
       }
-      if (getAnswerType(q.answerType).includes('FILE')) {
-        const f = files[q.formQuestionId];
-        if (q.required && (!f || !f.key)) {
-          setValidationError(
-            `필수 파일을 업로드해주세요: ${q.content ?? ''}`.trim(),
-          );
-          return;
-        }
-      }
     }
 
     const payloadAnswers = questions
       .map((q) => {
+        const type = getAnswerType(q.answerType);
+
+        if (type.includes('FILE')) {
+          const fileKey = files[q.formQuestionId]?.key ?? null;
+          if (!fileKey) return null;
+          return { formQuestionId: q.formQuestionId, value: fileKey };
+        }
+
         const value = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
         return value
           ? { formQuestionId: q.formQuestionId, value }
@@ -247,6 +359,7 @@ export default function ApplyPage() {
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
             />
           </div>
+
           <div>
             <label className="text-sm font-bold text-slate-700">비밀번호</label>
             <input
@@ -256,13 +369,16 @@ export default function ApplyPage() {
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
             />
           </div>
+
           <div>
             <label className="text-sm font-bold text-slate-700">1지망</label>
             <select
               value={firstDepartment}
-              onChange={(e) =>
-                setFirstDepartment((e.target.value || '') as DepartmentType | '')
-              }
+              onChange={(e) => {
+                const next = normalizeDepartment(e.target.value);
+                setFirstDepartment(next);
+                if (next && secondDepartment === next) setSecondDepartment('');
+              }}
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
             >
               <option value="">선택하세요</option>
@@ -273,18 +389,23 @@ export default function ApplyPage() {
               ))}
             </select>
           </div>
+
           <div>
             <label className="text-sm font-bold text-slate-700">2지망</label>
             <select
               value={secondDepartment}
               onChange={(e) =>
-                setSecondDepartment((e.target.value || '') as DepartmentType | '')
+                setSecondDepartment(normalizeDepartment(e.target.value))
               }
               className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
             >
               <option value="">선택하세요</option>
               {DEPARTMENT_OPTIONS.map(({ value, label }) => (
-                <option key={value} value={value}>
+                <option
+                  key={value}
+                  value={value}
+                  disabled={value === firstDepartment}
+                >
                   {label}
                 </option>
               ))}
@@ -316,7 +437,7 @@ export default function ApplyPage() {
       )}
 
       <Reveal
-        delayMs={240}
+        delayMs={220}
         className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <h2 className="text-base font-bold text-slate-900">질문</h2>
@@ -326,6 +447,7 @@ export default function ApplyPage() {
             const type = getAnswerType(q.answerType);
             const value = answers[q.formQuestionId] ?? '';
             const options = parseOptions(q.selectOptions);
+            const file = files[q.formQuestionId];
 
             return (
               <div key={q.formQuestionId} className="space-y-2">
@@ -333,33 +455,92 @@ export default function ApplyPage() {
                   {q.content}
                   {q.required && <span className="ml-1 text-rose-500">*</span>}
                 </label>
+
                 {q.description && (
                   <p className="text-xs text-slate-400">{q.description}</p>
                 )}
 
                 {type.includes('FILE') ? (
-                  <div className="flex flex-col gap-2">
-                    <input
-                      type="file"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) void handleFileUpload(q, file);
+                  <div className="space-y-2">
+                    <label
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: true,
+                        }));
                       }}
-                      className="text-sm"
-                    />
-                    {files[q.formQuestionId]?.uploading && (
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: false,
+                        }));
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: false,
+                        }));
+                        const dropped = e.dataTransfer.files?.[0] ?? null;
+                        if (dropped) void handleFileUpload(q, dropped);
+                      }}
+                      className={[
+                        'flex min-h-[100px] cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed px-4 py-5 text-center transition',
+                        dragOverByQuestion[q.formQuestionId]
+                          ? 'border-primary bg-primary/5'
+                          : 'border-slate-300 bg-slate-50/50 hover:border-primary/60',
+                      ].join(' ')}
+                    >
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const selected = e.target.files?.[0] ?? null;
+                          if (selected) void handleFileUpload(q, selected);
+                        }}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">
+                          {file?.fileName
+                            ? file.fileName
+                            : '드래그 & 드롭하거나 클릭해서 파일을 업로드하세요.'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {file?.fileSize
+                            ? formatBytes(file.fileSize)
+                            : '파일 형식 제한 없음'}
+                        </p>
+                      </div>
+                    </label>
+
+                    {file?.uploading && (
                       <span className="text-xs text-slate-500">
                         업로드 중...
                       </span>
                     )}
-                    {files[q.formQuestionId]?.key && (
-                      <span className="text-xs text-emerald-600">
-                        업로드 완료
-                      </span>
+                    {file?.key && !file?.uploading && (
+                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <p className="truncate text-xs text-slate-500">
+                          {file.key}
+                        </p>
+                        <div className="mt-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveQuestionFile(q.formQuestionId)
+                            }
+                            className="rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                          >
+                            파일 제거
+                          </button>
+                        </div>
+                      </div>
                     )}
-                    {files[q.formQuestionId]?.error && (
+                    {file?.error && (
                       <span className="text-xs text-rose-600">
-                        {files[q.formQuestionId]?.error}
+                        {file.error}
                       </span>
                     )}
                   </div>

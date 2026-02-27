@@ -13,6 +13,12 @@ export type AdminApplicationListItem = {
   updatedAt?: string | number[] | null;
 };
 
+export type AdminApplicationAnswerItem = {
+  formQuestionId: number;
+  value: string | null;
+  fileUrl?: string | null;
+};
+
 export type AdminApplicationDetail = {
   applicationId: number;
   studentId: string;
@@ -21,15 +27,9 @@ export type AdminApplicationDetail = {
   resultStatus: AdminApplicationResultStatus;
   createdAt?: string | number[] | null;
   updatedAt?: string | number[] | null;
-  commonAnswers?: Array<{ formQuestionId: number; value: string | null }>;
-  firstDepartmentAnswers?: Array<{
-    formQuestionId: number;
-    value: string | null;
-  }>;
-  secondDepartmentAnswers?: Array<{
-    formQuestionId: number;
-    value: string | null;
-  }>;
+  commonAnswers?: AdminApplicationAnswerItem[];
+  firstDepartmentAnswers?: AdminApplicationAnswerItem[];
+  secondDepartmentAnswers?: AdminApplicationAnswerItem[];
 };
 
 export type AdminApplicationResultUpdateRequest = {

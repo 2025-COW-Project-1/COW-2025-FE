@@ -1,9 +1,4 @@
-
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { useConfirm } from '../../components/confirm/useConfirm';
@@ -19,10 +14,12 @@ import {
 } from '../../api/adminForms';
 import { DEPARTMENT_OPTIONS, getDepartmentLabel } from '../../types/recruit';
 
-const ANSWER_TYPES = ['TEXT', 'SELECT'] as const;
+const ANSWER_TYPES = ['TEXT', 'SELECT', 'FILE'] as const;
 const SECTION_TYPES = ['COMMON', 'DEPARTMENT'] as const;
 
-const defaultQuestionPayload = (order: number): AdminFormQuestionCreateRequest => ({
+const defaultQuestionPayload = (
+  order: number,
+): AdminFormQuestionCreateRequest => ({
   label: '',
   description: '',
   questionOrder: order,
@@ -67,13 +64,13 @@ export default function AdminFormDetailPage() {
   // Add question
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [addQuestionPayload, setAddQuestionPayload] = useState(() =>
-    defaultQuestionPayload(1)
+    defaultQuestionPayload(1),
   );
   const [addingQuestion, setAddingQuestion] = useState(false);
 
   // Edit question (formQuestionId)
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(
-    null
+    null,
   );
   const [editQuestionPayload, setEditQuestionPayload] =
     useState<AdminFormQuestionCreateRequest | null>(null);
@@ -81,7 +78,8 @@ export default function AdminFormDetailPage() {
 
   // Add notice
   const [showAddNotice, setShowAddNotice] = useState(false);
-  const [addNoticePayload, setAddNoticePayload] = useState(defaultNoticePayload);
+  const [addNoticePayload, setAddNoticePayload] =
+    useState(defaultNoticePayload);
   const [addingNotice, setAddingNotice] = useState(false);
 
   // Edit notice
@@ -166,7 +164,7 @@ export default function AdminFormDetailPage() {
         toast.error('상태 변경에 실패했어요.');
       }
     },
-    [formId, isNew, loadDetail, loadFormList, toast]
+    [formId, isNew, loadDetail, loadFormList, toast],
   );
 
   const handleCopyQuestions = useCallback(async () => {
@@ -251,7 +249,11 @@ export default function AdminFormDetailPage() {
       };
       setUpdatingQuestion(true);
       try {
-        await adminFormsApi.updateQuestion(formId, String(formQuestionId), payload);
+        await adminFormsApi.updateQuestion(
+          formId,
+          String(formQuestionId),
+          payload,
+        );
         toast.success('문항을 수정했어요.');
         setEditingQuestionId(null);
         setEditQuestionPayload(null);
@@ -262,7 +264,7 @@ export default function AdminFormDetailPage() {
         setUpdatingQuestion(false);
       }
     },
-    [formId, isNew, editQuestionPayload, loadDetail, toast]
+    [formId, isNew, editQuestionPayload, loadDetail, toast],
   );
 
   const handleDeleteQuestion = useCallback(
@@ -283,7 +285,7 @@ export default function AdminFormDetailPage() {
         toast.error('삭제에 실패했어요.');
       }
     },
-    [confirm, formId, isNew, loadDetail, toast]
+    [confirm, formId, isNew, loadDetail, toast],
   );
 
   const handleAddNotice = useCallback(async () => {
@@ -337,7 +339,7 @@ export default function AdminFormDetailPage() {
         setUpdatingNotice(false);
       }
     },
-    [formId, isNew, editNoticePayload, loadDetail, toast]
+    [formId, isNew, editNoticePayload, loadDetail, toast],
   );
 
   const handleDeleteNotice = useCallback(
@@ -358,7 +360,7 @@ export default function AdminFormDetailPage() {
         toast.error('삭제에 실패했어요.');
       }
     },
-    [confirm, formId, isNew, loadDetail, toast]
+    [confirm, formId, isNew, loadDetail, toast],
   );
 
   // ----- New Form create UI -----
@@ -373,7 +375,9 @@ export default function AdminFormDetailPage() {
             >
               ← 목록
             </Link>
-            <h1 className="font-heading text-3xl text-primary">새 Form 만들기</h1>
+            <h1 className="font-heading text-3xl text-primary">
+              새 Form 만들기
+            </h1>
           </div>
         </Reveal>
         <Reveal
@@ -400,7 +404,10 @@ export default function AdminFormDetailPage() {
                 onChange={(e) => setCreateOpen(e.target.checked)}
                 className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
               />
-              <label htmlFor="create-open" className="text-sm font-semibold text-slate-700">
+              <label
+                htmlFor="create-open"
+                className="text-sm font-semibold text-slate-700"
+              >
                 생성 후 OPEN 상태로 두기 (기존 OPEN Form은 자동 close)
               </label>
             </div>
@@ -511,9 +518,12 @@ export default function AdminFormDetailPage() {
       {/* Copy questions */}
       <Reveal delayMs={80} className="mt-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-sm font-bold text-slate-800">문항 복사 (덮어쓰기)</h2>
+          <h2 className="text-sm font-bold text-slate-800">
+            문항 복사 (덮어쓰기)
+          </h2>
           <p className="mt-1 text-xs text-slate-500">
-            다른 Form의 문항을 이 Form으로 가져옵니다. 현재 문항은 삭제된 뒤 복사돼요.
+            다른 Form의 문항을 이 Form으로 가져옵니다. 현재 문항은 삭제된 뒤
+            복사돼요.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <select
@@ -553,7 +563,7 @@ export default function AdminFormDetailPage() {
                 setShowAddQuestion((v) => !v);
                 if (!showAddQuestion)
                   setAddQuestionPayload(
-                    defaultQuestionPayload(questions.length + 1)
+                    defaultQuestionPayload(questions.length + 1),
                   );
               }}
               className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary hover:bg-primary/20"
@@ -583,7 +593,8 @@ export default function AdminFormDetailPage() {
                 key={q.formQuestionId}
                 className="rounded-xl border border-slate-100 bg-slate-50/50 p-4"
               >
-                {editingQuestionId === q.formQuestionId && editQuestionPayload ? (
+                {editingQuestionId === q.formQuestionId &&
+                editQuestionPayload ? (
                   <QuestionForm
                     payload={editQuestionPayload}
                     setPayload={setEditQuestionPayload}
@@ -602,7 +613,9 @@ export default function AdminFormDetailPage() {
                         <span className="text-xs font-semibold text-slate-500">
                           #{q.questionOrder}
                         </span>
-                        <p className="font-semibold text-slate-900">{q.label}</p>
+                        <p className="font-semibold text-slate-900">
+                          {q.label}
+                        </p>
                         {q.description && (
                           <p className="mt-1 text-sm text-slate-600">
                             {q.description}
@@ -634,7 +647,9 @@ export default function AdminFormDetailPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => void handleDeleteQuestion(q.formQuestionId)}
+                          onClick={() =>
+                            void handleDeleteQuestion(q.formQuestionId)
+                          }
                           className="rounded-lg border border-rose-200 px-2 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50"
                         >
                           삭제
@@ -733,7 +748,9 @@ function QuestionForm({
     <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
       <div className="grid gap-2 sm:grid-cols-2">
         <div>
-          <label className="block text-xs font-semibold text-slate-600">라벨</label>
+          <label className="block text-xs font-semibold text-slate-600">
+            라벨
+          </label>
           <input
             value={payload.label}
             onChange={(e) => setPayload({ ...payload, label: e.target.value })}
@@ -741,7 +758,9 @@ function QuestionForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-600">순서</label>
+          <label className="block text-xs font-semibold text-slate-600">
+            순서
+          </label>
           <input
             type="number"
             min={1}
@@ -757,7 +776,9 @@ function QuestionForm({
         </div>
       </div>
       <div>
-        <label className="block text-xs font-semibold text-slate-600">설명</label>
+        <label className="block text-xs font-semibold text-slate-600">
+          설명
+        </label>
         <input
           value={payload.description}
           onChange={(e) =>
@@ -779,7 +800,9 @@ function QuestionForm({
           <span className="text-sm font-semibold text-slate-700">필수</span>
         </label>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-600">답변 타입</span>
+          <span className="text-xs font-semibold text-slate-600">
+            답변 타입
+          </span>
           <select
             value={payload.answerType}
             onChange={(e) =>
@@ -804,7 +827,10 @@ function QuestionForm({
             <input
               value={payload.selectOptions ?? ''}
               onChange={(e) =>
-                setPayload({ ...payload, selectOptions: e.target.value || null })
+                setPayload({
+                  ...payload,
+                  selectOptions: e.target.value || null,
+                })
               }
               placeholder="선택 옵션 (쉼표 등)"
               className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm"
@@ -933,7 +959,9 @@ function NoticeForm({
         )}
       </div>
       <div>
-        <label className="block text-xs font-semibold text-slate-600">제목</label>
+        <label className="block text-xs font-semibold text-slate-600">
+          제목
+        </label>
         <input
           value={payload.title}
           onChange={(e) => setPayload({ ...payload, title: e.target.value })}
@@ -941,7 +969,9 @@ function NoticeForm({
         />
       </div>
       <div>
-        <label className="block text-xs font-semibold text-slate-600">내용</label>
+        <label className="block text-xs font-semibold text-slate-600">
+          내용
+        </label>
         <textarea
           value={payload.content}
           onChange={(e) => setPayload({ ...payload, content: e.target.value })}
@@ -1008,7 +1038,9 @@ function NoticeRow({
         <p className="font-semibold text-slate-900">{notice.title}</p>
         <p className="mt-1 text-xs text-slate-500">
           {notice.sectionType}
-          {notice.departmentType ? ` · ${getDepartmentLabel(notice.departmentType)}` : ''}
+          {notice.departmentType
+            ? ` · ${getDepartmentLabel(notice.departmentType)}`
+            : ''}
         </p>
         <p className="mt-2 text-sm text-slate-600">{notice.content}</p>
       </div>
