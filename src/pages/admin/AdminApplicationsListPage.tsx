@@ -8,6 +8,7 @@ import {
   type AdminApplicationListItem,
   type AdminApplicationResultStatus,
 } from '../../api/adminApplications';
+import { adminFormsApi, type AdminFormListItem } from '../../api/adminForms';
 import { formatYmd, parseDateLike } from '../../utils/date';
 import { getDepartmentLabel } from '../../types/recruit';
 
@@ -29,6 +30,9 @@ export default function AdminApplicationsListPage() {
   const [params, setParams] = useSearchParams();
 
   const [formId, setFormId] = useState(params.get('formId') ?? '');
+  const [forms, setForms] = useState<AdminFormListItem[]>([]);
+  const [formsLoading, setFormsLoading] = useState(true);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [list, setList] = useState<AdminApplicationListItem[]>([]);
@@ -51,15 +55,36 @@ export default function AdminApplicationsListPage() {
       setList(data ?? []);
     } catch (err) {
       console.error(err);
-      setError('지원서 목록을 불러오지 못했어요.');
+      setError('지원서 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const data = await adminFormsApi.list();
+        if (!active) return;
+        setForms(Array.isArray(data) ? data : []);
+      } catch {
+        if (!active) return;
+        setForms([]);
+      } finally {
+        if (active) setFormsLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const existing = params.get('formId') ?? '';
+    setFormId(existing);
     if (existing) void load(existing);
+    else setList([]);
   }, [load, params]);
 
   const filtered = useMemo(() => {
@@ -106,11 +131,11 @@ export default function AdminApplicationsListPage() {
 
       try {
         await adminApplicationsApi.delete(String(item.applicationId));
-        toast.success('삭제했어요');
+        toast.success('삭제되었습니다.');
         const currentFormId = params.get('formId') ?? '';
         if (currentFormId) await load(currentFormId);
       } catch {
-        toast.error('삭제에 실패했어요');
+        toast.error('삭제에 실패했습니다.');
       }
     },
     [confirm, load, params, toast],
@@ -123,7 +148,7 @@ export default function AdminApplicationsListPage() {
           <div>
             <h1 className="font-heading text-3xl text-primary">지원서 관리</h1>
             <p className="mt-2 text-sm text-slate-600">
-              formId로 지원서 목록을 조회하고 결과를 입력할 수 있어요
+              모집 Form을 선택하면 해당 지원서 목록을 조회할 수 있습니다.
             </p>
           </div>
         </div>
@@ -134,12 +159,32 @@ export default function AdminApplicationsListPage() {
         className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <input
-            value={formId}
-            onChange={(e) => setFormId(e.target.value)}
-            placeholder="formId 입력"
-            className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:w-64"
-          />
+          {formsLoading ? (
+            <div className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-400 md:w-72">
+              Form 목록 불러오는 중...
+            </div>
+          ) : forms.length > 0 ? (
+            <select
+              value={formId}
+              onChange={(e) => setFormId(e.target.value)}
+              className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:w-72"
+            >
+              <option value="">Form 선택</option>
+              {forms.map((form) => (
+                <option key={form.formId} value={String(form.formId)}>
+                  [{form.open ? 'OPEN' : 'CLOSE'}] {form.title}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={formId}
+              onChange={(e) => setFormId(e.target.value)}
+              placeholder="formId 입력"
+              className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:w-64"
+            />
+          )}
+
           <button
             type="button"
             onClick={handleSearch}
@@ -193,7 +238,7 @@ export default function AdminApplicationsListPage() {
 
         {!loading && !error && filtered.length === 0 && (
           <div className="py-10 text-center text-sm text-slate-500">
-            조회된 지원서가 없어요.
+            조회된 지원서가 없습니다.
           </div>
         )}
 
@@ -214,7 +259,7 @@ export default function AdminApplicationsListPage() {
                   </p>
                   <p className="mt-1 text-xs text-slate-500">{date}</p>
                   <p className="mt-1 text-xs text-slate-500">
-                    1지망: {getDepartmentLabel(item.firstDepartment)} / 2지망:{' '}
+                    1지망 {getDepartmentLabel(item.firstDepartment)} / 2지망{' '}
                     {getDepartmentLabel(item.secondDepartment)}
                   </p>
                 </div>
