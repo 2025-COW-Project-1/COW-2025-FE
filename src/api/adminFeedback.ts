@@ -19,17 +19,23 @@ export type AdminFeedbackUpdateRequest = {
 
 export const adminFeedbackApi = {
   list() {
-    return api<AdminFeedbackResponse[]>(
-      withApiBase('/admin/feedback'),
-    ).then((res) => {
-      return Array.isArray(res) ? res : [];
-    });
+    return api<AdminFeedbackResponse[]>(withApiBase('/admin/feedback')).then(
+      (res) => {
+        return Array.isArray(res) ? res : [];
+      },
+    );
   },
 
   update(id: string | number, body: AdminFeedbackUpdateRequest) {
     return api<void>(withApiBase(`/admin/feedback/${id}`), {
       method: 'PUT',
       body,
+    });
+  },
+
+  remove(id: string | number) {
+    return api<void>(withApiBase(`/admin/feedback/${id}`), {
+      method: 'DELETE',
     });
   },
 };
