@@ -57,15 +57,14 @@ export default function SiteLayout() {
     return [...notices, notices[0]];
   }, [notices]);
 
+  // 공지 배너 자동 넘김 비활성화 (메인 로고 캐러셀과 겹쳐 버그 유발 → 수동으로만 전환)
   useEffect(() => {
     if (slides.length <= 1) return;
     if (prefersReducedMotion) return;
-
-    const id = window.setInterval(() => {
-      setSlideIndex((prev) => prev + 1);
-    }, 4500);
-
-    return () => window.clearInterval(id);
+    // const id = window.setInterval(() => {
+    //   setSlideIndex((prev) => prev + 1);
+    // }, 4500);
+    // return () => window.clearInterval(id);
   }, [slides.length, prefersReducedMotion]);
 
   useEffect(() => {
