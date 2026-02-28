@@ -14,8 +14,6 @@ const TABS: { label: string; value: TabValue }[] = [
   { label: '준비중', value: 'PREPARING' },
   { label: '마감', value: 'CLOSED' },
 ];
-const PROJECT_CARD_WRAP_CLASS = 'mx-auto w-full max-w-[460px]';
-
 function isProjectStatus(v: string): v is ProjectStatus {
   return v === 'OPEN' || v === 'PREPARING' || v === 'CLOSED';
 }
@@ -84,67 +82,78 @@ export default function ProjectsPage() {
   }, [filtered]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12">
-      <Reveal>
-        <h1 className="font-heading text-3xl text-primary">프로젝트</h1>
-        <p className="mt-2 text-slate-600">
-          진행 상태에 따라 프로젝트를 확인할 수 있어요.
-        </p>
-      </Reveal>
-
-      <Reveal delayMs={80} className="mt-6 flex flex-wrap gap-2">
-        {TABS.map((t) => {
-          const active = status === t.value;
-          return (
-            <button
-              key={t.value}
-              onClick={() => {
-                if (t.value === 'all') setSp({});
-                else setSp({ status: t.value });
-              }}
-              className={[
-                'rounded-full px-4 py-2 text-sm font-bold transition-colors',
-                'border border-slate-200',
-                active
-                  ? 'bg-primary text-white'
-                  : 'bg-white text-slate-700 hover:bg-slate-100',
-              ].join(' ')}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-      </Reveal>
-
-      {pinnedProjects.length > 0 && (
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {pinnedProjects.map((p, i) => (
-            <Reveal key={p.id} delayMs={i * 40}>
-              <div className={PROJECT_CARD_WRAP_CLASS}>
-                <ProjectCard project={p} size="large" showApplyAction={false} />
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      )}
-
-      {yearSections.map(([year, items], sectionIndex) => (
-        <div key={year} className="mt-10">
-          <div className="mt-12 text-2xl font-heading text-slate-900">
-            {year}
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
+        <Reveal>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="font-heading text-2xl font-bold text-slate-900 sm:text-3xl">
+                컬렉션
+              </h1>
+              <p className="mt-1.5 text-sm text-slate-500">
+                진행 중인 프로젝트와 상품을 만나보세요
+              </p>
+            </div>
           </div>
-          <div className="mt-4 border-t border-slate-200" />
-          <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((p, i) => (
-              <Reveal key={p.id} delayMs={(sectionIndex + i) * 40}>
-                <div className={PROJECT_CARD_WRAP_CLASS}>
-                  <ProjectCard project={p} size="large" showApplyAction={false} />
-                </div>
-              </Reveal>
-            ))}
+        </Reveal>
+
+        <Reveal delayMs={60} className="mt-6">
+          <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+            {TABS.map((t) => {
+              const active = status === t.value;
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => {
+                    if (t.value === 'all') setSp({});
+                    else setSp({ status: t.value });
+                  }}
+                  className={[
+                    'rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
+                    active
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-50',
+                  ].join(' ')}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
-        </div>
-      ))}
+        </Reveal>
+
+        {pinnedProjects.length > 0 && (
+          <section className="mt-8">
+            <h2 className="text-lg font-bold text-slate-800">추천 프로젝트</h2>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {pinnedProjects.map((p, i) => (
+                <Reveal key={p.id} delayMs={i * 40}>
+                  <div className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md">
+                    <ProjectCard project={p} size="large" showApplyAction={false} />
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {yearSections.map(([year, items], sectionIndex) => (
+          <section key={year} className="mt-10 first:mt-8">
+            <h2 className="text-lg font-bold text-slate-800">
+              {year === '기타' ? '기타' : `${year} 컬렉션`}
+            </h2>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {items.map((p, i) => (
+                <Reveal key={p.id} delayMs={(sectionIndex + i) * 30}>
+                  <div className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md">
+                    <ProjectCard project={p} size="large" showApplyAction={false} />
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
     </div>
   );
 }
