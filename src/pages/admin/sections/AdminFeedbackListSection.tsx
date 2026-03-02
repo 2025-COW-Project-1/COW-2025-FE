@@ -54,6 +54,7 @@ export default function AdminFeedbackListSection({
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<number[]>([]);
   const [answeredOnly, setAnsweredOnly] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<number[]>([]);
 
   const initialAnswers = useMemo(() => {
     const map: Record<number, string> = {};
@@ -131,6 +132,28 @@ export default function AdminFeedbackListSection({
       setSaveMsg('저장에 실패했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       setSavingIds((prev) => prev.filter((x) => x !== id));
+    }
+  };
+
+  const handleDelete = async (entry: AdminFeedbackResponse) => {
+    const ok = window.confirm(`"${entry.title}" 피드백을 삭제할까요?`);
+    if (!ok) return;
+
+    setDeletingIds((prev) => [...prev, entry.id]);
+    setSaveMsg(null);
+
+    try {
+      await adminFeedbackApi.remove(entry.id);
+      setSaveMsg('피드백을 삭제했어요.');
+      onRefresh();
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? e.message
+          : '삭제에 실패했어요. 잠시 후 다시 시도해 주세요.';
+      setSaveMsg(msg);
+    } finally {
+      setDeletingIds((prev) => prev.filter((id) => id !== entry.id));
     }
   };
 
@@ -242,6 +265,7 @@ export default function AdminFeedbackListSection({
       <div className="mt-4 space-y-3">
         {filteredEntries.map((entry) => {
           const isSaving = savingIds.includes(entry.id);
+          const isDeleting = deletingIds.includes(entry.id);
           const isExpanded = expandedIds.includes(entry.id);
           const contentText = entry.content ?? '';
           const isLong = contentText.length > 140;
@@ -279,10 +303,15 @@ export default function AdminFeedbackListSection({
                   )}
                 </div>
 
-                <div className="shrink-0 text-right">
-                  <p className="text-[11px] font-semibold text-emerald-600">
-                    (api 생성 후 날짜-시간 변경 예정)
-                  </p>
+                <div className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete(entry)}
+                    disabled={isDeleting}
+                    className="rounded-xl border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+                  >
+                    {isDeleting ? '삭제 중...' : '삭제'}
+                  </button>
                 </div>
               </div>
 

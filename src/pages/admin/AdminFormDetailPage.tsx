@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { useConfirm } from '../../components/confirm/useConfirm';
 import { useToast } from '../../components/toast/useToast';
+import { ApiError } from '../../api/client';
 import {
   adminFormsApi,
   type AdminFormDetail,
@@ -166,6 +167,35 @@ export default function AdminFormDetailPage() {
     },
     [formId, isNew, loadDetail, loadFormList, toast],
   );
+
+  const handleDeleteForm = useCallback(async () => {
+    if (!formId || isNew) return;
+
+    const ok = await confirm.open({
+      title: '폼 삭제',
+      description:
+        '이 폼을 삭제할까요?\n활성 폼이거나 지원서가 존재하면 삭제되지 않을 수 있어요.',
+      danger: true,
+      confirmText: '삭제',
+    });
+    if (!ok) return;
+
+    try {
+      await adminFormsApi.deleteForm(formId);
+      toast.success('폼을 삭제했어요.');
+      navigate('/admin/forms', { replace: true });
+    } catch (e) {
+      if (e instanceof ApiError && (e.status === 400 || e.status === 403)) {
+        toast.error('지원서가 존재하는 폼은 삭제할 수 없습니다.');
+      } else {
+        toast.error(
+          e instanceof Error
+            ? e.message
+            : '폼 삭제에 실패했어요. 잠시 후 다시 시도해 주세요.',
+        );
+      }
+    }
+  }, [confirm, formId, isNew, navigate, toast]);
 
   const handleCopyQuestions = useCallback(async () => {
     const sourceId = copySourceId.trim();
@@ -505,12 +535,21 @@ export default function AdminFormDetailPage() {
                 Form OPEN
               </button>
             )}
+
             <Link
               to={`/admin/applications?formId=${detail.formId}`}
               className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100"
             >
               지원서 보기
             </Link>
+
+            <button
+              type="button"
+              onClick={() => void handleDeleteForm()}
+              className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50"
+            >
+              폼 삭제
+            </button>
           </div>
         </div>
       </Reveal>
