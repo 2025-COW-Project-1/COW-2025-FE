@@ -129,6 +129,7 @@ function mapReportDto(v: unknown): PayoutReport {
     id: toStr(dto.payoutId ?? dto.id ?? dto.reportId) ?? `tmp_${Date.now()}`,
     term: toStr(dto.semester ?? dto.term) ?? '',
     projectTitle: toStr(dto.title ?? dto.projectTitle ?? dto.projectName) ?? '',
+    projectId: toStr(dto.projectId) ?? undefined,
     sales: mapSales(dto),
     expenseGroups: mapExpenseGroups(dto),
     footerNote: toStr(dto.footerNote ?? dto.note) ?? undefined,
@@ -184,6 +185,14 @@ function collectExistingItemIds(report: PayoutReport): string[] {
   return ids;
 }
 
+function getValidatedProjectId(report: PayoutReport): number {
+  const n = Number(report.projectId);
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error('정산 저장 시 프로젝트 선택은 필수입니다.');
+  }
+  return n;
+}
+
 export const payoutsApi = {
   async list(): Promise<PayoutReport[]> {
     const raw = await api<unknown>(withApiBase(USER_PAYOUTS_PATH));
@@ -202,6 +211,13 @@ export const payoutsApi = {
     );
 
     return enriched;
+  },
+
+  async getByProjectId(projectId: string): Promise<PayoutReport> {
+    const raw = await api<unknown>(
+      withApiBase(`/projects/${projectId}/payout`),
+    );
+    return mapReportDto(unwrapData(raw));
   },
 };
 
@@ -230,9 +246,12 @@ export const payoutsAdminApi = {
   },
 
   async save(report: PayoutReport): Promise<PayoutReport> {
+    const projectId = getValidatedProjectId(report);
+
     const metaBody = {
       title: report.projectTitle,
       semester: report.term,
+      projectId,
     };
 
     let reportId = report.id;
@@ -262,7 +281,9 @@ export const payoutsAdminApi = {
         itemIds.map((itemId) =>
           api<void>(
             withApiBase(`${ADMIN_PAYOUTS_PATH}/${reportId}/items/${itemId}`),
-            { method: 'DELETE' },
+            {
+              method: 'DELETE',
+            },
           ),
         ),
       );
@@ -287,7 +308,7 @@ export const payoutsAdminApi = {
     try {
       return await fetchAdminDetailById(reportId);
     } catch {
-      return { ...report, id: reportId };
+      return { ...report, id: reportId, projectId: String(projectId) };
     }
   },
 };
