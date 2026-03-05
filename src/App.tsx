@@ -12,6 +12,7 @@ import ProjectsPage from './pages/site/ProjectsPage';
 import ProjectDetailPage from './pages/site/ProjectDetailPage';
 import ProjectItemDetailPage from './pages/site/ProjectItemDetailPage';
 import ResourcesPage from './pages/site/ResourcesPage';
+import PayoutsPage from './pages/site/PayoutsPage';
 import CartPage from './pages/site/CartPage';
 import OrderPage from './pages/site/OrderPage';
 import OrderCompletePage from './pages/site/OrderCompletePage';
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/order/complete" element={<OrderCompletePage />} />
           <Route path="/orders/lookup" element={<OrderLookupPage />} />
           <Route path="/orders/view" element={<OrderViewPage />} />
+          <Route path="/payouts" element={<PayoutsPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/notices" element={<NoticesPage />} />
           <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
