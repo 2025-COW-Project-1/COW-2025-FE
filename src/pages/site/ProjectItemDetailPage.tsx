@@ -29,7 +29,7 @@ type ProductGalleryProps = {
   images: string[];
   activeIndex: number;
   onSelect: (index: number) => void;
-  onOpen: (url: string, list: string[]) => void;
+  onOpen: (url: string) => void;
   fallbackLabel: string;
 };
 
@@ -39,7 +39,6 @@ type PurchaseCardProps = {
   isPurchasable: boolean;
   isSoldOut: boolean;
   stockSummary: string | null;
-  availableStock: number | null;
   groupBuySummary: string | null;
   onAddToCart: () => void;
   onBuyNow: () => void;
@@ -51,7 +50,7 @@ type DetailImagesViewerProps = {
   images: string[];
   activeIndex: number;
   onSelect: (index: number) => void;
-  onOpen: (url: string, list: string[]) => void;
+  onOpen: (url: string) => void;
 };
 
 class RenderGuard extends React.Component<
@@ -79,25 +78,22 @@ function ProductGallery({
   fallbackLabel,
 }: ProductGalleryProps) {
   const activeImage = images[activeIndex];
-  const hasMultiple = images.length > 1;
-  const canPrev = hasMultiple && activeIndex > 0;
-  const canNext = hasMultiple && activeIndex < images.length - 1;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="flex min-h-[200px] w-full max-h-[min(52vh,400px)] sm:max-h-[min(56vh,440px)] items-center justify-center">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="aspect-5/6 w-full">
           {activeImage ? (
             <button
               type="button"
-              onClick={() => onOpen(activeImage, images)}
+              onClick={() => onOpen(activeImage)}
               className="h-full w-full"
               aria-label="대표 이미지 크게 보기"
             >
               <img
                 src={activeImage}
                 alt={name}
-                className="max-h-[min(52vh,400px)] w-full object-contain sm:max-h-[min(56vh,440px)]"
+                className="h-full w-full object-cover"
               />
             </button>
           ) : (
@@ -106,61 +102,36 @@ function ProductGallery({
             </div>
           )}
         </div>
-        {hasMultiple && (
-          <>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onSelect(activeIndex - 1); }}
-              disabled={!canPrev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-md hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
-              aria-label="이전 이미지"
-            >
-              <span className="text-lg font-bold">‹</span>
-            </button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onSelect(activeIndex + 1); }}
-              disabled={!canNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-md hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
-              aria-label="다음 이미지"
-            >
-              <span className="text-lg font-bold">›</span>
-            </button>
-            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white">
-              {activeIndex + 1} / {images.length}
-            </span>
-          </>
-        )}
       </div>
 
-      {hasMultiple && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {images.map((url, idx) => (
-            <button
-              key={`${url}-${idx}`}
-              type="button"
-              onClick={() => onSelect(idx)}
-              className={`shrink-0 overflow-hidden rounded-xl border-2 transition ${
-                idx === activeIndex
-                  ? 'border-primary ring-2 ring-primary/30'
-                  : 'border-slate-200 hover:border-primary/50'
-              }`}
-              aria-label={`${name} 이미지 ${idx + 1} 보기`}
-            >
-              <img
-                src={url}
-                alt=""
-                className="h-16 w-16 object-cover"
-              />
-            </button>
-          ))}
+      {images.length > 1 && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-3">
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {images.map((url, idx) => (
+              <button
+                key={`${url}-${idx}`}
+                type="button"
+                onClick={() => onSelect(idx)}
+                className={`shrink-0 overflow-hidden rounded-2xl border transition ${
+                  idx === activeIndex
+                    ? 'border-primary/70'
+                    : 'border-slate-200 hover:border-primary/40'
+                }`}
+                aria-label={`${name} 이미지 ${idx + 1} 보기`}
+              >
+                <img
+                  src={url}
+                  alt={`${name} 썸네일 ${idx + 1}`}
+                  className="h-20 w-20 object-cover"
+                />
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
-
-const LOW_STOCK_THRESHOLD = 5;
 
 function PurchaseCard({
   item,
@@ -168,18 +139,11 @@ function PurchaseCard({
   isPurchasable,
   isSoldOut,
   stockSummary,
-  availableStock,
   groupBuySummary,
   onAddToCart,
   onBuyNow,
   showCartNotice,
 }: PurchaseCardProps) {
-  const isLowStock =
-    item.saleType === 'NORMAL' &&
-    availableStock !== null &&
-    availableStock > 0 &&
-    availableStock <= LOW_STOCK_THRESHOLD;
-
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:sticky md:top-24">
       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
@@ -190,7 +154,7 @@ function PurchaseCard({
       </div>
 
       <div className="mt-5 space-y-4">
-        <h1 className="font-heading text-2xl md:text-3xl text-slate-900 whitespace-normal break-keep leading-tight">
+        <h1 className="font-heading text-2xl text-slate-900 leading-tight break-keep whitespace-normal md:text-3xl">
           {item.name}
         </h1>
         {item.summary ? (
@@ -206,64 +170,25 @@ function PurchaseCard({
         <p className="text-2xl font-bold text-slate-900">
           {formatMoney(item.price)}원
         </p>
-
-        {item.saleType === 'NORMAL' && stockSummary && (
-          <div
-            className={[
-              'mt-4 flex items-center gap-3 rounded-xl border px-4 py-3',
-              isSoldOut
-                ? 'border-rose-200 bg-rose-50/80'
-                : isLowStock
-                  ? 'border-amber-200 bg-amber-50/80'
-                  : 'border-slate-100 bg-slate-50/80',
-            ].join(' ')}
-          >
+        <div className="mt-2 flex flex-wrap gap-2">
+          {item.saleType === 'NORMAL' && stockSummary && (
             <span
               className={[
-                'text-xs font-bold uppercase tracking-wide',
+                'inline-flex items-center rounded-full px-3.5 py-1.5 text-sm font-semibold leading-none',
                 isSoldOut
-                  ? 'text-rose-600'
-                  : isLowStock
-                    ? 'text-amber-700'
-                    : 'text-slate-500',
+                  ? 'bg-rose-50 text-rose-600'
+                  : 'bg-emerald-50 text-emerald-600',
               ].join(' ')}
             >
-              재고
+              {stockSummary}
             </span>
-            <span
-              className={[
-                'text-sm font-semibold',
-                isSoldOut
-                  ? 'text-rose-700'
-                  : isLowStock
-                    ? 'text-amber-800'
-                    : 'text-slate-800',
-              ].join(' ')}
-            >
-              {isSoldOut
-                ? '소진'
-                : availableStock !== null
-                  ? `${availableStock.toLocaleString()}개 남음`
-                  : '확인 중'}
-            </span>
-            {isLowStock && !isSoldOut && (
-              <span className="ml-auto rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
-                남은 수량 적음
-              </span>
-            )}
-          </div>
-        )}
-
-        {item.saleType === 'GROUPBUY' && groupBuySummary && (
-          <div className="mt-4 flex items-center gap-3 rounded-xl border border-sky-100 bg-sky-50/80 px-4 py-3">
-            <span className="text-xs font-bold uppercase tracking-wide text-sky-600">
-              모집 현황
-            </span>
-            <span className="text-sm font-semibold text-sky-800">
+          )}
+          {item.saleType === 'GROUPBUY' && groupBuySummary && (
+            <span className="inline-flex items-center rounded-full bg-sky-50 px-3.5 py-1.5 text-sm font-semibold leading-none text-sky-700">
               {groupBuySummary}
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -360,13 +285,10 @@ function DetailImagesViewer({
   onOpen,
 }: DetailImagesViewerProps) {
   const preview = images[activeIndex];
-  const hasMultiple = images.length > 1;
-  const canPrev = hasMultiple && activeIndex > 0;
-  const canNext = hasMultiple && activeIndex < images.length - 1;
 
   if (images.length === 0) {
     return (
-      <div className="mt-5 flex h-32 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-sm font-semibold text-slate-400">
+      <div className="mt-5 flex h-40 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/70 text-sm font-semibold text-slate-400">
         등록된 상세 이미지가 없어요
       </div>
     );
@@ -374,73 +296,46 @@ function DetailImagesViewer({
 
   return (
     <div className="mt-5 space-y-4">
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-        <div className="flex min-h-[200px] max-h-[min(45vh,360px)] w-full items-center justify-center">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+        <div className="aspect-5/6 w-full">
           {preview && (
             <button
               type="button"
-              onClick={() => onOpen(preview, images)}
+              onClick={() => onOpen(preview)}
               className="h-full w-full"
               aria-label="상세 이미지 크게 보기"
             >
               <img
                 src={preview}
                 alt={`${name} 상세 이미지 ${activeIndex + 1}`}
-                className="max-h-[min(45vh,360px)] w-full object-contain"
+                className="h-full w-full object-cover"
               />
             </button>
           )}
         </div>
-        {hasMultiple && (
-          <>
-            <button
-              type="button"
-              onClick={() => onSelect(Math.max(0, activeIndex - 1))}
-              disabled={!canPrev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
-              aria-label="이전 이미지"
-            >
-              <span className="text-lg font-bold">‹</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelect(Math.min(images.length - 1, activeIndex + 1))}
-              disabled={!canNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
-              aria-label="다음 이미지"
-            >
-              <span className="text-lg font-bold">›</span>
-            </button>
-            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-2 py-0.5 text-xs font-medium text-white">
-              {activeIndex + 1} / {images.length}
-            </span>
-          </>
-        )}
       </div>
 
-      {hasMultiple && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {images.map((url, idx) => (
-            <button
-              key={`${url}-${idx}`}
-              type="button"
-              onClick={() => onSelect(idx)}
-              className={`shrink-0 overflow-hidden rounded-lg border-2 transition ${
-                idx === activeIndex
-                  ? 'border-primary ring-2 ring-primary/30'
-                  : 'border-slate-200 hover:border-primary/50'
-              }`}
-              aria-label={`상세 이미지 ${idx + 1} 보기`}
-            >
-              <img
-                src={url}
-                alt=""
-                className="h-14 w-14 object-cover"
-              />
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {images.map((url, idx) => (
+          <button
+            key={`${url}-${idx}`}
+            type="button"
+            onClick={() => onSelect(idx)}
+            className={`shrink-0 overflow-hidden rounded-2xl border transition ${
+              idx === activeIndex
+                ? 'border-primary/70'
+                : 'border-slate-200 hover:border-primary/40'
+            }`}
+            aria-label={`상세 이미지 ${idx + 1} 보기`}
+          >
+            <img
+              src={url}
+              alt={`${name} 상세 썸네일 ${idx + 1}`}
+              className="h-20 w-20 object-cover"
+            />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -449,15 +344,25 @@ export default function ProjectItemDetailPage() {
   const { projectId, itemId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+
+  const routeKey = `${projectId ?? ''}:${itemId ?? ''}`;
+  const hasValidParams = Boolean(projectId && itemId);
+
   const [item, setItem] = useState<ItemResponse | null>(null);
+  const [fetchedKey, setFetchedKey] = useState('');
   const [notFound, setNotFound] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [activeImage, setActiveImage] = useState<string | null>(null);
-  const [activeImageList, setActiveImageList] = useState<string[]>([]);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [detailIndex, setDetailIndex] = useState(0);
-  const [showCartNotice, setShowCartNotice] = useState(false);
+  const [cartNoticeForKey, setCartNoticeForKey] = useState<string | null>(null);
+
+  const showCartNotice = cartNoticeForKey === routeKey;
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [projectId, itemId]);
 
   const parseCount = (value: unknown): number | null => {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -488,57 +393,41 @@ export default function ProjectItemDetailPage() {
   }, [detailImages, item]);
 
   useEffect(() => {
-    let active = true;
-    setItem(null);
-    setNotFound(false);
-    setLoading(true);
-    setError(null);
+    if (!projectId || !itemId) return;
 
-    if (!projectId || !itemId) {
-      setNotFound(true);
-      setLoading(false);
-      return () => {
-        active = false;
-      };
-    }
+    let active = true;
 
     itemsApi
       .getById(projectId, itemId)
       .then((data) => {
         if (!active) return;
         if (!data) {
+          setItem(null);
           setNotFound(true);
+          setError(null);
+          setFetchedKey(routeKey);
           return;
         }
+
         setItem(data);
+        setNotFound(false);
+        setError(null);
+        setFetchedKey(routeKey);
       })
       .catch((err) => {
         if (!active) return;
+        setItem(null);
+        setNotFound(false);
         setError(
           err instanceof Error ? err.message : '상품을 불러오지 못했어요.',
         );
-      })
-      .finally(() => {
-        if (!active) return;
-        setLoading(false);
+        setFetchedKey(routeKey);
       });
 
     return () => {
       active = false;
     };
-  }, [projectId, itemId]);
-
-  useEffect(() => {
-    setGalleryIndex(0);
-  }, [galleryImages.length]);
-
-  useEffect(() => {
-    setDetailIndex(0);
-  }, [detailImages.length]);
-
-  useEffect(() => {
-    setShowCartNotice(false);
-  }, [itemId]);
+  }, [projectId, itemId, routeKey]);
 
   const pushToCart = (target: ItemResponse) => {
     if (!projectId) return false;
@@ -556,7 +445,19 @@ export default function ProjectItemDetailPage() {
     return true;
   };
 
-  if (loading) {
+  if (!hasValidParams) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <h1 className="font-heading text-2xl text-slate-900">
+          상품을 찾을 수 없어요
+        </h1>
+      </div>
+    );
+  }
+
+  const isLoading = fetchedKey !== routeKey;
+
+  if (isLoading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">
         로딩 중...
@@ -644,7 +545,7 @@ export default function ProjectItemDetailPage() {
       toast.error('프로젝트 정보를 찾을 수 없어요.');
       return;
     }
-    setShowCartNotice(true);
+    setCartNoticeForKey(routeKey);
     toast.success('장바구니에 상품을 담았어요.');
   };
 
@@ -701,10 +602,7 @@ export default function ProjectItemDetailPage() {
                 Math.max(0, galleryImages.length - 1),
               )}
               onSelect={setGalleryIndex}
-              onOpen={(url, list) => {
-                setActiveImage(url);
-                setActiveImageList(list);
-              }}
+              onOpen={setActiveImage}
               fallbackLabel="대표 이미지가 없어요"
             />
             <PurchaseCard
@@ -713,7 +611,6 @@ export default function ProjectItemDetailPage() {
               isPurchasable={isPurchasable}
               isSoldOut={isSoldOut}
               stockSummary={stockSummary}
-              availableStock={availableStock}
               groupBuySummary={groupBuySummary}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
@@ -749,37 +646,37 @@ export default function ProjectItemDetailPage() {
                       components={{
                         h1: ({ ...props }) => (
                           <h2
-                            className="mt-6 text-xl font-heading text-slate-900 first:mt-0"
+                            className="mt-6 first:mt-0 text-xl font-heading text-slate-900"
                             {...props}
                           />
                         ),
                         h2: ({ ...props }) => (
                           <h3
-                            className="mt-6 text-lg font-heading text-slate-900 first:mt-0"
+                            className="mt-6 first:mt-0 text-lg font-heading text-slate-900"
                             {...props}
                           />
                         ),
                         h3: ({ ...props }) => (
                           <h4
-                            className="mt-5 text-base font-heading text-slate-900 first:mt-0"
+                            className="mt-5 first:mt-0 text-base font-heading text-slate-900"
                             {...props}
                           />
                         ),
                         p: ({ ...props }) => (
                           <p
-                            className="mt-3 whitespace-normal wrap-break-word leading-relaxed first:mt-0"
+                            className="mt-3 first:mt-0 whitespace-normal wrap-break-word leading-relaxed"
                             {...props}
                           />
                         ),
                         ul: ({ ...props }) => (
                           <ul
-                            className="mt-3 list-disc space-y-2 pl-5 first:mt-0"
+                            className="mt-3 first:mt-0 list-disc pl-5 space-y-2"
                             {...props}
                           />
                         ),
                         ol: ({ ...props }) => (
                           <ol
-                            className="mt-3 list-decimal space-y-2 pl-5 first:mt-0"
+                            className="mt-3 first:mt-0 list-decimal pl-5 space-y-2"
                             {...props}
                           />
                         ),
@@ -872,10 +769,7 @@ export default function ProjectItemDetailPage() {
                   Math.max(0, detailImages.length - 1),
                 )}
                 onSelect={setDetailIndex}
-                onOpen={(url, list) => {
-                  setActiveImage(url);
-                  setActiveImageList(list);
-                }}
+                onOpen={setActiveImage}
               />
             </section>
           </div>
@@ -883,60 +777,23 @@ export default function ProjectItemDetailPage() {
       </Reveal>
 
       {activeImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <button
             type="button"
-            onClick={() => { setActiveImage(null); setActiveImageList([]); }}
+            onClick={() => setActiveImage(null)}
             className="absolute inset-0 h-full w-full cursor-zoom-out"
             aria-label="닫기"
           />
-          <div className="relative z-10 flex max-h-[85vh] max-w-[90vw] items-center justify-center">
+          <div className="relative z-10 max-h-[85vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-black">
             <img
               src={activeImage}
               alt="상세 이미지 크게 보기"
-              className="max-h-[75vh] max-w-full object-contain"
+              className="max-h-[85vh] w-full object-contain"
             />
-            {activeImageList.length > 1 && (() => {
-              const idx = activeImageList.indexOf(activeImage);
-              const current = idx >= 0 ? idx : 0;
-              const canPrev = current > 0;
-              const canNext = current < activeImageList.length - 1;
-              return (
-                <>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (canPrev) setActiveImage(activeImageList[current - 1]);
-                    }}
-                    disabled={!canPrev}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
-                    aria-label="이전 이미지"
-                  >
-                    <span className="text-2xl font-bold">‹</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (canNext) setActiveImage(activeImageList[current + 1]);
-                    }}
-                    disabled={!canNext}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
-                    aria-label="다음 이미지"
-                  >
-                    <span className="text-2xl font-bold">›</span>
-                  </button>
-                  <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-2 text-sm font-medium text-white">
-                    {current + 1} / {activeImageList.length}
-                  </span>
-                </>
-              );
-            })()}
             <button
               type="button"
-              onClick={() => { setActiveImage(null); setActiveImageList([]); }}
-              className="absolute right-3 top-3 rounded-xl bg-white/95 px-4 py-2 text-sm font-bold text-slate-800 shadow hover:bg-white"
+              onClick={() => setActiveImage(null)}
+              className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700"
             >
               닫기
             </button>
