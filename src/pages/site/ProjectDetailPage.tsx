@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -30,13 +30,17 @@ function formatMoney(value?: number | null) {
 
 export default function ProjectDetailPage() {
   const { projectId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const toast = useToast();
   const [project, setProject] = useState<Project | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [items, setItems] = useState<ItemResponse[]>([]);
   const [itemsLoading, setItemsLoading] = useState(false);
   const [itemsError, setItemsError] = useState<string | null>(null);
-  const [downloadingId, setDownloadingId] = useState<string | number | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | number | null>(
+    null,
+  );
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   useEffect(() => {
@@ -100,6 +104,31 @@ export default function ProjectDetailPage() {
     setCarouselIndex(0);
   }, [projectId]);
 
+  useEffect(() => {
+    if (location.hash !== '#apply') return;
+
+    const scrollToApply = () => {
+      const target = document.getElementById('apply');
+      if (!target) return false;
+
+      const headerOffset = 80;
+      const y =
+        target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top: Math.max(0, y), left: 0, behavior: 'auto' });
+      return true;
+    };
+
+    if (scrollToApply()) return;
+
+    const t1 = window.setTimeout(scrollToApply, 0);
+    const t2 = window.setTimeout(scrollToApply, 120);
+
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [location.hash, projectId, project, items.length, itemsLoading]);
+
   const handleJournalDownload = useCallback(
     async (target: ItemResponse) => {
       if (!target.id) return;
@@ -159,17 +188,17 @@ export default function ProjectDetailPage() {
       ? project.dDay === 0
         ? 'D-Day'
         : project.dDay > 0
-        ? `D-${project.dDay}`
-        : `D+${Math.abs(project.dDay)}`
+          ? `D-${project.dDay}`
+          : `D+${Math.abs(project.dDay)}`
       : null;
 
   const emptyItemsMessage = itemsLoading
     ? '불러오는 중...'
     : itemsError
-    ? itemsError
-    : items.length === 0
-    ? '등록된 상품이 없어요'
-    : null;
+      ? itemsError
+      : items.length === 0
+        ? '등록된 상품이 없어요'
+        : null;
 
   const canCarouselPrev = carouselImages.length > 1 && carouselIndex > 0;
   const canCarouselNext =
@@ -187,65 +216,87 @@ export default function ProjectDetailPage() {
               >
                 ← 프로젝트 목록
               </Link>
+
               <div className="mt-3 flex flex-wrap items-center gap-3 md:gap-4">
                 <StatusBadge
                   status={project.status}
                   className="px-4 py-2 text-sm"
                 />
-                {project.status === 'CLOSED' ? (
+
+                {deadlineText && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                    마감됨
+                    <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
+                    마감일 {deadlineText}
                   </span>
+                )}
+
+                {project.status === 'CLOSED' ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/payouts?projectId=${project.id}`)}
+                    className="inline-flex items-center rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                  >
+                    정산
+                  </button>
                 ) : (
-                  <>
-                    {deadlineText && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                        <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
-                        마감일 {deadlineText}
-                      </span>
-                    )}
-                    {dDayLabel && (
-                      <span
-                        className={[
-                          'inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700',
-                          typeof project.dDay === 'number' && project.dDay <= 7
-                            ? 'text-rose-600 font-bold'
-                            : '',
-                        ].join(' ')}
-                      >
-                        <Clock className="h-4 w-4 shrink-0 text-slate-500" />
-                        {dDayLabel}
-                      </span>
-                    )}
-                  </>
+                  dDayLabel && (
+                    <span
+                      className={[
+                        'inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700',
+                        typeof project.dDay === 'number' && project.dDay <= 7
+                          ? 'font-bold text-rose-600'
+                          : '',
+                      ].join(' ')}
+                    >
+                      <Clock className="h-4 w-4 shrink-0 text-slate-500" />
+                      {dDayLabel}
+                    </span>
+                  )
                 )}
               </div>
+
               <h1 className="mt-4 font-heading text-3xl text-slate-900">
                 {project.title}
               </h1>
+
               {project.description && project.description.trim().length > 0 ? (
                 <div className="mt-2 text-sm text-slate-700">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm, remarkBreaks]}
                     components={{
                       h1: ({ ...props }) => (
-                        <h3 className="mt-5 text-lg font-heading text-slate-900 first:mt-0" {...props} />
+                        <h3
+                          className="mt-5 first:mt-0 text-lg font-heading text-slate-900"
+                          {...props}
+                        />
                       ),
                       h2: ({ ...props }) => (
-                        <h4 className="mt-4 text-base font-heading text-slate-900 first:mt-0" {...props} />
+                        <h4
+                          className="mt-4 first:mt-0 text-base font-heading text-slate-900"
+                          {...props}
+                        />
                       ),
                       p: ({ ...props }) => (
-                        <p className="mt-3 whitespace-normal break-words leading-relaxed first:mt-0" {...props} />
+                        <p
+                          className="mt-3 first:mt-0 whitespace-normal wrap-break-word leading-relaxed"
+                          {...props}
+                        />
                       ),
                       ul: ({ ...props }) => (
-                        <ul className="mt-3 list-disc space-y-1 pl-5 first:mt-0" {...props} />
+                        <ul
+                          className="mt-3 first:mt-0 list-disc pl-5 space-y-1"
+                          {...props}
+                        />
                       ),
                       ol: ({ ...props }) => (
-                        <ol className="mt-3 list-decimal space-y-1 pl-5 first:mt-0" {...props} />
+                        <ol
+                          className="mt-3 first:mt-0 list-decimal pl-5 space-y-1"
+                          {...props}
+                        />
                       ),
                       a: ({ ...props }) => (
                         <a
-                          className="text-primary underline decoration-slate-300 underline-offset-4 break-words"
+                          className="text-primary underline decoration-slate-300 underline-offset-4 wrap-break-word"
                           target="_blank"
                           rel="noreferrer noopener"
                           {...props}
@@ -254,7 +305,12 @@ export default function ProjectDetailPage() {
                       code: ({ className, ...props }) => {
                         const isBlock = Boolean(className);
                         if (isBlock) {
-                          return <code className="block whitespace-pre-wrap break-words" {...props} />;
+                          return (
+                            <code
+                              className="block whitespace-pre-wrap wrap-break-word"
+                              {...props}
+                            />
+                          );
                         }
                         return (
                           <code
@@ -310,6 +366,7 @@ export default function ProjectDetailPage() {
                       </div>
                     ))}
                   </div>
+
                   {carouselImages.length > 1 && (
                     <>
                       <button
@@ -318,7 +375,7 @@ export default function ProjectDetailPage() {
                           setCarouselIndex((i) => Math.max(0, i - 1))
                         }
                         disabled={!canCarouselPrev}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-md transition hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-md transition hover:bg-white disabled:pointer-events-none disabled:opacity-30"
                         aria-label="이전 이미지"
                       >
                         <ChevronLeft className="h-6 w-6" />
@@ -331,7 +388,7 @@ export default function ProjectDetailPage() {
                           )
                         }
                         disabled={!canCarouselNext}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-md transition hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-md transition hover:bg-white disabled:pointer-events-none disabled:opacity-30"
                         aria-label="다음 이미지"
                       >
                         <ChevronRight className="h-6 w-6" />
@@ -355,7 +412,7 @@ export default function ProjectDetailPage() {
                   )}
                 </>
               ) : (
-                <div className="flex h-72 items-center justify-center text-sm font-semibold text-slate-400 md:h-80">
+                <div className="flex h-72 md:h-80 items-center justify-center text-sm font-semibold text-slate-400">
                   대표 이미지 없음
                 </div>
               )}
@@ -393,7 +450,8 @@ export default function ProjectDetailPage() {
                 const isMuted = item.status !== 'OPEN';
                 const isGroupbuy = item.saleType === 'GROUPBUY';
                 const isJournal = item.itemType === 'DIGITAL_JOURNAL';
-                const isJournalDownloadable = isJournal && item.status === 'OPEN';
+                const isJournalDownloadable =
+                  isJournal && item.status === 'OPEN';
 
                 if (isJournal) {
                   return (
@@ -451,7 +509,8 @@ export default function ProjectDetailPage() {
                               }
                             }}
                             disabled={
-                              downloadingId === item.id || !isJournalDownloadable
+                              downloadingId === item.id ||
+                              !isJournalDownloadable
                             }
                             title={
                               isJournalDownloadable
@@ -521,8 +580,8 @@ export default function ProjectDetailPage() {
                             item.status === 'OPEN'
                               ? 'bg-emerald-50 text-emerald-700'
                               : item.status === 'PREPARING'
-                              ? 'bg-slate-100 text-slate-600'
-                              : 'bg-rose-50 text-rose-600',
+                                ? 'bg-slate-100 text-slate-600'
+                                : 'bg-rose-50 text-rose-600',
                           ].join(' ')}
                         >
                           {statusLabel}
