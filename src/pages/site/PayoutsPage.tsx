@@ -237,6 +237,10 @@ export default function PayoutsPage() {
     };
   }, [load]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [projectId]);
+
   const terms = useMemo(() => {
     const set = new Set(reports.map((r) => r.term));
     return Array.from(set).sort().reverse();
