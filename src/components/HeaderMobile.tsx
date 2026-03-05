@@ -20,7 +20,6 @@ export default function HeaderMobile() {
       about: pathname.startsWith('/about'),
       projects: pathname.startsWith('/projects'),
       notices: pathname.startsWith('/notices'),
-      payouts: pathname.startsWith('/payouts'),
       apply: pathname.startsWith('/apply'),
       feedback: pathname.startsWith('/feedback'),
       cart: pathname.startsWith('/cart'),
@@ -197,11 +196,6 @@ export default function HeaderMobile() {
                 label: 'FEEDBACK',
                 href: '/feedback',
                 active: isActive.feedback,
-              },
-              {
-                label: 'PAYOUTS',
-                href: '/payouts',
-                active: isActive.payouts,
               },
             ].map((item) => (
               <Link
