@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Pin, Receipt } from 'lucide-react';
 import StatusBadge from './StatusBadge';
@@ -7,19 +7,27 @@ import type { Project } from '../api/projects';
 type ProjectCardProps = {
   project: Project;
   showApplyAction?: boolean;
-  size?: "default" | "large" | "main";
+  size?: 'default' | 'large' | 'main';
 };
 
 export default function ProjectCard({
   project,
   showApplyAction = true,
-  size = "default",
+  size = 'default',
 }: ProjectCardProps) {
-  const canApply = project.status === "OPEN";
-  const deadlineText = project.endAt || "";
-  const isLarge = size === "large";
-  const isMain = size === "main";
+  const navigate = useNavigate();
+  const canApply = project.status === 'OPEN';
+  const deadlineText = project.deadlineDate || project.endAt || '';
+  const isLarge = size === 'large';
+  const isMain = size === 'main';
+  const isClosed = project.status === 'CLOSED';
   const [imgLoaded, setImgLoaded] = useState(false);
+
+  const goPayout = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/payouts?projectId=${project.id}`);
+  };
 
   return (
     <div
@@ -32,7 +40,7 @@ export default function ProjectCard({
         className="flex min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       >
         <div
-          className={`relative overflow-hidden bg-slate-100 ${isMain ? "h-56" : isLarge ? "h-48" : "h-40"}`}
+          className={`relative overflow-hidden bg-slate-100 ${isMain ? 'h-56' : isLarge ? 'h-48' : 'h-40'}`}
         >
           {project.thumbnailUrl ? (
             <>
@@ -46,9 +54,9 @@ export default function ProjectCard({
                 decoding="async"
                 onLoad={() => setImgLoaded(true)}
                 className={[
-                  "h-full w-full object-cover transition-all duration-300 ease-out group-hover:scale-105",
-                  imgLoaded ? "opacity-100" : "opacity-0",
-                ].join(" ")}
+                  'h-full w-full object-cover transition-all duration-300 ease-out group-hover:scale-105',
+                  imgLoaded ? 'opacity-100' : 'opacity-0',
+                ].join(' ')}
               />
             </>
           ) : (
@@ -78,7 +86,7 @@ export default function ProjectCard({
         <div className="flex flex-1 flex-col p-5">
           <div className="flex items-center justify-between">
             <StatusBadge status={project.status} />
-            {project.status === "CLOSED" ? (
+            {project.status === 'CLOSED' ? (
               <span className="inline-flex items-center gap-1 text-sm text-slate-600 leading-none">
                 <Calendar className="h-4 w-4 text-slate-500" />
                 <span className="font-medium text-slate-700">마감됨</span>
@@ -86,7 +94,7 @@ export default function ProjectCard({
             ) : deadlineText ? (
               <span className="inline-flex items-center gap-1 text-sm text-slate-600 leading-none">
                 <Calendar className="h-4 w-4 text-slate-400" />
-                마감:{" "}
+                마감:{' '}
                 <span className="font-medium text-slate-700">
                   {deadlineText}
                 </span>
@@ -126,7 +134,7 @@ export default function ProjectCard({
               disabled
               className="rounded-xl bg-slate-200 px-4 py-2.5 text-sm font-bold text-slate-500"
             >
-              {project.status === "CLOSED" ? "마감" : "준비중"}
+              {project.status === 'CLOSED' ? '마감' : '준비중'}
             </button>
           ))}
       </div>
