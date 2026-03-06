@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Reveal from '../../components/Reveal';
 import ResourceCard from '../../components/ResourceCard';
 import { resourcesApi } from '../../api/resources';
@@ -17,15 +18,17 @@ export default function ResourcesPage() {
     (sp.get('category') as ResourceCategory | 'all' | null) ?? 'all';
   const year = sp.get('year');
 
-  const [items, setItems] = useState<ResourceItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isError, error: queryError } = useQuery({
+    queryKey: ['resources'],
+    queryFn: () => resourcesApi.list(),
+  });
 
-  useEffect(() => {
-    resourcesApi
-      .list()
-      .then(setItems)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
-  }, []);
+  const items: ResourceItem[] = data ?? [];
+  const error = isError
+    ? queryError instanceof Error
+      ? queryError.message
+      : '리소스를 불러오지 못했어요.'
+    : null;
 
   const years = useMemo(() => {
     return Array.from(new Set(items.map((r) => r.year))).sort((a, b) => b - a);
