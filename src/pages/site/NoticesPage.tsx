@@ -1,5 +1,6 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Reveal from '../../components/Reveal';
 import { noticesApi, type NoticeResponse } from '../../api/notices';
 import { API_BASE } from '../../api/client';
@@ -75,32 +76,22 @@ function highlightText(text: string, query: string) {
 }
 
 export default function NoticesPage() {
-  const [notices, setNotices] = useState<NoticeResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const [query, setQuery] = useState('');
   const [imageFilter, setImageFilter] = useState<ImageFilter>('all');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [page, setPage] = useState(1);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await noticesApi.list();
-      setNotices(list ?? []);
-    } catch (err) {
-      console.error(err);
-      setError('공지사항을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data,
+    isLoading: loading,
+    isError,
+  } = useQuery({
+    queryKey: ['notices'],
+    queryFn: () => noticesApi.list(),
+  });
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const notices: NoticeResponse[] = data ?? [];
+  const error = isError ? '공지사항을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.' : null;
 
   useEffect(() => {
     setPage(1);

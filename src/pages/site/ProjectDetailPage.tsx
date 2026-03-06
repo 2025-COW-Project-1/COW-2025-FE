@@ -1,36 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import {
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Receipt,
-} from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkBreaks from 'remark-breaks';
-import remarkGfm from 'remark-gfm';
-import Reveal from '../../components/Reveal';
-import StatusBadge from '../../components/StatusBadge';
-import { useToast } from '../../components/toast/useToast';
-import { projectsApi } from '../../api/projects';
-import type { Project } from '../../api/projects';
-import { itemsApi } from '../../api/items';
-import type { ItemResponse } from '../../api/items';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Calendar, ChevronLeft, ChevronRight, Clock, Receipt } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
+import remarkGfm from "remark-gfm";
+import { useQuery } from "@tanstack/react-query";
+import Reveal from "../../components/Reveal";
+import StatusBadge from "../../components/StatusBadge";
+import { SkeletonProjectDetail } from "../../components/Skeleton";
+import { useToast } from "../../components/toast/useToast";
+import { projectsApi } from "../../api/projects";
+import { itemsApi } from "../../api/items";
+import type { ItemResponse } from "../../api/items";
 
 const STATUS_LABELS: Record<string, string> = {
-  PREPARING: '준비중',
-  OPEN: '진행중',
-  CLOSED: '마감',
+  PREPARING: "준비중",
+  OPEN: "진행중",
+  CLOSED: "마감",
 };
 
 const SALETYPE_LABELS: Record<string, string> = {
-  NORMAL: '일반',
-  GROUPBUY: '공구',
+  NORMAL: "일반",
+  GROUPBUY: "공구",
 };
 
 function formatMoney(value?: number | null) {
-  if (value === null || value === undefined) return '-';
+  if (value === null || value === undefined) return "-";
   return value.toLocaleString();
 }
 
@@ -39,88 +34,46 @@ export default function ProjectDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
-  const [project, setProject] = useState<Project | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [items, setItems] = useState<ItemResponse[]>([]);
-  const [itemsLoading, setItemsLoading] = useState(false);
-  const [itemsError, setItemsError] = useState<string | null>(null);
-  const [downloadingId, setDownloadingId] = useState<string | number | null>(
-    null,
-  );
+  const [downloadingId, setDownloadingId] = useState<string | number | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
 
-  useEffect(() => {
-    let active = true;
-    setNotFound(false);
-    setProject(null);
-    setItems([]);
-    setItemsError(null);
-    setItemsLoading(false);
+  const {
+    data: project,
+    isLoading: projectLoading,
+    isError: projectError,
+  } = useQuery({
+    queryKey: ["project", projectId],
+    queryFn: () => projectsApi.getById(projectId!),
+    enabled: !!projectId,
+  });
 
-    if (!projectId) {
-      setNotFound(true);
-      return () => {
-        active = false;
-      };
-    }
+  const {
+    data: itemsData,
+    isLoading: itemsLoading,
+    isError: itemsError,
+  } = useQuery({
+    queryKey: ["projectItems", projectId],
+    queryFn: () => itemsApi.listByProject(projectId!),
+    enabled: !!projectId && !!project,
+  });
 
-    (async () => {
-      try {
-        const p = await projectsApi.getById(projectId);
-        if (!active) return;
-        if (!p) {
-          setNotFound(true);
-          return;
-        }
-        setProject(p);
-
-        const itemsFromProject = (p as Project & { items?: ItemResponse[] })
-          .items;
-        if (Array.isArray(itemsFromProject)) {
-          setItems(itemsFromProject);
-          return;
-        }
-
-        setItemsLoading(true);
-        try {
-          const list = await itemsApi.listByProject(projectId);
-          if (!active) return;
-          setItems(Array.isArray(list) ? list : []);
-        } catch (err) {
-          if (!active) return;
-          setItemsError(
-            err instanceof Error ? err.message : '상품을 불러오지 못했어요.',
-          );
-        } finally {
-          if (active) setItemsLoading(false);
-        }
-      } catch (err) {
-        if (!active) return;
-        console.error(err);
-        setNotFound(true);
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [projectId]);
+  const items: ItemResponse[] = Array.isArray(itemsData) ? itemsData : [];
 
   useEffect(() => {
     setCarouselIndex(0);
   }, [projectId]);
 
   useEffect(() => {
-    if (location.hash !== '#apply') return;
+    if (location.hash !== "#apply") return;
 
     const scrollToApply = () => {
-      const target = document.getElementById('apply');
+      const target = document.getElementById("apply");
       if (!target) return false;
 
       const headerOffset = 80;
       const y =
         target.getBoundingClientRect().top + window.scrollY - headerOffset;
-      window.scrollTo({ top: Math.max(0, y), left: 0, behavior: 'auto' });
+      window.scrollTo({ top: Math.max(0, y), left: 0, behavior: "auto" });
       return true;
     };
 
@@ -143,11 +96,11 @@ export default function ProjectDetailPage() {
       setDownloadingId(target.id);
       try {
         const data = await itemsApi.getJournalDownloadUrl(String(target.id));
-        if (!data.downloadUrl) throw new Error('다운로드 URL이 없어요');
-        window.open(data.downloadUrl, '_blank', 'noopener,noreferrer');
+        if (!data.downloadUrl) throw new Error("다운로드 URL이 없어요");
+        window.open(data.downloadUrl, "_blank", "noopener,noreferrer");
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '파일 다운로드에 실패했어요.';
+          err instanceof Error ? err.message : "파일 다운로드에 실패했어요.";
         toast.error(message);
       } finally {
         setDownloadingId(null);
@@ -164,7 +117,7 @@ export default function ProjectDetailPage() {
     return list;
   }, [project]);
 
-  if (notFound) {
+  if (!projectId) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
         <h1 className="font-heading text-2xl text-slate-900">
@@ -180,30 +133,42 @@ export default function ProjectDetailPage() {
     );
   }
 
-  if (!project) {
+  if (projectLoading) {
+    return <SkeletonProjectDetail />;
+  }
+
+  if (projectError || !project) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">
-        로딩 중...
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <h1 className="font-heading text-2xl text-slate-900">
+          프로젝트를 찾을 수 없어요
+        </h1>
+        <Link
+          to="/projects"
+          className="mt-4 inline-block text-primary hover:underline"
+        >
+          목록으로 돌아가기 →
+        </Link>
       </div>
     );
   }
 
-  const deadlineText = project.deadlineDate || project.endAt || '';
+  const deadlineText = project.deadlineDate || project.endAt || "";
   const dDayLabel =
-    typeof project.dDay === 'number'
+    typeof project.dDay === "number"
       ? project.dDay === 0
-        ? 'D-Day'
+        ? "D-Day"
         : project.dDay > 0
           ? `D-${project.dDay}`
           : `D+${Math.abs(project.dDay)}`
       : null;
 
   const emptyItemsMessage = itemsLoading
-    ? '불러오는 중...'
+    ? null
     : itemsError
-      ? itemsError
+      ? "상품을 불러오지 못했어요."
       : items.length === 0
-        ? '등록된 상품이 없어요'
+        ? "등록된 상품이 없어요"
         : null;
 
   const canCarouselPrev = carouselImages.length > 1 && carouselIndex > 0;
@@ -236,7 +201,7 @@ export default function ProjectDetailPage() {
                   </span>
                 )}
 
-                {project.status === 'CLOSED' ? (
+                {project.status === "CLOSED" ? (
                   <button
                     type="button"
                     onClick={() => navigate(`/payouts?projectId=${project.id}`)}
@@ -250,11 +215,11 @@ export default function ProjectDetailPage() {
                   dDayLabel && (
                     <span
                       className={[
-                        'inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700',
-                        typeof project.dDay === 'number' && project.dDay <= 7
-                          ? 'font-bold text-rose-600'
-                          : '',
-                      ].join(' ')}
+                        "inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700",
+                        typeof project.dDay === "number" && project.dDay <= 7
+                          ? "font-bold text-rose-600"
+                          : "",
+                      ].join(" ")}
                     >
                       <Clock className="h-4 w-4 shrink-0 text-slate-500" />
                       {dDayLabel}
@@ -353,7 +318,7 @@ export default function ProjectDetailPage() {
                     style={{
                       width: `${carouselImages.length * 100}%`,
                       transform: `translateX(-${(carouselIndex / carouselImages.length) * 100}%)`,
-                      transition: 'transform 300ms ease-out',
+                      transition: "transform 300ms ease-out",
                     }}
                   >
                     {carouselImages.map((url, idx) => (
@@ -369,6 +334,8 @@ export default function ProjectDetailPage() {
                               ? project.title
                               : `${project.title} 상세 이미지 ${idx}`
                           }
+                          loading={idx === 0 ? undefined : "lazy"}
+                          decoding="async"
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -409,8 +376,8 @@ export default function ProjectDetailPage() {
                             onClick={() => setCarouselIndex(idx)}
                             className={`h-2 rounded-full transition ${
                               idx === carouselIndex
-                                ? 'w-6 bg-white'
-                                : 'w-2 bg-white/60 hover:bg-white/80'
+                                ? "w-6 bg-white"
+                                : "w-2 bg-white/60 hover:bg-white/80"
                             }`}
                             aria-label={`이미지 ${idx + 1}`}
                           />
@@ -440,12 +407,28 @@ export default function ProjectDetailPage() {
             )}
           </h2>
 
-          {emptyItemsMessage ? (
+          {itemsLoading ? (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                >
+                  <div className="aspect-square w-full animate-pulse bg-slate-200" />
+                  <div className="space-y-2 p-4">
+                    <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
+                    <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
+                    <div className="h-3 w-2/3 animate-pulse rounded bg-slate-200" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : emptyItemsMessage ? (
             <p
               className={[
-                'mt-6 text-sm font-semibold',
-                itemsError ? 'text-rose-600' : 'text-slate-500',
-              ].join(' ')}
+                "mt-6 text-sm font-semibold",
+                itemsError ? "text-rose-600" : "text-slate-500",
+              ].join(" ")}
             >
               {emptyItemsMessage}
             </p>
@@ -455,26 +438,28 @@ export default function ProjectDetailPage() {
                 const saleTypeLabel =
                   SALETYPE_LABELS[item.saleType] ?? item.saleType;
                 const statusLabel = STATUS_LABELS[item.status] ?? item.status;
-                const isMuted = item.status !== 'OPEN';
-                const isGroupbuy = item.saleType === 'GROUPBUY';
-                const isJournal = item.itemType === 'DIGITAL_JOURNAL';
+                const isMuted = item.status !== "OPEN";
+                const isGroupbuy = item.saleType === "GROUPBUY";
+                const isJournal = item.itemType === "DIGITAL_JOURNAL";
                 const isJournalDownloadable =
-                  isJournal && item.status === 'OPEN';
+                  isJournal && item.status === "OPEN";
 
                 if (isJournal) {
                   return (
                     <div
                       key={item.id}
                       className={[
-                        'group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md',
-                        isMuted ? 'opacity-75' : '',
-                      ].join(' ')}
+                        "group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md",
+                        isMuted ? "opacity-75" : "",
+                      ].join(" ")}
                     >
                       <div className="aspect-square w-full overflow-hidden bg-slate-100">
                         {item.thumbnailUrl ? (
                           <img
                             src={item.thumbnailUrl}
                             alt={item.name}
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-full object-cover transition duration-200 group-hover:scale-105"
                           />
                         ) : (
@@ -498,11 +483,11 @@ export default function ProjectDetailPage() {
                         <div className="mt-3 flex flex-wrap items-center gap-1.5">
                           <span
                             className={[
-                              'inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold',
-                              item.status === 'OPEN'
-                                ? 'bg-emerald-50 text-emerald-700'
-                                : 'bg-slate-100 text-slate-600',
-                            ].join(' ')}
+                              "inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold",
+                              item.status === "OPEN"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-slate-100 text-slate-600",
+                            ].join(" ")}
                           >
                             {statusLabel}
                           </span>
@@ -523,13 +508,13 @@ export default function ProjectDetailPage() {
                             title={
                               isJournalDownloadable
                                 ? undefined
-                                : '진행중일 때만 다운로드 가능'
+                                : "진행중일 때만 다운로드 가능"
                             }
                             className="w-full rounded-xl bg-primary py-2.5 text-sm font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {downloadingId === item.id
-                              ? '다운로드 중...'
-                              : '다운로드'}
+                              ? "다운로드 중..."
+                              : "다운로드"}
                           </button>
                         </div>
                       </div>
@@ -542,15 +527,17 @@ export default function ProjectDetailPage() {
                     key={item.id}
                     to={`/projects/${project.id}/items/${item.id}`}
                     className={[
-                      'group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md',
-                      isMuted ? 'opacity-75' : '',
-                    ].join(' ')}
+                      "group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md",
+                      isMuted ? "opacity-75" : "",
+                    ].join(" ")}
                   >
                     <div className="aspect-square w-full overflow-hidden bg-slate-100">
                       {item.thumbnailUrl ? (
                         <img
                           src={item.thumbnailUrl}
                           alt={item.name}
+                          loading="lazy"
+                          decoding="async"
                           className="h-full w-full object-cover transition duration-200 group-hover:scale-105"
                         />
                       ) : (
@@ -574,23 +561,23 @@ export default function ProjectDetailPage() {
                       <div className="mt-3 flex flex-wrap items-center gap-1.5">
                         <span
                           className={[
-                            'inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold',
+                            "inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold",
                             isGroupbuy
-                              ? 'bg-amber-50 text-amber-700'
-                              : 'bg-slate-100 text-slate-600',
-                          ].join(' ')}
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-slate-100 text-slate-600",
+                          ].join(" ")}
                         >
                           {saleTypeLabel}
                         </span>
                         <span
                           className={[
-                            'inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold',
-                            item.status === 'OPEN'
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : item.status === 'PREPARING'
-                                ? 'bg-slate-100 text-slate-600'
-                                : 'bg-rose-50 text-rose-600',
-                          ].join(' ')}
+                            "inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold",
+                            item.status === "OPEN"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : item.status === "PREPARING"
+                                ? "bg-slate-100 text-slate-600"
+                                : "bg-rose-50 text-rose-600",
+                          ].join(" ")}
                         >
                           {statusLabel}
                         </span>

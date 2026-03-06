@@ -1,28 +1,26 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Reveal from '../../components/Reveal';
-import { introApi, type IntroduceMainSummary } from '../../api/intro';
-import IntroduceMainView from '../../features/introduce/IntroduceMainView';
-import { projectsApi, type Project } from '../../api/projects';
-import { sortProjects } from '../../utils/projectSort';
-import ProjectCard from '../../components/ProjectCard';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import Reveal from "../../components/Reveal";
+import { SkeletonProjectCard } from "../../components/Skeleton";
+import { introApi, type IntroduceMainSummary } from "../../api/intro";
+import IntroduceMainView from "../../features/introduce/IntroduceMainView";
+import { projectsApi, type Project } from "../../api/projects";
+import { sortProjects } from "../../utils/projectSort";
+import ProjectCard from "../../components/ProjectCard";
 
 const CAROUSEL_PEEK = false;
 
 export default function MainPage() {
   const [introMain, setIntroMain] = useState<IntroduceMainSummary | null>(null);
   const [introLoading, setIntroLoading] = useState(true);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [projectsLoading, setProjectsLoading] = useState(true);
-  const [projectsError, setProjectsError] = useState(false);
   const [isScrollable, setIsScrollable] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   const fetchedRef = useRef(false);
-  const projectsFetchedRef = useRef(false);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -51,20 +49,18 @@ export default function MainPage() {
     return () => mediaQuery.removeListener(updatePreference);
   }, []);
 
-  useEffect(() => {
-    if (projectsFetchedRef.current) return;
-    projectsFetchedRef.current = true;
-
-    projectsApi
-      .list()
-      .then((list) => setProjects(list))
-      .catch(() => setProjectsError(true))
-      .finally(() => setProjectsLoading(false));
-  }, []);
+  const {
+    data: projectsData,
+    isLoading: projectsLoading,
+    isError: projectsError,
+  } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => projectsApi.list(),
+  });
 
   const orderedProjects = useMemo(() => {
-    const sorted = sortProjects(projects);
-    const order: Project['status'][] = ['OPEN', 'PREPARING', 'CLOSED'];
+    const sorted = sortProjects(projectsData ?? []);
+    const order: Project["status"][] = ["OPEN", "PREPARING", "CLOSED"];
     const grouped = order.flatMap((status) =>
       sorted.filter((project) => project.status === status),
     );
@@ -73,7 +69,7 @@ export default function MainPage() {
       ...grouped.filter((project) => !project.pinned),
     ];
     return pinnedFirst.slice(0, 9);
-  }, [projects]);
+  }, [projectsData]);
 
   const scrollByCard = useCallback(
     (direction: 'left' | 'right') => {
@@ -161,7 +157,11 @@ export default function MainPage() {
 
         <div className="mt-8">
           {projectsLoading ? (
-            <p className="text-sm text-slate-500">불러오는 중</p>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <SkeletonProjectCard key={idx} />
+              ))}
+            </div>
           ) : projectsError ? (
             <p className="text-sm text-rose-600">
               프로젝트를 불러오지 못했어요

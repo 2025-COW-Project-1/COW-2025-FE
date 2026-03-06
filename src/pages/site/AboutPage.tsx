@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { loadAdminContent, type AdminContent } from '../../utils/adminContent';
-import { introApi, type IntroduceDetailPayload } from '../../api/intro';
+import { introApi } from '../../api/intro';
 import IntroduceDetailView from '../../features/introduce/IntroduceDetailView';
-
-type IntroduceDetailViewModel = IntroduceDetailPayload;
 
 type FallbackDetail = {
   brandTitle?: string;
@@ -25,7 +24,11 @@ type FallbackDetail = {
 
 export default function AboutPage() {
   const [content] = useState<AdminContent>(() => loadAdminContent());
-  const [detail, setDetail] = useState<IntroduceDetailViewModel | null>(null);
+
+  const { data: detail } = useQuery({
+    queryKey: ['introduceDetail'],
+    queryFn: () => introApi.getDetail().then((d) => d ?? null),
+  });
 
   const fallback: FallbackDetail = {
     brandTitle: content.about.headline,
@@ -40,28 +43,9 @@ export default function AboutPage() {
     logoHistories: [],
   };
 
-  useEffect(() => {
-    let cancelled = false;
-
-    introApi
-      .getDetail()
-      .then((data) => {
-        if (cancelled) return;
-        setDetail(data ?? null);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setDetail(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <IntroduceDetailView data={detail} fallback={fallback} />
+      <IntroduceDetailView data={detail ?? null} fallback={fallback} />
     </div>
   );
 }

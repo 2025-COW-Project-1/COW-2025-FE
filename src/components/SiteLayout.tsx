@@ -97,7 +97,18 @@ export default function SiteLayout() {
   const canSlideNotices = visibleNotices.length > 1;
 
   const location = useLocation();
+  const currentNotice = notices[slideIndex] ?? null;
   const isHome = location.pathname === '/';
+
+  useEffect(() => {
+    if (!location.state || typeof location.state !== 'object') return;
+    if (!('scrollFromFooter' in location.state)) return;
+    if (!location.state.scrollFromFooter) return;
+
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    });
+  }, [location.pathname, location.state]);
 
   const showBanner =
     isHome &&
@@ -227,6 +238,7 @@ export default function SiteLayout() {
                   <li>
                     <Link
                       to="/about"
+                      state={{ scrollFromFooter: true }}
                       className="text-slate-600 hover:text-primary"
                     >
                       소개
@@ -235,6 +247,7 @@ export default function SiteLayout() {
                   <li>
                     <Link
                       to="/projects"
+                      state={{ scrollFromFooter: true }}
                       className="text-slate-600 hover:text-primary"
                     >
                       컬렉션
@@ -243,6 +256,7 @@ export default function SiteLayout() {
                   <li>
                     <Link
                       to="/notices"
+                      state={{ scrollFromFooter: true }}
                       className="text-slate-600 hover:text-primary"
                     >
                       공지사항
@@ -259,6 +273,7 @@ export default function SiteLayout() {
                   <li>
                     <Link
                       to="/apply"
+                      state={{ scrollFromFooter: true }}
                       className="text-slate-600 hover:text-primary"
                     >
                       모집 안내
@@ -267,6 +282,7 @@ export default function SiteLayout() {
                   <li>
                     <Link
                       to="/payouts"
+                      state={{ scrollFromFooter: true }}
                       className="text-slate-600 hover:text-primary"
                     >
                       정산 안내
@@ -283,6 +299,7 @@ export default function SiteLayout() {
                   <li>
                     <Link
                       to="/feedback"
+                      state={{ scrollFromFooter: true }}
                       className="text-slate-600 hover:text-primary"
                     >
                       문의하기
@@ -299,6 +316,7 @@ export default function SiteLayout() {
                   <li>
                     <Link
                       to="/login"
+                      state={{ scrollFromFooter: true }}
                       className="text-slate-500 hover:text-primary"
                     >
                       관리자 로그인

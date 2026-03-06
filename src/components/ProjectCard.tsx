@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { Calendar, Pin, Receipt } from 'lucide-react';
 import StatusBadge from './StatusBadge';
@@ -6,26 +7,19 @@ import type { Project } from '../api/projects';
 type ProjectCardProps = {
   project: Project;
   showApplyAction?: boolean;
-  size?: 'default' | 'large' | 'main';
+  size?: "default" | "large" | "main";
 };
 
 export default function ProjectCard({
   project,
   showApplyAction = true,
-  size = 'default',
+  size = "default",
 }: ProjectCardProps) {
-  const navigate = useNavigate();
-  const canApply = project.status === 'OPEN';
-  const isLarge = size === 'large';
-  const isMain = size === 'main';
-  const isClosed = project.status === 'CLOSED';
-  const deadlineText = project.deadlineDate || project.endAt || '';
-
-  const goPayout = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate(`/payouts?projectId=${project.id}`);
-  };
+  const canApply = project.status === "OPEN";
+  const deadlineText = project.endAt || "";
+  const isLarge = size === "large";
+  const isMain = size === "main";
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   return (
     <div
@@ -34,26 +28,34 @@ export default function ProjectCard({
       aria-label={project.title}
     >
       <Link
-        to={`/projects/${project.id}#apply`}
+        to={`/projects/${project.id}`}
         className="flex min-h-0 flex-1 flex-col outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       >
         <div
-          className={`relative overflow-hidden bg-slate-100 ${
-            isMain ? 'h-56' : isLarge ? 'h-48' : 'h-40'
-          }`}
+          className={`relative overflow-hidden bg-slate-100 ${isMain ? "h-56" : isLarge ? "h-48" : "h-40"}`}
         >
           {project.thumbnailUrl ? (
-            <img
-              src={project.thumbnailUrl}
-              alt={project.title}
-              className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-            />
+            <>
+              {!imgLoaded && (
+                <div className="absolute inset-0 animate-pulse bg-slate-200" />
+              )}
+              <img
+                src={project.thumbnailUrl}
+                alt={project.title}
+                loading="lazy"
+                decoding="async"
+                onLoad={() => setImgLoaded(true)}
+                className={[
+                  "h-full w-full object-cover transition-all duration-300 ease-out group-hover:scale-105",
+                  imgLoaded ? "opacity-100" : "opacity-0",
+                ].join(" ")}
+              />
+            </>
           ) : (
             <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-slate-400">
               대표 이미지 없음
             </div>
           )}
-
           {project.pinned && (
             <div className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/90 px-2.5 py-1 text-xs font-bold text-slate-700 shadow-sm">
               <Pin className="h-3.5 w-3.5 text-slate-700" aria-hidden="true" />
@@ -73,27 +75,24 @@ export default function ProjectCard({
             </button>
           )}
         </div>
-
         <div className="flex flex-1 flex-col p-5">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between">
             <StatusBadge status={project.status} />
-
-            {deadlineText ? (
-              <span className="inline-flex items-center gap-1 text-sm leading-none text-slate-600">
+            {project.status === "CLOSED" ? (
+              <span className="inline-flex items-center gap-1 text-sm text-slate-600 leading-none">
                 <Calendar className="h-4 w-4 text-slate-500" />
-                마감:
+                <span className="font-medium text-slate-700">마감됨</span>
+              </span>
+            ) : deadlineText ? (
+              <span className="inline-flex items-center gap-1 text-sm text-slate-600 leading-none">
+                <Calendar className="h-4 w-4 text-slate-400" />
+                마감:{" "}
                 <span className="font-medium text-slate-700">
                   {deadlineText}
                 </span>
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-sm leading-none text-slate-600">
-                <Calendar className="h-4 w-4 text-slate-500" />
-                <span className="font-medium text-slate-700">마감</span>
-              </span>
-            )}
+            ) : null}
           </div>
-
           <div className="mt-3 flex flex-1 flex-col">
             <div className="text-lg font-bold text-slate-900 transition-colors group-hover:text-primary">
               {project.title}
@@ -108,12 +107,11 @@ export default function ProjectCard({
 
       <div className="flex gap-2 px-5 pb-4 pt-0">
         <Link
-          to={`/projects/${project.id}#apply`}
+          to={`/projects/${project.id}`}
           className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-bold text-slate-800 transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
         >
-          상세 보기
+          상품 보러 가기
         </Link>
-
         {showApplyAction &&
           (canApply ? (
             <Link
@@ -128,7 +126,7 @@ export default function ProjectCard({
               disabled
               className="rounded-xl bg-slate-200 px-4 py-2.5 text-sm font-bold text-slate-500"
             >
-              {isClosed ? '마감' : '준비중'}
+              {project.status === "CLOSED" ? "마감" : "준비중"}
             </button>
           ))}
       </div>
