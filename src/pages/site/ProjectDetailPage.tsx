@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Receipt,
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -234,8 +240,10 @@ export default function ProjectDetailPage() {
                   <button
                     type="button"
                     onClick={() => navigate(`/payouts?projectId=${project.id}`)}
-                    className="inline-flex items-center rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                    aria-label="정산 내역 보기"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-3.5 py-2 text-sm font-semibold text-sky-700 shadow-sm transition hover:bg-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
                   >
+                    <Receipt className="h-4 w-4" />
                     정산
                   </button>
                 ) : (
