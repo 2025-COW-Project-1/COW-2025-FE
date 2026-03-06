@@ -1,9 +1,8 @@
-// src/components/ProjectCard.tsx
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Calendar, Pin } from "lucide-react";
-import StatusBadge from "./StatusBadge";
-import type { Project } from "../api/projects";
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, Pin, Receipt } from 'lucide-react';
+import StatusBadge from './StatusBadge';
+import type { Project } from '../api/projects';
 
 type ProjectCardProps = {
   project: Project;
@@ -63,6 +62,18 @@ export default function ProjectCard({
               고정
             </div>
           )}
+
+          {isClosed && (
+            <button
+              type="button"
+              onClick={goPayout}
+              aria-label="정산 내역 보기"
+              className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-white/90 px-3 py-1.5 text-sm font-bold text-sky-700 shadow-sm backdrop-blur-sm transition hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+            >
+              <Receipt className="h-4 w-4" />
+              정산
+            </button>
+          )}
         </div>
         <div className="flex flex-1 flex-col p-5">
           <div className="flex items-center justify-between">
@@ -89,12 +100,12 @@ export default function ProjectCard({
             <p className="mt-2 line-clamp-2 text-sm text-slate-600">
               {project.summary}
             </p>
-            <div className="h-4" />
+            <div className="h-3" />
           </div>
         </div>
       </Link>
 
-      <div className="flex gap-2 p-5 pt-0">
+      <div className="flex gap-2 px-5 pb-4 pt-0">
         <Link
           to={`/projects/${project.id}`}
           className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-center text-sm font-bold text-slate-800 transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"

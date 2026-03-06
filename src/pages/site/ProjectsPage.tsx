@@ -16,6 +16,7 @@ const TABS: { label: string; value: TabValue }[] = [
   { label: '준비중', value: 'PREPARING' },
   { label: '마감', value: 'CLOSED' },
 ];
+
 function isProjectStatus(v: string): v is ProjectStatus {
   return v === 'OPEN' || v === 'PREPARING' || v === 'CLOSED';
 }
@@ -155,7 +156,6 @@ export default function ProjectsPage() {
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {pinnedProjects.map((p, i) => (
                     <Reveal key={p.id} delayMs={i * 40}>
-                      <div className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md">
                         <ProjectCard
                           project={p}
                           size="large"
@@ -168,28 +168,24 @@ export default function ProjectsPage() {
               </section>
             )}
 
-            {yearSections.map(([year, items], sectionIndex) => (
-              <section key={year} className="mt-10 first:mt-8">
-                <h2 className="text-lg font-bold text-slate-800">
-                  {year === '기타' ? '기타' : `${year} 컬렉션`}
-                </h2>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {items.map((p, i) => (
-                    <Reveal key={p.id} delayMs={(sectionIndex + i) * 30}>
-                      <div className="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md">
-                        <ProjectCard
-                          project={p}
-                          size="large"
-                          showApplyAction={false}
-                        />
-                      </div>
-                    </Reveal>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </>
-        )}
+        {yearSections.map(([year, items], sectionIndex) => (
+          <section key={year} className="mt-10 first:mt-8">
+            <h2 className="text-lg font-bold text-slate-800">
+              {year === '기타' ? '기타' : `${year} 컬렉션`}
+            </h2>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {items.map((p, i) => (
+                <Reveal key={p.id} delayMs={(sectionIndex + i) * 30}>
+                  <ProjectCard
+                    project={p}
+                    size="large"
+                    showApplyAction={false}
+                  />
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );
