@@ -1,8 +1,10 @@
 import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Reveal from '../../components/Reveal';
 import StatusBadge from '../../components/StatusBadge';
+import { SkeletonItemDetail } from '../../components/Skeleton';
 import { useToast } from '../../components/toast/useToast';
 import { itemsApi } from '../../api/items';
 import type { ItemResponse, ItemSaleType } from '../../api/items';
@@ -93,6 +95,8 @@ function ProductGallery({
               <img
                 src={activeImage}
                 alt={name}
+                loading="eager"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             </button>
@@ -122,6 +126,8 @@ function ProductGallery({
                 <img
                   src={url}
                   alt={`${name} 썸네일 ${idx + 1}`}
+                  loading="lazy"
+                  decoding="async"
                   className="h-20 w-20 object-cover"
                 />
               </button>
@@ -308,6 +314,8 @@ function DetailImagesViewer({
               <img
                 src={preview}
                 alt={`${name} 상세 이미지 ${activeIndex + 1}`}
+                loading="eager"
+                decoding="async"
                 className="h-full w-full object-cover"
               />
             </button>
@@ -331,6 +339,8 @@ function DetailImagesViewer({
             <img
               src={url}
               alt={`${name} 상세 썸네일 ${idx + 1}`}
+              loading="lazy"
+              decoding="async"
               className="h-20 w-20 object-cover"
             />
           </button>
@@ -348,11 +358,6 @@ export default function ProjectItemDetailPage() {
   const routeKey = `${projectId ?? ''}:${itemId ?? ''}`;
   const hasValidParams = Boolean(projectId && itemId);
 
-  const [item, setItem] = useState<ItemResponse | null>(null);
-  const [fetchedKey, setFetchedKey] = useState('');
-  const [notFound, setNotFound] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const [activeImage, setActiveImage] = useState<string | null>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [detailIndex, setDetailIndex] = useState(0);
@@ -363,6 +368,17 @@ export default function ProjectItemDetailPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [projectId, itemId]);
+
+  const {
+    data: item,
+    isLoading,
+    isError,
+    error: queryError,
+  } = useQuery({
+    queryKey: ['item', projectId, itemId],
+    queryFn: () => itemsApi.getById(projectId!, itemId!),
+    enabled: hasValidParams,
+  });
 
   const parseCount = (value: unknown): number | null => {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -392,43 +408,6 @@ export default function ProjectItemDetailPage() {
     return merged.length > 0 ? merged : detailImages;
   }, [detailImages, item]);
 
-  useEffect(() => {
-    if (!projectId || !itemId) return;
-
-    let active = true;
-
-    itemsApi
-      .getById(projectId, itemId)
-      .then((data) => {
-        if (!active) return;
-        if (!data) {
-          setItem(null);
-          setNotFound(true);
-          setError(null);
-          setFetchedKey(routeKey);
-          return;
-        }
-
-        setItem(data);
-        setNotFound(false);
-        setError(null);
-        setFetchedKey(routeKey);
-      })
-      .catch((err) => {
-        if (!active) return;
-        setItem(null);
-        setNotFound(false);
-        setError(
-          err instanceof Error ? err.message : '상품을 불러오지 못했어요.',
-        );
-        setFetchedKey(routeKey);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [projectId, itemId, routeKey]);
-
   const pushToCart = (target: ItemResponse) => {
     if (!projectId) return false;
 
@@ -455,23 +434,21 @@ export default function ProjectItemDetailPage() {
     );
   }
 
-  const isLoading = fetchedKey !== routeKey;
-
   if (isLoading) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-12 text-slate-600">
-        로딩 중...
-      </div>
-    );
+    return <SkeletonItemDetail />;
   }
 
-  if (error) {
+  if (isError) {
+    const errorMessage =
+      queryError instanceof Error
+        ? queryError.message
+        : '상품을 불러오지 못했어요.';
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
         <h1 className="font-heading text-2xl text-slate-900">
           상품을 불러오지 못했어요
         </h1>
-        <p className="mt-2 text-sm text-slate-600">{error}</p>
+        <p className="mt-2 text-sm text-slate-600">{errorMessage}</p>
         {projectId && (
           <Link
             to={`/projects/${projectId}`}
@@ -484,7 +461,7 @@ export default function ProjectItemDetailPage() {
     );
   }
 
-  if (notFound || !item) {
+  if (!item) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-12">
         <h1 className="font-heading text-2xl text-slate-900">
@@ -545,7 +522,7 @@ export default function ProjectItemDetailPage() {
       toast.error('프로젝트 정보를 찾을 수 없어요.');
       return;
     }
-    setCartNoticeForKey(routeKey);
+    setCartNoticeForKey(`${projectId ?? ''}:${itemId ?? ''}`);
     toast.success('장바구니에 상품을 담았어요.');
   };
 
@@ -788,6 +765,8 @@ export default function ProjectItemDetailPage() {
             <img
               src={activeImage}
               alt="상세 이미지 크게 보기"
+              loading="eager"
+              decoding="async"
               className="max-h-[85vh] w-full object-contain"
             />
             <button

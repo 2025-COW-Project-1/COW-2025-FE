@@ -141,14 +141,16 @@ function PreviewView({
           {safeLogos.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {safeLogos.map((logo, idx) => {
-                const img = (
-                  <img
-                    src={logo.imageUrl ?? ''}
-                    alt={`logo-${idx}`}
-                    className="h-14 w-14 rounded-xl bg-white object-contain"
-                    draggable={false}
-                  />
-                );
+              const img = (
+              <img
+                src={logo.imageUrl ?? ''}
+                alt={`logo-${idx}`}
+                loading="lazy"
+                decoding="async"
+                className="h-14 w-14 rounded-xl bg-white object-contain"
+                draggable={false}
+              />
+              );
 
                 return linkToAbout ? (
                   <Link
@@ -299,6 +301,8 @@ function PublicView({
                         <img
                           src={logo.imageUrl ?? ''}
                           alt={`logo-${idx}`}
+                          loading={idx === 0 ? undefined : 'lazy'}
+                          decoding="async"
                           className="h-64 w-auto max-w-full select-none object-contain"
                           draggable={false}
                         />
