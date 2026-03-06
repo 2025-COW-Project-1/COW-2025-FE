@@ -16,6 +16,7 @@ export type PayoutReport = {
   id: string;
   term: string;
   projectTitle: string;
+  projectId?: string;
   sales: MoneyItem[];
   expenseGroups: ExpenseGroup[];
   footerNote?: string;

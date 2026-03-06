@@ -2,8 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import Reveal from '../../../components/Reveal';
 import { payoutsAdminApi, type PayoutReport } from '../../../api/payouts';
 import type { ExpenseGroup, MoneyItem } from '../../../types/payouts';
+import {
+  adminProjectsApi,
+  type AdminProjectResponse,
+} from '../../../api/adminProjects';
 
 type SectionKey = 'sales' | 'expense';
+type InputMode = 'select' | 'manual';
 
 function createId() {
   return `tmp_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
@@ -13,11 +18,14 @@ function reportKey(id: string | number | undefined) {
   return String(id ?? '');
 }
 
-function createEmptyReport(): PayoutReport {
+function createEmptyReport(
+  defaultProject?: AdminProjectResponse,
+): PayoutReport {
   return {
     id: createId(),
     term: '',
-    projectTitle: '',
+    projectTitle: defaultProject?.title ?? '',
+    projectId: defaultProject ? String(defaultProject.id) : '',
     sales: [],
     expenseGroups: [],
   };
@@ -95,7 +103,7 @@ function AmountField({
       onBlur={() => setFocused(false)}
       onChange={(e) => onChange(toSafeNonNegativeInt(e.target.value))}
       placeholder={placeholder}
-      className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60"
+      className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-primary/60"
     />
   );
 }
@@ -110,9 +118,21 @@ export default function AdminPayoutsSection() {
   const [openSections, setOpenSections] = useState<
     Record<string, { sales: boolean; expense: boolean }>
   >({});
+  const [inputModes, setInputModes] = useState<Record<string, InputMode>>({});
   const [loading, setLoading] = useState(true);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
+  const [closedProjects, setClosedProjects] = useState<AdminProjectResponse[]>(
+    [],
+  );
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+
+  const projectMap = useMemo(() => {
+    const map = new Map<string, AdminProjectResponse>();
+    closedProjects.forEach((p) => map.set(String(p.id), p));
+    return map;
+  }, [closedProjects]);
 
   const ensureSectionState = (key: string) => {
     setOpenSections((prev) => {
@@ -121,8 +141,17 @@ export default function AdminPayoutsSection() {
     });
   };
 
+  const ensureInputMode = (key: string, mode: InputMode) => {
+    setInputModes((prev) => {
+      if (prev[key]) return prev;
+      return { ...prev, [key]: mode };
+    });
+  };
+
   const isSectionOpen = (key: string, section: SectionKey) =>
     openSections[key]?.[section] ?? true;
+
+  const getMode = (key: string): InputMode => inputModes[key] ?? 'select';
 
   const toggleSection = (key: string, section: SectionKey) => {
     setOpenSections((prev) => {
@@ -134,6 +163,35 @@ export default function AdminPayoutsSection() {
     });
   };
 
+  const setMode = (key: string, mode: InputMode) => {
+    setInputModes((prev) => ({ ...prev, [key]: mode }));
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      setProjectsLoading(true);
+      setProjectsError(null);
+
+      try {
+        const list = await adminProjectsApi.list();
+        if (!active) return;
+        const closed = (list ?? []).filter((p) => p.status === 'CLOSED');
+        setClosedProjects(closed);
+      } catch (e) {
+        if (!active) return;
+        setProjectsError(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (active) setProjectsLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -143,7 +201,19 @@ export default function AdminPayoutsSection() {
         if (!active) return;
 
         setReports(list);
-        list.forEach((r) => ensureSectionState(reportKey(r.id)));
+
+        list.forEach((r) => {
+          const key = reportKey(r.id);
+          ensureSectionState(key);
+
+          const pid = String(r.projectId ?? '');
+          const selected = projectMap.get(pid);
+          const mode: InputMode =
+            selected && r.projectTitle && r.projectTitle !== selected.title
+              ? 'manual'
+              : 'select';
+          ensureInputMode(key, mode);
+        });
       } catch (e) {
         if (!active) return;
         setError(e instanceof Error ? e.message : String(e));
@@ -155,7 +225,7 @@ export default function AdminPayoutsSection() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [projectMap]);
 
   const updateReport = (key: string, patch: Partial<PayoutReport>) => {
     setReports((prev) =>
@@ -164,12 +234,14 @@ export default function AdminPayoutsSection() {
   };
 
   const addReport = () => {
-    const next = createEmptyReport();
+    const defaultProject = closedProjects[0];
+    const next = createEmptyReport(defaultProject);
     const key = reportKey(next.id);
 
     setReports((prev) => [...prev, next]);
     setOpenReportId(key);
     ensureSectionState(key);
+    ensureInputMode(key, 'select');
   };
 
   const removeReport = async (key: string) => {
@@ -197,6 +269,12 @@ export default function AdminPayoutsSection() {
     try {
       setMsg(null);
       setError(null);
+
+      if (!report.projectId) {
+        setError('정산 저장 전 마감 프로젝트를 선택해 주세요.');
+        return;
+      }
+
       const saved = await payoutsAdminApi.save(report);
       const oldKey = reportKey(report.id);
       const newKey = reportKey(saved.id);
@@ -206,6 +284,7 @@ export default function AdminPayoutsSection() {
       );
       if (openReportId === oldKey) setOpenReportId(newKey);
       ensureSectionState(newKey);
+      ensureInputMode(newKey, getMode(oldKey));
       setMsg('저장했습니다.');
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -385,11 +464,27 @@ export default function AdminPayoutsSection() {
           <button
             type="button"
             onClick={addReport}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
+            className="h-10 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
             정산서 추가
           </button>
         </div>
+
+        {projectsLoading && (
+          <p className="mt-3 text-xs text-slate-500">
+            마감 프로젝트 목록 로딩 중...
+          </p>
+        )}
+        {projectsError && (
+          <p className="mt-3 text-xs font-semibold text-rose-600">
+            {projectsError}
+          </p>
+        )}
+        {!projectsLoading && !projectsError && closedProjects.length === 0 && (
+          <p className="mt-3 text-xs font-semibold text-amber-700">
+            마감(CLOSED) 프로젝트가 없어 정산서 생성/저장이 어렵습니다.
+          </p>
+        )}
 
         {error && (
           <p className="mt-4 text-sm font-semibold text-rose-600">{error}</p>
@@ -412,6 +507,10 @@ export default function AdminPayoutsSection() {
               const isOpen = openReportId === key;
               const isSalesOpen = isSectionOpen(key, 'sales');
               const isExpenseOpen = isSectionOpen(key, 'expense');
+              const mode = getMode(key);
+              const selectedProject = projectMap.get(
+                String(report.projectId ?? ''),
+              );
 
               const salesTotal = report.sales.reduce(
                 (acc, it) => acc + (it.amount ?? 0),
@@ -461,41 +560,129 @@ export default function AdminPayoutsSection() {
 
                   {isOpen && (
                     <div className="border-t border-slate-200 p-3 md:p-5">
-                      <div className="mt-3 grid gap-2 md:grid-cols-[220px_minmax(0,1fr)_auto_auto] md:gap-3">
-                        <input
-                          value={report.term}
-                          onChange={(e) =>
-                            updateReport(key, { term: e.target.value })
-                          }
-                          placeholder="학기 (예: 2026-1)"
-                          className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
-                        />
-                        <input
-                          value={report.projectTitle}
-                          onChange={(e) =>
-                            updateReport(key, {
-                              projectTitle: e.target.value,
-                            })
-                          }
-                          placeholder="프로젝트명"
-                          className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-primary/60"
-                        />
-                        <div className="grid grid-cols-2 gap-2 md:contents">
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 md:p-4">
+                        <div className="text-xs font-semibold text-slate-500">
+                          프로젝트 연결 방식
+                        </div>
+                        <div className="mt-2 inline-flex rounded-xl border border-slate-200 bg-white p-1">
+                          <button
+                            type="button"
+                            onClick={() => setMode(key, 'select')}
+                            className={[
+                              'h-10 rounded-lg px-4 text-sm font-bold transition',
+                              mode === 'select'
+                                ? 'bg-primary text-white'
+                                : 'text-slate-600 hover:bg-slate-50',
+                            ].join(' ')}
+                          >
+                            선택
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMode(key, 'manual')}
+                            className={[
+                              'h-10 rounded-lg px-4 text-sm font-bold transition',
+                              mode === 'manual'
+                                ? 'bg-primary text-white'
+                                : 'text-slate-600 hover:bg-slate-50',
+                            ].join(' ')}
+                          >
+                            직접 입력
+                          </button>
+                        </div>
+
+                        <div className="mt-3 grid gap-2 lg:grid-cols-[150px_minmax(280px,1fr)_minmax(320px,1.2fr)_auto_auto]">
+                          {mode === 'select' ? (
+                            <>
+                              <input
+                                value={report.term}
+                                onChange={(e) =>
+                                  updateReport(key, { term: e.target.value })
+                                }
+                                placeholder="학기 (예: 2026-1)"
+                                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary/60"
+                              />
+                              <select
+                                value={report.projectId ?? ''}
+                                onChange={(e) => {
+                                  const nextId = e.target.value;
+                                  const selected = projectMap.get(nextId);
+                                  updateReport(key, {
+                                    projectId: nextId,
+                                    projectTitle: selected?.title ?? '',
+                                  });
+                                }}
+                                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary/60"
+                              >
+                                <option value="">마감 프로젝트 선택</option>
+                                {closedProjects.map((p) => (
+                                  <option key={p.id} value={String(p.id)}>
+                                    {p.title}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                value={report.projectTitle}
+                                onChange={(e) =>
+                                  updateReport(key, {
+                                    projectTitle: e.target.value,
+                                  })
+                                }
+                                placeholder="정산명(프로젝트명) 수정"
+                                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary/60"
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <input
+                                value={report.term}
+                                onChange={(e) =>
+                                  updateReport(key, { term: e.target.value })
+                                }
+                                placeholder="학기 (예: 2026-1)"
+                                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary/60"
+                              />
+                              <input
+                                value={report.projectTitle}
+                                onChange={(e) =>
+                                  updateReport(key, {
+                                    projectTitle: e.target.value,
+                                  })
+                                }
+                                placeholder="프로젝트명 입력"
+                                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-primary/60"
+                              />
+                              <div className="flex h-10 items-center rounded-xl border border-slate-200 bg-slate-100 px-3 text-sm text-slate-500">
+                                연결 프로젝트: {selectedProject?.title ?? '-'}
+                                {report.projectId
+                                  ? ` (ID: ${report.projectId})`
+                                  : ''}
+                              </div>
+                            </>
+                          )}
+
                           <button
                             type="button"
                             onClick={() => void saveOne(report)}
-                            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 md:w-auto"
+                            className="h-10 whitespace-nowrap rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:opacity-95"
                           >
                             저장
                           </button>
                           <button
                             type="button"
                             onClick={() => void removeReport(key)}
-                            className="w-full rounded-lg border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 md:w-auto"
+                            className="h-10 whitespace-nowrap rounded-xl border border-rose-200 px-4 text-sm font-semibold text-rose-600 hover:bg-rose-50"
                           >
                             삭제
                           </button>
                         </div>
+
+                        {mode === 'manual' && (
+                          <p className="mt-2 text-[11px] text-slate-500">
+                            직접 입력 모드에서도 연결 projectId는 유지됩니다.
+                            변경은 선택 모드에서 가능합니다.
+                          </p>
+                        )}
                       </div>
 
                       <div className="mt-6 rounded-2xl border border-slate-200">
@@ -567,7 +754,7 @@ export default function AdminPayoutsSection() {
                                         })
                                       }
                                       placeholder="항목명"
-                                      className="col-span-2 rounded-xl border border-slate-200 px-3 py-2 text-sm sm:col-span-1"
+                                      className="col-span-2 h-10 rounded-xl border border-slate-200 px-3 text-sm sm:col-span-1"
                                     />
 
                                     <AmountField
@@ -585,7 +772,7 @@ export default function AdminPayoutsSection() {
                                       onClick={() =>
                                         removeSale(key, item.id ?? '')
                                       }
-                                      className="rounded-xl border border-rose-200 px-2 py-2 text-[13px] font-semibold text-rose-600 hover:bg-rose-50 md:px-3 md:text-xs"
+                                      className="h-10 rounded-xl border border-rose-200 px-2 text-[13px] font-semibold text-rose-600 hover:bg-rose-50 md:px-3 md:text-xs"
                                     >
                                       삭제
                                     </button>
@@ -676,7 +863,7 @@ export default function AdminPayoutsSection() {
                                             })
                                           }
                                           placeholder="지출 그룹명 (예: 제작비, 운영비)"
-                                          className="w-full rounded-xl border border-slate-200 px-3 py-1 text-sm"
+                                          className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm"
                                         />
                                         <button
                                           type="button"
@@ -715,7 +902,7 @@ export default function AdminPayoutsSection() {
                                                 )
                                               }
                                               placeholder="항목명"
-                                              className="col-span-2 rounded-xl border border-slate-200 px-3 py-2 text-sm sm:col-span-1"
+                                              className="col-span-2 h-10 rounded-xl border border-slate-200 px-3 text-sm sm:col-span-1"
                                             />
 
                                             <AmountField
@@ -740,7 +927,7 @@ export default function AdminPayoutsSection() {
                                                   item.id ?? '',
                                                 )
                                               }
-                                              className="rounded-xl border border-rose-200 px-2 py-2 text-[13px] font-semibold text-rose-600 hover:bg-rose-50 md:px-3 md:text-xs"
+                                              className="h-10 rounded-xl border border-rose-200 px-2 text-[13px] font-semibold text-rose-600 hover:bg-rose-50 md:px-3 md:text-xs"
                                             >
                                               삭제
                                             </button>
