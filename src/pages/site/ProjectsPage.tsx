@@ -52,7 +52,7 @@ export default function ProjectsPage() {
     placeholderData: (prev) => prev,
   });
 
-  const projects = data ?? [];
+  const projects = useMemo(() => data ?? [], [data]);
 
   const filtered = useMemo(() => {
     return status === 'all'
@@ -152,40 +152,43 @@ export default function ProjectsPage() {
           <>
             {pinnedProjects.length > 0 && (
               <section className="mt-8">
-                <h2 className="text-lg font-bold text-slate-800">추천 프로젝트</h2>
+                <h2 className="text-lg font-bold text-slate-800">
+                  추천 프로젝트
+                </h2>
                 <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {pinnedProjects.map((p, i) => (
                     <Reveal key={p.id} delayMs={i * 40}>
-                        <ProjectCard
-                          project={p}
-                          size="large"
-                          showApplyAction={false}
-                        />
-                      </div>
+                      <ProjectCard
+                        project={p}
+                        size="large"
+                        showApplyAction={false}
+                      />
                     </Reveal>
                   ))}
                 </div>
               </section>
             )}
 
-        {yearSections.map(([year, items], sectionIndex) => (
-          <section key={year} className="mt-10 first:mt-8">
-            <h2 className="text-lg font-bold text-slate-800">
-              {year === '기타' ? '기타' : `${year} 컬렉션`}
-            </h2>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {items.map((p, i) => (
-                <Reveal key={p.id} delayMs={(sectionIndex + i) * 30}>
-                  <ProjectCard
-                    project={p}
-                    size="large"
-                    showApplyAction={false}
-                  />
-                </Reveal>
-              ))}
-            </div>
-          </section>
-        ))}
+            {yearSections.map(([year, items], sectionIndex) => (
+              <section key={year} className="mt-10 first:mt-8">
+                <h2 className="text-lg font-bold text-slate-800">
+                  {year === '기타' ? '기타' : `${year} 컬렉션`}
+                </h2>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {items.map((p, i) => (
+                    <Reveal key={p.id} delayMs={(sectionIndex + i) * 30}>
+                      <ProjectCard
+                        project={p}
+                        size="large"
+                        showApplyAction={false}
+                      />
+                    </Reveal>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

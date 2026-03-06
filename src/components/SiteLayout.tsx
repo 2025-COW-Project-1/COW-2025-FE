@@ -97,7 +97,6 @@ export default function SiteLayout() {
   const canSlideNotices = visibleNotices.length > 1;
 
   const location = useLocation();
-  const currentNotice = notices[slideIndex] ?? null;
   const isHome = location.pathname === '/';
 
   useEffect(() => {
