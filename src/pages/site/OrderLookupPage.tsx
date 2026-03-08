@@ -39,7 +39,7 @@ export default function OrderLookupPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12">
+    <div className="mx-auto max-w-4xl px-4 pt-16 pb-12 md:pt-20">
       <Reveal>
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <Link
