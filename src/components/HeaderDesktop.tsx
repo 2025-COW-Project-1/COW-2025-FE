@@ -74,8 +74,8 @@ export default function HeaderDesktop() {
             {[
               { label: '전체', href: '/projects' },
               { label: '진행 중', href: '/projects?status=OPEN' },
-              { label: '준비중', href: '/projects?status=PREPARING' },
               { label: '마감', href: '/projects?status=CLOSED' },
+              { label: '정산', href: '/projects?status=PAYOUT' },
             ].map((x) => (
               <button
                 key={x.href}
