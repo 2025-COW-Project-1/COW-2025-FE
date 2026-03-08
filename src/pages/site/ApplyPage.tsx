@@ -84,6 +84,64 @@ function shouldShowByDepartment(
   return true;
 }
 
+function getDepartmentLabelByValue(value: DepartmentType | '') {
+  if (!value) return '';
+  return DEPARTMENT_OPTIONS.find((x) => x.value === value)?.label ?? value;
+}
+
+function looksLikeDepartmentQuestion(q: ApplicationQuestion) {
+  const text = `${q.content ?? ''} ${q.description ?? ''}`.toLowerCase();
+  const keywordMatched =
+    text.includes('희망부서') ||
+    text.includes('희망 부서') ||
+    text.includes('1지망') ||
+    text.includes('2지망') ||
+    text.includes('first department') ||
+    text.includes('second department');
+
+  if (keywordMatched) return true;
+
+  const type = getAnswerType(q.answerType);
+  if (!type.includes('SELECT')) return false;
+
+  const options = parseOptions(q.selectOptions);
+  if (options.length === 0) return false;
+
+  const normalized = new Set(options.map((x) => x.trim().toUpperCase()));
+  const deptValues = DEPARTMENT_OPTIONS.map((x) => x.value.toUpperCase());
+  const deptLabels = DEPARTMENT_OPTIONS.map((x) => x.label.toUpperCase());
+
+  const hasAnyDeptValue = deptValues.some((x) => normalized.has(x));
+  const hasAnyDeptLabel = deptLabels.some((x) => normalized.has(x));
+  return hasAnyDeptValue || hasAnyDeptLabel;
+}
+
+function inferDepartmentAnswerForQuestion(
+  q: ApplicationQuestion,
+  firstDepartment: DepartmentType | '',
+  secondDepartment: DepartmentType | '',
+) {
+  if (!looksLikeDepartmentQuestion(q)) return null;
+  const text = `${q.content ?? ''} ${q.description ?? ''}`.toLowerCase();
+  if (text.includes('2지망') || text.includes('second')) return secondDepartment;
+  if (text.includes('1지망') || text.includes('first')) return firstDepartment;
+  return firstDepartment || secondDepartment || null;
+}
+
+function getQuestionGroupKey(
+  q: ApplicationQuestion,
+  firstDepartment: DepartmentType | '',
+  secondDepartment: DepartmentType | '',
+) {
+  if (isCommonSection(q.sectionType)) return 'common' as const;
+  if (isDepartmentSection(q.sectionType)) {
+    const dept = normalizeDeptType(q.departmentType);
+    if (dept && dept === firstDepartment) return 'first' as const;
+    if (dept && dept === secondDepartment) return 'second' as const;
+  }
+  return 'other' as const;
+}
+
 function formatBytes(size: number) {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
@@ -136,7 +194,7 @@ export default function ApplyPage() {
     return set;
   }, [firstDepartment, secondDepartment]);
 
-  const questions = useMemo(() => {
+  const allQuestions = useMemo(() => {
     const list = (form?.questions ?? []).slice().sort((a, b) => {
       const ao = a.questionOrder ?? 0;
       const bo = b.questionOrder ?? 0;
@@ -162,6 +220,50 @@ export default function ApplyPage() {
       ),
     );
   }, [form?.notices, selectedDepartments]);
+
+  const visibleQuestions = useMemo(
+    () => allQuestions.filter((q) => !looksLikeDepartmentQuestion(q)),
+    [allQuestions],
+  );
+
+  const groupedQuestions = useMemo(() => {
+    const groups = {
+      common: [] as ApplicationQuestion[],
+      first: [] as ApplicationQuestion[],
+      second: [] as ApplicationQuestion[],
+      other: [] as ApplicationQuestion[],
+    };
+
+    visibleQuestions.forEach((q) => {
+      const key = getQuestionGroupKey(q, firstDepartment, secondDepartment);
+      groups[key].push(q);
+    });
+
+    return groups;
+  }, [visibleQuestions, firstDepartment, secondDepartment]);
+
+  const groupedNotices = useMemo(() => {
+    const groups = {
+      common: [] as ApplicationNotice[],
+      first: [] as ApplicationNotice[],
+      second: [] as ApplicationNotice[],
+    };
+
+    notices.forEach((n) => {
+      if (isCommonSection(n.sectionType)) {
+        groups.common.push(n);
+        return;
+      }
+
+      if (isDepartmentSection(n.sectionType)) {
+        const dept = normalizeDeptType(n.departmentType);
+        if (dept && dept === firstDepartment) groups.first.push(n);
+        else if (dept && dept === secondDepartment) groups.second.push(n);
+      }
+    });
+
+    return groups;
+  }, [notices, firstDepartment, secondDepartment]);
 
   const handleAnswerChange = (id: number, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -251,9 +353,16 @@ export default function ApplyPage() {
       return;
     }
 
-    for (const q of questions) {
+    for (const q of allQuestions) {
       const type = getAnswerType(q.answerType);
-      const val = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
+      const autoValue = inferDepartmentAnswerForQuestion(
+        q,
+        firstDepartment,
+        secondDepartment,
+      );
+      const val = normalizeAnswerValue(
+        autoValue ?? answers[q.formQuestionId] ?? null,
+      );
 
       if (type.includes('FILE')) {
         const fileKey = files[q.formQuestionId]?.key ?? null;
@@ -274,9 +383,14 @@ export default function ApplyPage() {
       }
     }
 
-    const payloadAnswers = questions
+    const payloadAnswers = allQuestions
       .map((q) => {
         const type = getAnswerType(q.answerType);
+        const autoValue = inferDepartmentAnswerForQuestion(
+          q,
+          firstDepartment,
+          secondDepartment,
+        );
 
         if (type.includes('FILE')) {
           const fileKey = files[q.formQuestionId]?.key ?? null;
@@ -284,7 +398,9 @@ export default function ApplyPage() {
           return { formQuestionId: q.formQuestionId, value: fileKey };
         }
 
-        const value = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
+        const value = normalizeAnswerValue(
+          autoValue ?? answers[q.formQuestionId] ?? null,
+        );
         return value
           ? { formQuestionId: q.formQuestionId, value }
           : q.required
@@ -420,36 +536,33 @@ export default function ApplyPage() {
         </div>
       </Reveal>
 
-      {notices.length > 0 && (
-        <Reveal
-          delayMs={180}
-          className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <h2 className="text-base font-bold text-slate-900">공지사항</h2>
-          <ul className="mt-3 space-y-3 text-sm text-slate-700">
-            {notices.map((n) => (
-              <li
-                key={String(n.noticeId)}
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
-              >
-                <p className="text-sm font-semibold text-slate-900">
-                  {n.title}
-                </p>
-                <p className="mt-1 text-xs text-slate-600">{n.content}</p>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
-      )}
-
       <Reveal
-        delayMs={220}
+        delayMs={180}
         className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <h2 className="text-base font-bold text-slate-900">질문</h2>
 
-        <div className="mt-4 space-y-5">
-          {questions.map((q) => {
+        <div className="mt-4 space-y-6">
+          {groupedNotices.common.length > 0 && (
+            <div className="rounded-2xl border border-amber-200 bg-linear-to-br from-amber-50 to-white p-4 shadow-sm">
+              <p className="text-sm font-bold text-slate-900">공통 안내</p>
+              <ul className="mt-3 space-y-3 text-sm text-slate-700">
+                {groupedNotices.common.map((n) => (
+                  <li
+                    key={String(n.noticeId)}
+                    className="rounded-xl border border-amber-100 border-l-4 border-l-amber-400 bg-white px-4 py-3 shadow-sm"
+                  >
+                    <p className="text-sm font-semibold text-slate-900">
+                      {n.title}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600">{n.content}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {groupedQuestions.common.map((q) => {
             const type = getAnswerType(q.answerType);
             const value = answers[q.formQuestionId] ?? '';
             const options = parseOptions(q.selectOptions);
@@ -525,6 +638,557 @@ export default function ApplyPage() {
                       <span className="text-xs text-slate-500">
                         업로드 중...
                       </span>
+                    )}
+                    {file?.key && !file?.uploading && (
+                      <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <p className="truncate text-xs text-slate-500">
+                          {file.key}
+                        </p>
+                        <div className="mt-2 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveQuestionFile(q.formQuestionId)
+                            }
+                            className="rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                          >
+                            파일 제거
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {file?.error && (
+                      <span className="text-xs text-rose-600">
+                        {file.error}
+                      </span>
+                    )}
+                  </div>
+                ) : type.includes('TEXTAREA') ? (
+                  <textarea
+                    value={String(value ?? '')}
+                    onChange={(e) =>
+                      handleAnswerChange(q.formQuestionId, e.target.value)
+                    }
+                    className="min-h-[120px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                  />
+                ) : type.includes('SELECT') || type.includes('RADIO') ? (
+                  <select
+                    value={String(value ?? '')}
+                    onChange={(e) =>
+                      handleAnswerChange(q.formQuestionId, e.target.value)
+                    }
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                  >
+                    <option value="">선택</option>
+                    {options.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ) : type.includes('CHECK') || type.includes('MULTI') ? (
+                  <div className="flex flex-wrap gap-2">
+                    {options.map((opt) => {
+                      const arr = Array.isArray(value) ? value : [];
+                      const checked = arr.includes(opt);
+                      return (
+                        <label
+                          key={opt}
+                          className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const next = new Set(arr);
+                              if (e.target.checked) next.add(opt);
+                              else next.delete(opt);
+                              handleAnswerChange(
+                                q.formQuestionId,
+                                Array.from(next),
+                              );
+                            }}
+                          />
+                          {opt}
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <input
+                    value={String(value ?? '')}
+                    onChange={(e) =>
+                      handleAnswerChange(q.formQuestionId, e.target.value)
+                    }
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                  />
+                )}
+              </div>
+            );
+          })}
+
+          {firstDepartment && (
+            <div className="space-y-5">
+              {groupedNotices.first.length > 0 && (
+                <div className="rounded-2xl border border-sky-200 bg-linear-to-br from-sky-50 to-white p-4 shadow-sm">
+                  <p className="text-sm font-bold text-slate-900">
+                    {getDepartmentLabelByValue(firstDepartment)} 안내
+                  </p>
+                  <ul className="mt-3 space-y-3 text-sm text-slate-700">
+                    {groupedNotices.first.map((n) => (
+                      <li
+                        key={String(n.noticeId)}
+                        className="rounded-xl border border-sky-100 border-l-4 border-l-sky-400 bg-white px-4 py-3 shadow-sm"
+                      >
+                        <p className="text-sm font-semibold text-slate-900">
+                          {n.title}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-600">
+                          {n.content}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {groupedQuestions.first.map((q) => {
+                const type = getAnswerType(q.answerType);
+                const value = answers[q.formQuestionId] ?? '';
+                const options = parseOptions(q.selectOptions);
+                const file = files[q.formQuestionId];
+
+                return (
+                  <div key={q.formQuestionId} className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">
+                      {q.content}
+                      {q.required && (
+                        <span className="ml-1 text-rose-500">*</span>
+                      )}
+                    </label>
+
+                    {q.description && (
+                      <p className="text-xs text-slate-400">{q.description}</p>
+                    )}
+
+                    {type.includes('FILE') ? (
+                      <div className="space-y-2">
+                        <label
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragOverByQuestion((prev) => ({
+                              ...prev,
+                              [q.formQuestionId]: true,
+                            }));
+                          }}
+                          onDragLeave={(e) => {
+                            e.preventDefault();
+                            setDragOverByQuestion((prev) => ({
+                              ...prev,
+                              [q.formQuestionId]: false,
+                            }));
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setDragOverByQuestion((prev) => ({
+                              ...prev,
+                              [q.formQuestionId]: false,
+                            }));
+                            const dropped = e.dataTransfer.files?.[0] ?? null;
+                            if (dropped) void handleFileUpload(q, dropped);
+                          }}
+                          className={[
+                            'flex min-h-[100px] cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed px-4 py-5 text-center transition',
+                            dragOverByQuestion[q.formQuestionId]
+                              ? 'border-primary bg-primary/5'
+                              : 'border-slate-300 bg-slate-50/50 hover:border-primary/60',
+                          ].join(' ')}
+                        >
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={(e) => {
+                              const selected = e.target.files?.[0] ?? null;
+                              if (selected) void handleFileUpload(q, selected);
+                            }}
+                          />
+                          <div>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {file?.fileName
+                                ? file.fileName
+                                : '드래그 & 드롭하거나 클릭해서 파일을 업로드하세요.'}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {file?.fileSize
+                                ? formatBytes(file.fileSize)
+                                : '파일 형식 제한 없음'}
+                            </p>
+                          </div>
+                        </label>
+
+                        {file?.uploading && (
+                          <span className="text-xs text-slate-500">
+                            업로드 중...
+                          </span>
+                        )}
+                        {file?.key && !file?.uploading && (
+                          <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <p className="truncate text-xs text-slate-500">
+                              {file.key}
+                            </p>
+                            <div className="mt-2 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveQuestionFile(q.formQuestionId)
+                                }
+                                className="rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                              >
+                                파일 제거
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {file?.error && (
+                          <span className="text-xs text-rose-600">
+                            {file.error}
+                          </span>
+                        )}
+                      </div>
+                    ) : type.includes('TEXTAREA') ? (
+                      <textarea
+                        value={String(value ?? '')}
+                        onChange={(e) =>
+                          handleAnswerChange(q.formQuestionId, e.target.value)
+                        }
+                        className="min-h-[120px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                      />
+                    ) : type.includes('SELECT') || type.includes('RADIO') ? (
+                      <select
+                        value={String(value ?? '')}
+                        onChange={(e) =>
+                          handleAnswerChange(q.formQuestionId, e.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                      >
+                        <option value="">선택</option>
+                        {options.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : type.includes('CHECK') || type.includes('MULTI') ? (
+                      <div className="flex flex-wrap gap-2">
+                        {options.map((opt) => {
+                          const arr = Array.isArray(value) ? value : [];
+                          const checked = arr.includes(opt);
+                          return (
+                            <label
+                              key={opt}
+                              className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => {
+                                  const next = new Set(arr);
+                                  if (e.target.checked) next.add(opt);
+                                  else next.delete(opt);
+                                  handleAnswerChange(
+                                    q.formQuestionId,
+                                    Array.from(next),
+                                  );
+                                }}
+                              />
+                              {opt}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <input
+                        value={String(value ?? '')}
+                        onChange={(e) =>
+                          handleAnswerChange(q.formQuestionId, e.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {secondDepartment && (
+            <div className="space-y-5">
+              {groupedNotices.second.length > 0 && (
+                <div className="rounded-2xl border border-violet-200 bg-linear-to-br from-violet-50 to-white p-4 shadow-sm">
+                  <p className="text-sm font-bold text-slate-900">
+                    {getDepartmentLabelByValue(secondDepartment)} 안내
+                  </p>
+                  <ul className="mt-3 space-y-3 text-sm text-slate-700">
+                    {groupedNotices.second.map((n) => (
+                      <li
+                        key={String(n.noticeId)}
+                        className="rounded-xl border border-violet-100 border-l-4 border-l-violet-400 bg-white px-4 py-3 shadow-sm"
+                      >
+                        <p className="text-sm font-semibold text-slate-900">
+                          {n.title}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-600">
+                          {n.content}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {groupedQuestions.second.map((q) => {
+                const type = getAnswerType(q.answerType);
+                const value = answers[q.formQuestionId] ?? '';
+                const options = parseOptions(q.selectOptions);
+                const file = files[q.formQuestionId];
+
+                return (
+                  <div key={q.formQuestionId} className="space-y-2">
+                    <label className="text-sm font-bold text-slate-700">
+                      {q.content}
+                      {q.required && (
+                        <span className="ml-1 text-rose-500">*</span>
+                      )}
+                    </label>
+
+                    {q.description && (
+                      <p className="text-xs text-slate-400">{q.description}</p>
+                    )}
+
+                    {type.includes('FILE') ? (
+                      <div className="space-y-2">
+                        <label
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragOverByQuestion((prev) => ({
+                              ...prev,
+                              [q.formQuestionId]: true,
+                            }));
+                          }}
+                          onDragLeave={(e) => {
+                            e.preventDefault();
+                            setDragOverByQuestion((prev) => ({
+                              ...prev,
+                              [q.formQuestionId]: false,
+                            }));
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setDragOverByQuestion((prev) => ({
+                              ...prev,
+                              [q.formQuestionId]: false,
+                            }));
+                            const dropped = e.dataTransfer.files?.[0] ?? null;
+                            if (dropped) void handleFileUpload(q, dropped);
+                          }}
+                          className={[
+                            'flex min-h-[100px] cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed px-4 py-5 text-center transition',
+                            dragOverByQuestion[q.formQuestionId]
+                              ? 'border-primary bg-primary/5'
+                              : 'border-slate-300 bg-slate-50/50 hover:border-primary/60',
+                          ].join(' ')}
+                        >
+                          <input
+                            type="file"
+                            className="hidden"
+                            onChange={(e) => {
+                              const selected = e.target.files?.[0] ?? null;
+                              if (selected) void handleFileUpload(q, selected);
+                            }}
+                          />
+                          <div>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {file?.fileName
+                                ? file.fileName
+                                : '드래그 & 드롭하거나 클릭해서 파일을 업로드하세요.'}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {file?.fileSize
+                                ? formatBytes(file.fileSize)
+                                : '파일 형식 제한 없음'}
+                            </p>
+                          </div>
+                        </label>
+
+                        {file?.uploading && (
+                          <span className="text-xs text-slate-500">
+                            업로드 중...
+                          </span>
+                        )}
+                        {file?.key && !file?.uploading && (
+                          <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <p className="truncate text-xs text-slate-500">
+                              {file.key}
+                            </p>
+                            <div className="mt-2 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveQuestionFile(q.formQuestionId)
+                                }
+                                className="rounded-lg border border-rose-200 px-3 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                              >
+                                파일 제거
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {file?.error && (
+                          <span className="text-xs text-rose-600">
+                            {file.error}
+                          </span>
+                        )}
+                      </div>
+                    ) : type.includes('TEXTAREA') ? (
+                      <textarea
+                        value={String(value ?? '')}
+                        onChange={(e) =>
+                          handleAnswerChange(q.formQuestionId, e.target.value)
+                        }
+                        className="min-h-[120px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                      />
+                    ) : type.includes('SELECT') || type.includes('RADIO') ? (
+                      <select
+                        value={String(value ?? '')}
+                        onChange={(e) =>
+                          handleAnswerChange(q.formQuestionId, e.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                      >
+                        <option value="">선택</option>
+                        {options.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    ) : type.includes('CHECK') || type.includes('MULTI') ? (
+                      <div className="flex flex-wrap gap-2">
+                        {options.map((opt) => {
+                          const arr = Array.isArray(value) ? value : [];
+                          const checked = arr.includes(opt);
+                          return (
+                            <label
+                              key={opt}
+                              className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) => {
+                                  const next = new Set(arr);
+                                  if (e.target.checked) next.add(opt);
+                                  else next.delete(opt);
+                                  handleAnswerChange(
+                                    q.formQuestionId,
+                                    Array.from(next),
+                                  );
+                                }}
+                              />
+                              {opt}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <input
+                        value={String(value ?? '')}
+                        onChange={(e) =>
+                          handleAnswerChange(q.formQuestionId, e.target.value)
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-primary/60 focus:ring-4 focus:ring-primary/10"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {groupedQuestions.other.map((q) => {
+            const type = getAnswerType(q.answerType);
+            const value = answers[q.formQuestionId] ?? '';
+            const options = parseOptions(q.selectOptions);
+            const file = files[q.formQuestionId];
+
+            return (
+              <div key={q.formQuestionId} className="space-y-2">
+                <label className="text-sm font-bold text-slate-700">
+                  {q.content}
+                  {q.required && <span className="ml-1 text-rose-500">*</span>}
+                </label>
+
+                {q.description && (
+                  <p className="text-xs text-slate-400">{q.description}</p>
+                )}
+
+                {type.includes('FILE') ? (
+                  <div className="space-y-2">
+                    <label
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: true,
+                        }));
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: false,
+                        }));
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOverByQuestion((prev) => ({
+                          ...prev,
+                          [q.formQuestionId]: false,
+                        }));
+                        const dropped = e.dataTransfer.files?.[0] ?? null;
+                        if (dropped) void handleFileUpload(q, dropped);
+                      }}
+                      className={[
+                        'flex min-h-[100px] cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed px-4 py-5 text-center transition',
+                        dragOverByQuestion[q.formQuestionId]
+                          ? 'border-primary bg-primary/5'
+                          : 'border-slate-300 bg-slate-50/50 hover:border-primary/60',
+                      ].join(' ')}
+                    >
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const selected = e.target.files?.[0] ?? null;
+                          if (selected) void handleFileUpload(q, selected);
+                        }}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">
+                          {file?.fileName
+                            ? file.fileName
+                            : '드래그 & 드롭하거나 클릭해서 파일을 업로드하세요.'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {file?.fileSize
+                            ? formatBytes(file.fileSize)
+                            : '파일 형식 제한 없음'}
+                        </p>
+                      </div>
+                    </label>
+
+                    {file?.uploading && (
+                      <span className="text-xs text-slate-500">업로드 중...</span>
                     )}
                     {file?.key && !file?.uploading && (
                       <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
