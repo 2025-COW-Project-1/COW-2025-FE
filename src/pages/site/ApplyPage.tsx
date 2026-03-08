@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Reveal from '../../components/Reveal';
+import { AlertCircle } from 'lucide-react';
 import {
   applicationsApi,
   type ApplicationFormResponse,
@@ -118,7 +119,7 @@ export default function ApplyPage() {
       const res = await applicationsApi.getForm();
       setForm(res ?? null);
     } catch {
-      setError('현재 모집 중인 지원서가 없어요.');
+      setError('현재 모집 중인 지원서가 없습니다. 다음 모집에서 만나요!');
     } finally {
       setLoading(false);
     }
@@ -322,11 +323,16 @@ export default function ApplyPage() {
 
   if (error || !form) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <h1 className="font-heading text-2xl text-slate-900">지원서 작성</h1>
-        <p className="mt-3 text-sm text-slate-600">
-          {error ?? '폼을 불러오지 못했어요.'}
-        </p>
+      <div className="mx-auto flex min-h-[calc(100vh-16rem)] max-w-6xl items-center justify-center px-4 py-12">
+        <Reveal className="w-full max-w-xl rounded-3xl border border-rose-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+            <AlertCircle className="h-6 w-6" />
+          </div>
+          <h1 className="mt-4 font-heading text-3xl text-slate-900">지원하기</h1>
+          <p className="mt-3 text-sm font-semibold leading-relaxed text-rose-600">
+            {error ?? '폼을 불러오지 못했어요.'}
+          </p>
+        </Reveal>
       </div>
     );
   }
