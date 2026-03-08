@@ -34,7 +34,25 @@ export default function ApplyEntryPage() {
       <div className="w-full">
         <Reveal>
           <div className="text-center">
-            <h1 className="font-heading text-3xl text-primary">지원하기</h1>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 font-heading text-3xl text-primary hover:opacity-90"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              지원하기
+            </Link>
             <p className="mt-2 text-sm text-slate-600">
               원하는 기능을 선택해 진행해주세요.
             </p>
