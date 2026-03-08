@@ -229,9 +229,11 @@ export default function ProjectsPage() {
               정산 내역을 불러오지 못했어요
             </p>
           ) : sortedPayouts.length === 0 ? (
-            <p className="mt-8 text-sm text-slate-500">등록된 정산 내역이 없어요</p>
+            <p className="mt-8 text-sm text-slate-500">
+              등록된 정산 내역이 없어요
+            </p>
           ) : (
-            <section className="mt-8 space-y-3">
+            <section className="mt-8 space-y-3 md:mx-auto md:w-full md:max-w-4xl">
               {sortedPayouts.map((report, idx) => {
                 const open = Boolean(openPayoutIds[report.id]);
                 return (
@@ -240,12 +242,13 @@ export default function ProjectsPage() {
                       <button
                         type="button"
                         onClick={() => togglePayout(report.id)}
-                        className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-slate-50"
+                        className="flex w-full items-center justify-between px-5 py-5 md:py-6 text-left hover:bg-slate-50"
                         aria-expanded={open}
                       >
-                        <p className="text-sm font-semibold text-slate-700">
+                        <p className="text-base md:text-base font-semibold text-slate-700">
                           {formatTermLabel(report.term)}
                         </p>
+
                         <span className="text-sm font-bold text-slate-500">
                           {open ? '닫기' : '보기'}
                         </span>
@@ -253,7 +256,12 @@ export default function ProjectsPage() {
 
                       {open && (
                         <div className="border-t border-slate-200 p-4 sm:p-5">
-                          <PayoutReportCard report={report} />
+                          <PayoutReportCard
+                            report={report}
+                            simplified
+                            embedded
+                            showHeader={false}
+                          />
                         </div>
                       )}
                     </div>
