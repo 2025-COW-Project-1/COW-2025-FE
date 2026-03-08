@@ -30,11 +30,20 @@ export default function HeaderDesktop() {
   const navActive = 'bg-primary/10 text-primary';
   const navIdle = 'text-slate-700 hover:bg-slate-100 hover:text-primary';
 
+  const scrollToTopAfterNav = () => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+  };
+
   return (
     <nav className="hidden items-center gap-1 md:flex justify-self-center">
       <Link
         to="/about"
-        onClick={() => setOpen(null)}
+        onClick={() => {
+          setOpen(null);
+          scrollToTopAfterNav();
+        }}
         className={`${navBase} ${isActive.about ? navActive : navIdle}`}
       >
         소개
@@ -84,6 +93,7 @@ export default function HeaderDesktop() {
                 onClick={() => {
                   setOpen(null);
                   navigate(x.href);
+                  scrollToTopAfterNav();
                 }}
                 className="w-full px-4 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-primary"
                 role="menuitem"
@@ -97,7 +107,10 @@ export default function HeaderDesktop() {
 
       <Link
         to="/notices"
-        onClick={() => setOpen(null)}
+        onClick={() => {
+          setOpen(null);
+          scrollToTopAfterNav();
+        }}
         className={`${navBase} ${isActive.notices ? navActive : navIdle}`}
       >
         공지사항
@@ -105,7 +118,10 @@ export default function HeaderDesktop() {
 
       <Link
         to="/apply"
-        onClick={() => setOpen(null)}
+        onClick={() => {
+          setOpen(null);
+          scrollToTopAfterNav();
+        }}
         className={`${navBase} ${isActive.apply ? navActive : navIdle}`}
       >
         지원하기
@@ -113,7 +129,10 @@ export default function HeaderDesktop() {
 
       <Link
         to="/feedback"
-        onClick={() => setOpen(null)}
+        onClick={() => {
+          setOpen(null);
+          scrollToTopAfterNav();
+        }}
         className={`${navBase} ${isActive.feedback ? navActive : navIdle}`}
       >
         피드백
@@ -121,7 +140,10 @@ export default function HeaderDesktop() {
 
       <Link
         to="/cart"
-        onClick={() => setOpen(null)}
+        onClick={() => {
+          setOpen(null);
+          scrollToTopAfterNav();
+        }}
         className={`${navBase} ${isActive.cart ? navActive : navIdle}`}
       >
         장바구니
@@ -129,7 +151,10 @@ export default function HeaderDesktop() {
 
       <Link
         to="/orders/lookup"
-        onClick={() => setOpen(null)}
+        onClick={() => {
+          setOpen(null);
+          scrollToTopAfterNav();
+        }}
         className={`${navBase} ${isActive.orderLookup ? navActive : navIdle}`}
       >
         주문조회

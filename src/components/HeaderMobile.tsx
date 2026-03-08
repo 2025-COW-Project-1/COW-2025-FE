@@ -38,6 +38,17 @@ export default function HeaderMobile() {
     setMobileProjectsOpen(false);
   };
 
+  const scrollToTopAfterNav = () => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+  };
+
+  const closeAllAndScrollTop = () => {
+    closeAll();
+    scrollToTopAfterNav();
+  };
+
   const handleLogout = () => {
     clearAuth();
     showLogoutToast();
@@ -101,7 +112,7 @@ export default function HeaderMobile() {
           <div className="flex-1 space-y-2 overflow-y-auto bg-white px-5 py-5">
             <Link
               to="/"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.home ? menuActive : menuIdle}`}
             >
               HOME
@@ -109,7 +120,7 @@ export default function HeaderMobile() {
 
             <Link
               to="/about"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.about ? menuActive : menuIdle}`}
             >
               소개
@@ -158,7 +169,7 @@ export default function HeaderMobile() {
                   <Link
                     key={item.href}
                     to={item.href}
-                    onClick={closeAll}
+                    onClick={closeAllAndScrollTop}
                     className="block rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-white"
                   >
                     {item.label}
@@ -169,7 +180,7 @@ export default function HeaderMobile() {
 
             <Link
               to="/notices"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.notices ? menuActive : menuIdle}`}
             >
               공지사항
@@ -177,7 +188,7 @@ export default function HeaderMobile() {
 
             <Link
               to="/cart"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.cart ? menuActive : menuIdle}`}
             >
               장바구니
@@ -185,7 +196,7 @@ export default function HeaderMobile() {
 
             <Link
               to="/orders/lookup"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.orderLookup ? menuActive : menuIdle}`}
             >
               주문조회
@@ -202,7 +213,7 @@ export default function HeaderMobile() {
               <Link
                 key={item.href}
                 to={item.href}
-                onClick={closeAll}
+                onClick={closeAllAndScrollTop}
                 className={`${menuBase} ${item.active ? menuActive : menuIdle}`}
               >
                 {item.label}
