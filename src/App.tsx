@@ -40,10 +40,10 @@ import FloatingSns from './components/FloatingSns';
 
 export default function App() {
   const location = useLocation();
+  const isOrderFlowPage =
+    location.pathname === '/order' || location.pathname.startsWith('/order/');
   const hideFloatingSns =
-    location.pathname.startsWith('/order') ||
-    location.pathname.startsWith('/orders') ||
-    location.pathname.startsWith('/admin');
+    isOrderFlowPage || location.pathname.startsWith('/admin');
 
   return (
     <>
