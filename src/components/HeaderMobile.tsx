@@ -137,7 +137,7 @@ export default function HeaderMobile() {
             <div
               className={[
                 'ml-2 overflow-hidden transition-all duration-200',
-                mobileProjectsOpen ? 'mt-2 max-h-40' : 'mt-0 max-h-0',
+                mobileProjectsOpen ? 'mt-2 max-h-56' : 'mt-0 max-h-0',
               ].join(' ')}
             >
               <div
@@ -151,6 +151,7 @@ export default function HeaderMobile() {
                 {[
                   { label: '전체', href: '/projects' },
                   { label: '진행 중', href: '/projects?status=OPEN' },
+                  { label: '준비중', href: '/projects?status=PREPARING' },
                   { label: '마감', href: '/projects?status=CLOSED' },
                   { label: '정산', href: '/projects?status=PAYOUT' },
                 ].map((item) => (

@@ -11,17 +11,24 @@ import type { PayoutReport } from '../../types/payouts';
 import type { Project } from '../../api/projects';
 import { sortProjects } from '../../utils/projectSort';
 
-type TabValue = 'all' | 'OPEN' | 'CLOSED' | 'PAYOUT';
+type TabValue = 'all' | 'OPEN' | 'PREPARING' | 'CLOSED' | 'PAYOUT';
 
 const TABS: { label: string; value: TabValue }[] = [
   { label: '전체', value: 'all' },
   { label: '진행 중', value: 'OPEN' },
+  { label: '준비중', value: 'PREPARING' },
   { label: '마감', value: 'CLOSED' },
   { label: '정산', value: 'PAYOUT' },
 ];
 
 function isTabValue(v: string): v is TabValue {
-  return v === 'all' || v === 'OPEN' || v === 'CLOSED' || v === 'PAYOUT';
+  return (
+    v === 'all' ||
+    v === 'OPEN' ||
+    v === 'PREPARING' ||
+    v === 'CLOSED' ||
+    v === 'PAYOUT'
+  );
 }
 
 function getYearFromProject(project: Project): string | null {
@@ -82,6 +89,8 @@ export default function ProjectsPage() {
   const filtered = useMemo(() => {
     if (status === 'all') return projects;
     if (status === 'OPEN') return projects.filter((p) => p.status === 'OPEN');
+    if (status === 'PREPARING')
+      return projects.filter((p) => p.status === 'PREPARING');
     if (status === 'CLOSED')
       return projects.filter((p) => p.status === 'CLOSED');
     return [];
