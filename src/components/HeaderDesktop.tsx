@@ -131,7 +131,7 @@ export default function HeaderDesktop() {
         onClick={() => setOpen(null)}
         className={`${navBase} ${isActive.orderLookup ? navActive : navIdle}`}
       >
-        비회원 주문조회
+        주문조회
       </Link>
     </nav>
   );

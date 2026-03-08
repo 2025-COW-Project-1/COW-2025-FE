@@ -187,7 +187,7 @@ export default function HeaderMobile() {
               onClick={closeAll}
               className={`${menuBase} ${isActive.orderLookup ? menuActive : menuIdle}`}
             >
-              비회원 주문조회
+              주문조회
             </Link>
 
             {[
