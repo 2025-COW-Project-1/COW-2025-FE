@@ -9,6 +9,7 @@ export type CartItem = {
   name: string;
   price: number;
   thumbnailUrl: string | null;
+  thumbnailKey?: string | null;
   status?: ItemResponse['status'];
   saleType?: ItemResponse['saleType'];
   quantity: number;
@@ -39,6 +40,7 @@ function parseStored(raw: string | null): CartItem[] {
         name: String(item.name),
         price: item.price,
         thumbnailUrl: item.thumbnailUrl ?? null,
+        thumbnailKey: item.thumbnailKey ?? null,
         status: item.status,
         saleType: item.saleType,
         quantity: normalizeQuantity(item.quantity ?? 1),
@@ -74,6 +76,7 @@ export function addCartItem(payload: {
   name: string;
   price: number;
   thumbnailUrl?: string | null;
+  thumbnailKey?: string | null;
   status?: ItemResponse['status'];
   saleType?: ItemResponse['saleType'];
   quantity?: number;
@@ -88,6 +91,8 @@ export function addCartItem(payload: {
     const current = items[targetIndex];
     items[targetIndex] = {
       ...current,
+      thumbnailUrl: current.thumbnailUrl ?? payload.thumbnailUrl ?? null,
+      thumbnailKey: current.thumbnailKey ?? payload.thumbnailKey ?? null,
       quantity: normalizeQuantity(current.quantity + quantity),
       mergedByDuplicateAdd: true,
     };
@@ -98,6 +103,7 @@ export function addCartItem(payload: {
       name: payload.name,
       price: payload.price,
       thumbnailUrl: payload.thumbnailUrl ?? null,
+      thumbnailKey: payload.thumbnailKey ?? null,
       status: payload.status,
       saleType: payload.saleType,
       quantity,
@@ -143,6 +149,30 @@ export function clearMergedNotice(itemId: string | number) {
     ...items[index],
     mergedByDuplicateAdd: false,
   };
+  saveCartItems(items);
+}
+
+export function updateCartItemMedia(
+  itemId: string | number,
+  patch: { thumbnailUrl?: string | null; thumbnailKey?: string | null },
+) {
+  const target = String(itemId);
+  const items = loadCartItems();
+  const index = items.findIndex((item) => item.itemId === target);
+  if (index < 0) return;
+
+  items[index] = {
+    ...items[index],
+    thumbnailUrl:
+      patch.thumbnailUrl !== undefined
+        ? patch.thumbnailUrl
+        : items[index].thumbnailUrl ?? null,
+    thumbnailKey:
+      patch.thumbnailKey !== undefined
+        ? patch.thumbnailKey
+        : items[index].thumbnailKey ?? null,
+  };
+
   saveCartItems(items);
 }
 
