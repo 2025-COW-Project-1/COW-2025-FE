@@ -493,11 +493,15 @@ export default function ApplicationManagePage() {
                 const type = getAnswerType(q.answerType);
                 const value = answers[q.formQuestionId] ?? '';
                 const options = parseOptions(q.selectOptions);
+                const displayNumber =
+                  typeof q.questionOrder === 'number' && q.questionOrder > 0
+                    ? q.questionOrder
+                    : idx + 1;
 
                 return (
                   <div key={q.formQuestionId} className="space-y-2">
                     <label className="text-sm font-bold text-slate-700">
-                      {idx + 1}. {q.content}
+                      {displayNumber}. {q.content}
                       {q.required && (
                         <span className="ml-1 text-rose-500">*</span>
                       )}
