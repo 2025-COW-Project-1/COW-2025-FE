@@ -187,6 +187,14 @@ export default function HeaderMobile() {
             </Link>
 
             <Link
+              to="/apply"
+              onClick={closeAllAndScrollTop}
+              className={`${menuBase} ${isActive.apply ? menuActive : menuIdle}`}
+            >
+              지원하기
+            </Link>
+
+            <Link
               to="/cart"
               onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.cart ? menuActive : menuIdle}`}
@@ -202,23 +210,13 @@ export default function HeaderMobile() {
               주문조회
             </Link>
 
-            {[
-              { label: '지원하기', href: '/apply', active: isActive.apply },
-              {
-                label: '피드백',
-                href: '/feedback',
-                active: isActive.feedback,
-              },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={closeAllAndScrollTop}
-                className={`${menuBase} ${item.active ? menuActive : menuIdle}`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            <Link
+              to="/feedback"
+              onClick={closeAllAndScrollTop}
+              className={`${menuBase} ${isActive.feedback ? menuActive : menuIdle}`}
+            >
+              피드백
+            </Link>
 
             {isLoggedIn && (
               <button

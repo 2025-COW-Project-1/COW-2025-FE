@@ -128,17 +128,6 @@ export default function HeaderDesktop() {
       </Link>
 
       <Link
-        to="/feedback"
-        onClick={() => {
-          setOpen(null);
-          scrollToTopAfterNav();
-        }}
-        className={`${navBase} ${isActive.feedback ? navActive : navIdle}`}
-      >
-        피드백
-      </Link>
-
-      <Link
         to="/cart"
         onClick={() => {
           setOpen(null);
@@ -158,6 +147,17 @@ export default function HeaderDesktop() {
         className={`${navBase} ${isActive.orderLookup ? navActive : navIdle}`}
       >
         주문조회
+      </Link>
+
+      <Link
+        to="/feedback"
+        onClick={() => {
+          setOpen(null);
+          scrollToTopAfterNav();
+        }}
+        className={`${navBase} ${isActive.feedback ? navActive : navIdle}`}
+      >
+        피드백
       </Link>
     </nav>
   );
