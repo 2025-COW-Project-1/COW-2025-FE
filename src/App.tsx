@@ -14,7 +14,6 @@ import MyPage from './pages/site/MyPage';
 import ProjectsPage from './pages/site/ProjectsPage';
 import ProjectDetailPage from './pages/site/ProjectDetailPage';
 import ProjectItemDetailPage from './pages/site/ProjectItemDetailPage';
-import ResourcesPage from './pages/site/ResourcesPage';
 import PayoutsPage from './pages/site/PayoutsPage';
 import CartPage from './pages/site/CartPage';
 import OrderPage from './pages/site/OrderPage';
@@ -57,7 +56,6 @@ export default function App() {
             path="/projects/:projectId/items/:itemId"
             element={<ProjectItemDetailPage />}
           />
-          <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/order" element={<OrderPage />} />
           <Route path="/order/complete" element={<OrderCompletePage />} />
