@@ -98,6 +98,7 @@ export default function OrderLookupPage() {
             </button>
             <Link
               to="/order"
+              state={{ source: 'cart' }}
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 px-5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               주문하러 가기

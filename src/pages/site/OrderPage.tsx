@@ -911,7 +911,9 @@ export default function OrderPage() {
                     />
                     <div>
                       <p className="text-sm font-bold text-slate-900">
-                        {agreement.title}
+                        {agreement.title}{' '}
+                        <span className="text-slate-700">[필수]</span>{' '}
+                        <span className="text-rose-600">*</span>
                       </p>
                       <p className="mt-3 text-xs font-bold text-slate-800">
                         {agreement.noticeTitle}
@@ -924,7 +926,7 @@ export default function OrderPage() {
                           {paragraph}
                         </p>
                       ))}
-                      <p className="mt-3 text-xs font-semibold text-slate-900">
+                      <p className="mt-3 text-xs font-semibold text-rose-600">
                         {agreement.question}
                       </p>
                     </div>
@@ -1444,7 +1446,7 @@ export default function OrderPage() {
                 </div>
               </section>
 
-              <section className="rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/60 p-5">
+              <section className="rounded-3xl border border-slate-200 bg-linear-to-b from-white to-slate-50/60 p-5">
                 <h3 className="text-sm font-bold text-slate-900">주문 상품</h3>
                 <div className="mt-2 space-y-2">
                   {items.map((item) => (
