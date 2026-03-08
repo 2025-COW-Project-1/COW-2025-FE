@@ -188,10 +188,10 @@ export default function IntroduceDetailView({
 
                 {history.description ? (
                   <div
-                    className={
-                      (history.year || imageUrl ? 'mt-2 ' : '') +
-                      'line-clamp-4 text-sm text-slate-700'
-                    }
+                    className={[
+                      history.year || imageUrl ? 'mt-2' : '',
+                      'text-sm text-slate-700',
+                    ].join(' ')}
                   >
                     <Markdown value={history.description} />
                   </div>
