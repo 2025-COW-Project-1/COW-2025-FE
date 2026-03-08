@@ -10,6 +10,7 @@ import {
 import { uploadToPresignedUrl } from '../../api/adminProjects';
 import { DEPARTMENT_OPTIONS } from '../../types/recruit';
 import type { DepartmentType } from '../../types/recruit';
+import { AlertCircle } from 'lucide-react';
 
 type AnswerValue = string | string[] | null;
 type FileState = {
@@ -357,9 +358,17 @@ export default function ApplicationManagePage() {
 
   if (formError || !openForm) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-12">
-        <Reveal className="rounded-3xl border border-rose-200 bg-white p-8">
-          <p className="text-sm font-bold text-rose-700">
+      <div className="mx-auto flex min-h-[calc(100vh-16rem)] max-w-6xl items-center justify-center px-4 py-12">
+        <Reveal className="w-full max-w-xl rounded-3xl border border-rose-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+            <AlertCircle className="h-6 w-6" />
+          </div>
+
+          <h1 className="mt-4 font-heading text-3xl text-slate-900">
+            지원서 조회/수정
+          </h1>
+
+          <p className="mt-3 text-sm font-semibold leading-relaxed text-rose-600">
             {formError ??
               '현재 모집 중인 지원서가 없습니다. 지원서 조회/수정은 모집 중인 지원서만 가능합니다.'}
           </p>

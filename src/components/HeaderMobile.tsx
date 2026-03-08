@@ -112,7 +112,7 @@ export default function HeaderMobile() {
               onClick={closeAll}
               className={`${menuBase} ${isActive.about ? menuActive : menuIdle}`}
             >
-              ABOUT
+              소개
             </Link>
 
             <button
@@ -123,7 +123,7 @@ export default function HeaderMobile() {
                 isActive.projects ? menuActive : menuIdle
               }`}
             >
-              PROJECTS
+              컬렉션
               <span
                 className={[
                   'text-slate-400 transition-transform',
@@ -149,10 +149,10 @@ export default function HeaderMobile() {
                 ].join(' ')}
               >
                 {[
-                  { label: 'ALL', href: '/projects' },
-                  { label: 'NOW OPEN', href: '/projects?status=OPEN' },
-                  { label: 'COMING SOON', href: '/projects?status=PREPARING' },
-                  { label: 'CLOSED', href: '/projects?status=CLOSED' },
+                  { label: '전체', href: '/projects' },
+                  { label: '진행 중', href: '/projects?status=OPEN' },
+                  { label: '준비중', href: '/projects?status=PREPARING' },
+                  { label: '마감', href: '/projects?status=CLOSED' },
                 ].map((item) => (
                   <Link
                     key={item.href}
@@ -171,7 +171,7 @@ export default function HeaderMobile() {
               onClick={closeAll}
               className={`${menuBase} ${isActive.notices ? menuActive : menuIdle}`}
             >
-              NOTICES
+              공지사항
             </Link>
 
             <Link
@@ -179,7 +179,7 @@ export default function HeaderMobile() {
               onClick={closeAll}
               className={`${menuBase} ${isActive.cart ? menuActive : menuIdle}`}
             >
-              CART
+              장바구니
             </Link>
 
             <Link
@@ -187,13 +187,13 @@ export default function HeaderMobile() {
               onClick={closeAll}
               className={`${menuBase} ${isActive.orderLookup ? menuActive : menuIdle}`}
             >
-              ORDER LOOKUP
+              비회원 주문조회
             </Link>
 
             {[
-              { label: 'APPLY', href: '/apply', active: isActive.apply },
+              { label: '지원하기', href: '/apply', active: isActive.apply },
               {
-                label: 'FEEDBACK',
+                label: '피드백',
                 href: '/feedback',
                 active: isActive.feedback,
               },

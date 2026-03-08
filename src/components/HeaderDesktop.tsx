@@ -37,7 +37,7 @@ export default function HeaderDesktop() {
         onClick={() => setOpen(null)}
         className={`${navBase} ${isActive.about ? navActive : navIdle}`}
       >
-        ABOUT
+        소개
       </Link>
 
       <div className="relative">
@@ -48,7 +48,7 @@ export default function HeaderDesktop() {
           aria-expanded={isProjectsOpen}
           aria-haspopup="menu"
         >
-          PROJECTS <span className="ml-1 text-slate-400">▾</span>
+          컬렉션 <span className="ml-1 text-slate-400">▾</span>
         </button>
 
         {isProjectsOpen && (
@@ -72,10 +72,10 @@ export default function HeaderDesktop() {
         >
           <div className="py-2">
             {[
-              { label: 'ALL', href: '/projects' },
-              { label: 'NOW OPEN', href: '/projects?status=OPEN' },
-              { label: 'COMING SOON', href: '/projects?status=PREPARING' },
-              { label: 'CLOSED', href: '/projects?status=CLOSED' },
+              { label: '전체', href: '/projects' },
+              { label: '진행 중', href: '/projects?status=OPEN' },
+              { label: '준비중', href: '/projects?status=PREPARING' },
+              { label: '마감', href: '/projects?status=CLOSED' },
             ].map((x) => (
               <button
                 key={x.href}
@@ -99,7 +99,7 @@ export default function HeaderDesktop() {
         onClick={() => setOpen(null)}
         className={`${navBase} ${isActive.notices ? navActive : navIdle}`}
       >
-        NOTICES
+        공지사항
       </Link>
 
       <Link
@@ -107,7 +107,7 @@ export default function HeaderDesktop() {
         onClick={() => setOpen(null)}
         className={`${navBase} ${isActive.apply ? navActive : navIdle}`}
       >
-        APPLY
+        지원하기
       </Link>
 
       <Link
@@ -115,7 +115,7 @@ export default function HeaderDesktop() {
         onClick={() => setOpen(null)}
         className={`${navBase} ${isActive.feedback ? navActive : navIdle}`}
       >
-        FEEDBACK
+        피드백
       </Link>
 
       <Link
@@ -123,7 +123,7 @@ export default function HeaderDesktop() {
         onClick={() => setOpen(null)}
         className={`${navBase} ${isActive.cart ? navActive : navIdle}`}
       >
-        CART
+        장바구니
       </Link>
 
       <Link
@@ -131,7 +131,7 @@ export default function HeaderDesktop() {
         onClick={() => setOpen(null)}
         className={`${navBase} ${isActive.orderLookup ? navActive : navIdle}`}
       >
-        ORDER LOOKUP
+        비회원 주문조회
       </Link>
     </nav>
   );

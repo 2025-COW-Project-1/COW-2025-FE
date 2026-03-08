@@ -148,7 +148,7 @@ export default function AdminApplicationsListPage() {
           <div>
             <h1 className="font-heading text-3xl text-primary">지원서 관리</h1>
             <p className="mt-2 text-sm text-slate-600">
-              모집 Form을 선택하면 해당 지원서 목록을 조회할 수 있습니다.
+              '모집 양식을 선택하면 해당 지원서 목록을 조회할 수 있습니다.'
             </p>
           </div>
         </div>
@@ -161,7 +161,7 @@ export default function AdminApplicationsListPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
           {formsLoading ? (
             <div className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-400 md:w-72">
-              Form 목록 불러오는 중...
+              양식 목록 불러오는 중...
             </div>
           ) : forms.length > 0 ? (
             <select
@@ -169,7 +169,7 @@ export default function AdminApplicationsListPage() {
               onChange={(e) => setFormId(e.target.value)}
               className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:w-72"
             >
-              <option value="">Form 선택</option>
+              <option value="">양식 선택</option>
               {forms.map((form) => (
                 <option key={form.formId} value={String(form.formId)}>
                   [{form.open ? 'OPEN' : 'CLOSE'}] {form.title}
