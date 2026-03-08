@@ -147,7 +147,7 @@ export default function CartPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
         <Reveal>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="font-heading text-2xl font-bold text-slate-900">
+            <h1 className="font-heading text-3xl text-primary">
               장바구니 {items.length > 0 && `(${totalCount}개)`}
             </h1>
             <div className="flex gap-2">

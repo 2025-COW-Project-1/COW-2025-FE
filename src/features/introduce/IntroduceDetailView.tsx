@@ -104,7 +104,7 @@ export default function IntroduceDetailView({
         </div>
 
         <div className="flex-1 rounded-3xl border border-slate-200 bg-white p-7">
-          <h2 className="font-heading text-xl text-slate-900">
+          <h2 className="font-heading text-2xl text-primary">
             {purposeTitle}
           </h2>
           {purposeDesc ? (
@@ -116,7 +116,7 @@ export default function IntroduceDetailView({
       </div>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-7 md:row-span-2 md:h-full">
-        <h2 className="font-heading text-lg text-slate-900">
+        <h2 className="font-heading text-2xl text-primary">
           {currentLogoTitle}
         </h2>
 
