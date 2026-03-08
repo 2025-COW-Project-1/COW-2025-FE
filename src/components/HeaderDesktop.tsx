@@ -26,7 +26,7 @@ export default function HeaderDesktop() {
   );
 
   const navBase =
-    'rounded-lg px-3 py-2 text-sm font-semibold transition-colors';
+    'rounded-lg px-3 py-2 text-[16px] font-semibold transition-colors';
   const navActive = 'bg-primary/10 text-primary';
   const navIdle = 'text-slate-700 hover:bg-slate-100 hover:text-primary';
 
