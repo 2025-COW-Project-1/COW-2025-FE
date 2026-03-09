@@ -7,11 +7,13 @@ import NoticesPage from './pages/site/NoticesPage';
 import NoticeDetailPage from './pages/site/NoticeDetailPage';
 import FeedbackPage from './pages/site/FeedbackPage';
 import ApplyPage from './pages/site/ApplyPage';
+import ApplyEntryPage from './pages/site/ApplyEntryPage';
+import ApplicationManagePage from './pages/site/ApplicationManagePage';
+import ApplicationResultPage from './pages/site/ApplicationResultPage';
 import MyPage from './pages/site/MyPage';
 import ProjectsPage from './pages/site/ProjectsPage';
 import ProjectDetailPage from './pages/site/ProjectDetailPage';
 import ProjectItemDetailPage from './pages/site/ProjectItemDetailPage';
-import ResourcesPage from './pages/site/ResourcesPage';
 import PayoutsPage from './pages/site/PayoutsPage';
 import CartPage from './pages/site/CartPage';
 import OrderPage from './pages/site/OrderPage';
@@ -38,10 +40,10 @@ import FloatingSns from './components/FloatingSns';
 
 export default function App() {
   const location = useLocation();
+  const isOrderFlowPage =
+    location.pathname === '/order' || location.pathname.startsWith('/order/');
   const hideFloatingSns =
-    location.pathname.startsWith('/order') ||
-    location.pathname.startsWith('/orders') ||
-    location.pathname.startsWith('/admin');
+    isOrderFlowPage || location.pathname.startsWith('/admin');
 
   return (
     <>
@@ -54,7 +56,6 @@ export default function App() {
             path="/projects/:projectId/items/:itemId"
             element={<ProjectItemDetailPage />}
           />
-          <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/order" element={<OrderPage />} />
           <Route path="/order/complete" element={<OrderCompletePage />} />
@@ -64,7 +65,10 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/notices" element={<NoticesPage />} />
           <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
-          <Route path="/apply" element={<ApplyPage />} />
+          <Route path="/apply" element={<ApplyEntryPage />} />
+          <Route path="/apply/new" element={<ApplyPage />} />
+          <Route path="/apply/manage" element={<ApplicationManagePage />} />
+          <Route path="/apply/result" element={<ApplicationResultPage />} />
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/login" element={<LoginPage />} />

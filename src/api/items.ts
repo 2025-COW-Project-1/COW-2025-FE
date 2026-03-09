@@ -39,11 +39,11 @@ export const itemsApi = {
   async getById(projectId: string, itemId: string) {
     try {
       return await api<ItemResponse>(
-        withApiBase(`/projects/${projectId}/items/${itemId}`),
+        withApiBase(`/items/${itemId}`),
       );
     } catch {
       return api<ItemResponse>(
-        withApiBase(`/items/${itemId}`),
+        withApiBase(`/projects/${projectId}/items/${itemId}`),
       );
     }
   },

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Reveal from '../../components/Reveal';
 import { useConfirm } from '../../components/confirm/useConfirm';
 import { useToast } from '../../components/toast/useToast';
+import { itemsApi } from '../../api/items';
 import {
   CART_CHANGED_EVENT,
   clearMergedNotice,
@@ -13,7 +14,9 @@ import {
   removeCartItem,
   setCartItemQuantity,
   type CartItem,
+  updateCartItemMedia,
 } from '../../utils/cart';
+import { buildMediaUrlCandidates } from '../../utils/media';
 
 function formatMoney(value: number) {
   return value.toLocaleString();
@@ -22,8 +25,12 @@ function formatMoney(value: number) {
 export default function CartPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<CartItem[]>(() => loadCartItems());
+  const [thumbFallbackIndex, setThumbFallbackIndex] = useState<
+    Record<string, number>
+  >({});
   const confirm = useConfirm();
   const toast = useToast();
+  const refreshedMediaItemIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const sync = () => setItems(loadCartItems());
@@ -34,6 +41,64 @@ export default function CartPage() {
       window.removeEventListener('storage', sync);
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const looksLikeExpiredPresignedUrl = (url?: string | null) => {
+      if (!url) return false;
+      return (
+        /X-Amz-Algorithm=/i.test(url) ||
+        /X-Amz-Signature=/i.test(url) ||
+        /amazonaws\.com/i.test(url)
+      );
+    };
+
+    const refreshMedia = async () => {
+      for (const item of items) {
+        if (!active) return;
+
+        // 아이템별 1회만 갱신 시도하여 404/중복 요청 반복 방지
+        const itemKey = String(item.itemId);
+        if (refreshedMediaItemIdsRef.current.has(itemKey)) continue;
+
+        // 기존 장바구니 데이터(만료 presigned URL 저장) 자동 복구
+        if (item.thumbnailKey && !looksLikeExpiredPresignedUrl(item.thumbnailUrl))
+          continue;
+
+        refreshedMediaItemIdsRef.current.add(itemKey);
+        try {
+          const latest = await itemsApi.getById(item.projectId, item.itemId);
+          const nextThumbnailUrl = latest.thumbnailUrl ?? null;
+          const nextThumbnailKey = latest.thumbnailKey ?? null;
+          if (
+            nextThumbnailUrl !== (item.thumbnailUrl ?? null) ||
+            nextThumbnailKey !== (item.thumbnailKey ?? null)
+          ) {
+            updateCartItemMedia(item.itemId, {
+              thumbnailUrl: nextThumbnailUrl,
+              thumbnailKey: nextThumbnailKey,
+            });
+          }
+        } catch {
+          // 개별 아이템 갱신 실패는 무시하고 다음 아이템 진행
+        }
+      }
+    };
+
+    void refreshMedia();
+
+    return () => {
+      active = false;
+    };
+  }, [items]);
+
+  useEffect(() => {
+    const existingIds = new Set(items.map((item) => String(item.itemId)));
+    refreshedMediaItemIdsRef.current.forEach((id) => {
+      if (!existingIds.has(id)) refreshedMediaItemIdsRef.current.delete(id);
+    });
+  }, [items]);
 
   const totalCount = useMemo(() => getCartCount(items), [items]);
   const totalPrice = useMemo(() => getCartTotal(items), [items]);
@@ -82,9 +147,25 @@ export default function CartPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
         <Reveal>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="font-heading text-2xl font-bold text-slate-900">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 font-heading text-3xl text-primary hover:opacity-90"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
               장바구니 {items.length > 0 && `(${totalCount}개)`}
-            </h1>
+            </Link>
             <div className="flex gap-2">
               <Link
                 to="/orders/lookup"
@@ -118,17 +199,38 @@ export default function CartPage() {
                   to={`/projects/${item.projectId}/items/${item.itemId}`}
                   className="h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100"
                 >
-                  {item.thumbnailUrl ? (
-                    <img
-                      src={item.thumbnailUrl}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400">
-                      이미지 없음
-                    </div>
-                  )}
+                  {(() => {
+                    const key = String(item.itemId);
+                    const candidates = buildMediaUrlCandidates(
+                      item.thumbnailUrl,
+                      item.thumbnailKey ?? null,
+                    );
+                    const currentIdx = thumbFallbackIndex[key] ?? 0;
+                    const src = candidates[currentIdx] ?? '';
+
+                    if (!src) {
+                      return (
+                        <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-slate-400">
+                          이미지 없음
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <img
+                        src={src}
+                        alt={item.name}
+                        className="h-full w-full object-cover"
+                        onError={() => {
+                          setThumbFallbackIndex((prev) => {
+                            const idx = prev[key] ?? 0;
+                            if (idx >= candidates.length - 1) return prev;
+                            return { ...prev, [key]: idx + 1 };
+                          });
+                        }}
+                      />
+                    );
+                  })()}
                 </Link>
 
                 <div className="flex min-w-0 flex-1 flex-col">

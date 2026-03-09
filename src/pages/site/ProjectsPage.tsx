@@ -1,24 +1,34 @@
-import { useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Reveal from '../../components/Reveal';
 import ProjectCard from '../../components/ProjectCard';
+import PayoutReportCard from '../../components/PayoutReportCard';
 import { SkeletonProjectCard } from '../../components/Skeleton';
 import { projectsApi } from '../../api/projects';
-import type { Project, ProjectStatus } from '../../api/projects';
+import { payoutsApi } from '../../api/payouts';
+import type { PayoutReport } from '../../types/payouts';
+import type { Project } from '../../api/projects';
 import { sortProjects } from '../../utils/projectSort';
 
-type TabValue = ProjectStatus | 'all';
+type TabValue = 'all' | 'OPEN' | 'PREPARING' | 'CLOSED' | 'PAYOUT';
 
 const TABS: { label: string; value: TabValue }[] = [
   { label: '전체', value: 'all' },
   { label: '진행 중', value: 'OPEN' },
   { label: '준비중', value: 'PREPARING' },
   { label: '마감', value: 'CLOSED' },
+  { label: '정산', value: 'PAYOUT' },
 ];
 
-function isProjectStatus(v: string): v is ProjectStatus {
-  return v === 'OPEN' || v === 'PREPARING' || v === 'CLOSED';
+function isTabValue(v: string): v is TabValue {
+  return (
+    v === 'all' ||
+    v === 'OPEN' ||
+    v === 'PREPARING' ||
+    v === 'CLOSED' ||
+    v === 'PAYOUT'
+  );
 }
 
 function getYearFromProject(project: Project): string | null {
@@ -40,11 +50,23 @@ function sortPinned(items: Project[]) {
   });
 }
 
+function formatTermLabel(term: string) {
+  const matched = term.match(/(\d{4})\D*(\d{1,2})?/);
+  if (!matched) return term;
+  const year = matched[1];
+  const semester = matched[2];
+  if (!semester) return `${year}년도`;
+  return `${year}년도 ${Number(semester)}학기`;
+}
+
 export default function ProjectsPage() {
   const [sp, setSp] = useSearchParams();
+  const [openPayoutIds, setOpenPayoutIds] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const raw = sp.get('status');
-  const status: TabValue = raw ? (isProjectStatus(raw) ? raw : 'all') : 'all';
+  const status: TabValue = raw ? (isTabValue(raw) ? raw : 'all') : 'all';
 
   const { data, isLoading, isError, isFetching } = useQuery({
     queryKey: ['projects'],
@@ -53,12 +75,55 @@ export default function ProjectsPage() {
   });
 
   const projects = useMemo(() => data ?? [], [data]);
+  const {
+    data: payoutData,
+    isLoading: payoutsLoading,
+    isError: payoutsError,
+  } = useQuery({
+    queryKey: ['payouts'],
+    queryFn: () => payoutsApi.list(),
+    enabled: status === 'PAYOUT',
+    placeholderData: (prev) => prev,
+  });
 
   const filtered = useMemo(() => {
-    return status === 'all'
-      ? projects
-      : projects.filter((p) => p.status === status);
+    if (status === 'all') return projects;
+    if (status === 'OPEN') return projects.filter((p) => p.status === 'OPEN');
+    if (status === 'PREPARING')
+      return projects.filter((p) => p.status === 'PREPARING');
+    if (status === 'CLOSED')
+      return projects.filter((p) => p.status === 'CLOSED');
+    return [];
   }, [projects, status]);
+
+  const sortedPayouts = useMemo(() => {
+    const list = (payoutData ?? []).slice();
+    const parseTerm = (term: string) => {
+      const matched = term.match(/(\d{4})\D*(\d{1,2})?/);
+      if (!matched) return { year: 0, seq: 0 };
+      return {
+        year: Number(matched[1] ?? 0),
+        seq: Number(matched[2] ?? 0),
+      };
+    };
+
+    const toNumericId = (report: PayoutReport) => {
+      const n = Number(report.id);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    return list.sort((a, b) => {
+      const ta = parseTerm(a.term);
+      const tb = parseTerm(b.term);
+      if (tb.year !== ta.year) return tb.year - ta.year;
+      if (tb.seq !== ta.seq) return tb.seq - ta.seq;
+      return toNumericId(b) - toNumericId(a);
+    });
+  }, [payoutData]);
+
+  const togglePayout = (id: string) => {
+    setOpenPayoutIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const { pinnedProjects, yearSections } = useMemo(() => {
     const pinned = filtered.filter((p) => p.pinned);
@@ -93,10 +158,26 @@ export default function ProjectsPage() {
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="font-heading text-2xl font-bold text-slate-900 sm:text-3xl">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 font-heading text-3xl text-primary hover:opacity-90"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
                 컬렉션
-              </h1>
-              <p className="mt-1.5 text-sm text-slate-500">
+              </Link>
+              <p className="mt-1.5 text-sm text-slate-600">
                 진행 중인 프로젝트와 상품을 만나보세요
               </p>
             </div>
@@ -136,7 +217,60 @@ export default function ProjectsPage() {
           </div>
         </Reveal>
 
-        {isLoading ? (
+        {status === 'PAYOUT' ? (
+          payoutsLoading ? (
+            <section className="mt-8">
+              <Reveal className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">
+                정산 내역 불러오는 중...
+              </Reveal>
+            </section>
+          ) : payoutsError ? (
+            <p className="mt-8 text-sm text-rose-600">
+              정산 내역을 불러오지 못했어요
+            </p>
+          ) : sortedPayouts.length === 0 ? (
+            <p className="mt-8 text-sm text-slate-500">
+              등록된 정산 내역이 없어요
+            </p>
+          ) : (
+            <section className="mt-8 space-y-3 md:mx-auto md:w-full md:max-w-4xl">
+              {sortedPayouts.map((report, idx) => {
+                const open = Boolean(openPayoutIds[report.id]);
+                return (
+                  <Reveal key={report.id} delayMs={idx * 40}>
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => togglePayout(report.id)}
+                        className="flex w-full items-center justify-between px-5 py-5 md:py-6 text-left hover:bg-slate-50"
+                        aria-expanded={open}
+                      >
+                        <p className="text-base md:text-base font-semibold text-slate-700">
+                          {formatTermLabel(report.term)}
+                        </p>
+
+                        <span className="text-sm font-bold text-slate-500">
+                          {open ? '닫기' : '보기'}
+                        </span>
+                      </button>
+
+                      {open && (
+                        <div className="border-t border-slate-200 p-4 sm:p-5">
+                          <PayoutReportCard
+                            report={report}
+                            simplified
+                            embedded
+                            showHeader={false}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </Reveal>
+                );
+              })}
+            </section>
+          )
+        ) : isLoading ? (
           <section className="mt-8">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, idx) => (

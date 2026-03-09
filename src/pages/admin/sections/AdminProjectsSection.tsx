@@ -781,7 +781,7 @@ export default function AdminProjectsSection({
                     </p>
                   )}
 
-                  <div className="mt-3 grid grid-cols-4 gap-2">
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {previewImages.length > 0 ? (
                       previewImages.map((url, idx) => (
                         <div
@@ -808,7 +808,7 @@ export default function AdminProjectsSection({
                         </div>
                       ))
                     ) : (
-                      <div className="col-span-4 flex h-16 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white/60 text-xs font-semibold text-slate-400">
+                      <div className="col-span-2 flex h-16 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white/60 text-xs font-semibold text-slate-400 sm:col-span-4">
                         업로드된 이미지가 없습니다
                       </div>
                     )}

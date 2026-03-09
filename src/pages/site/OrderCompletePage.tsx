@@ -46,7 +46,7 @@ export default function OrderCompletePage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <Reveal>
-        <section className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm">
+        <section className="rounded-3xl border border-emerald-200 bg-linear-to-br from-emerald-50 to-white p-6 shadow-sm">
           <p className="inline-flex rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-bold text-emerald-700">
             ORDER RECEIVED
           </p>

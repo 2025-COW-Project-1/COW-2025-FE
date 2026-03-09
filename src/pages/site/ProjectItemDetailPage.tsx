@@ -417,6 +417,7 @@ export default function ProjectItemDetailPage() {
       name: target.name,
       price: target.price,
       thumbnailUrl: target.thumbnailUrl,
+      thumbnailKey: target.thumbnailKey,
       status: target.status,
       saleType: target.saleType,
       quantity: 1,

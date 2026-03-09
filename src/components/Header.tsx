@@ -8,12 +8,20 @@ import { showLogoutToast } from '../utils/LogoutToast';
 export default function Header() {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+
+  const scrollToTopAfterNav = () => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+  };
+
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       <div className="border-b border-slate-200/60 bg-white/75 backdrop-blur">
         <div className="mx-auto grid h-16 max-w-none grid-cols-[1fr_auto_1fr] items-center px-6">
           <Link
             to="/"
+            onClick={scrollToTopAfterNav}
             className="justify-self-start font-heading text-2xl tracking-tight text-primary"
           >
             명지공방

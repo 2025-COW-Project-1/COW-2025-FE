@@ -38,6 +38,17 @@ export default function HeaderMobile() {
     setMobileProjectsOpen(false);
   };
 
+  const scrollToTopAfterNav = () => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+  };
+
+  const closeAllAndScrollTop = () => {
+    closeAll();
+    scrollToTopAfterNav();
+  };
+
   const handleLogout = () => {
     clearAuth();
     showLogoutToast();
@@ -101,7 +112,7 @@ export default function HeaderMobile() {
           <div className="flex-1 space-y-2 overflow-y-auto bg-white px-5 py-5">
             <Link
               to="/"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.home ? menuActive : menuIdle}`}
             >
               HOME
@@ -109,10 +120,10 @@ export default function HeaderMobile() {
 
             <Link
               to="/about"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.about ? menuActive : menuIdle}`}
             >
-              ABOUT
+              소개
             </Link>
 
             <button
@@ -123,7 +134,7 @@ export default function HeaderMobile() {
                 isActive.projects ? menuActive : menuIdle
               }`}
             >
-              PROJECTS
+              컬렉션
               <span
                 className={[
                   'text-slate-400 transition-transform',
@@ -137,7 +148,7 @@ export default function HeaderMobile() {
             <div
               className={[
                 'ml-2 overflow-hidden transition-all duration-200',
-                mobileProjectsOpen ? 'mt-2 max-h-40' : 'mt-0 max-h-0',
+                mobileProjectsOpen ? 'mt-2 max-h-56' : 'mt-0 max-h-0',
               ].join(' ')}
             >
               <div
@@ -149,15 +160,16 @@ export default function HeaderMobile() {
                 ].join(' ')}
               >
                 {[
-                  { label: 'ALL', href: '/projects' },
-                  { label: 'NOW OPEN', href: '/projects?status=OPEN' },
-                  { label: 'COMING SOON', href: '/projects?status=PREPARING' },
-                  { label: 'CLOSED', href: '/projects?status=CLOSED' },
+                  { label: '전체', href: '/projects' },
+                  { label: '진행 중', href: '/projects?status=OPEN' },
+                  { label: '준비중', href: '/projects?status=PREPARING' },
+                  { label: '마감', href: '/projects?status=CLOSED' },
+                  { label: '정산', href: '/projects?status=PAYOUT' },
                 ].map((item) => (
                   <Link
                     key={item.href}
                     to={item.href}
-                    onClick={closeAll}
+                    onClick={closeAllAndScrollTop}
                     className="block rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-white"
                   >
                     {item.label}
@@ -168,45 +180,43 @@ export default function HeaderMobile() {
 
             <Link
               to="/notices"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.notices ? menuActive : menuIdle}`}
             >
-              NOTICES
+              공지사항
+            </Link>
+
+            <Link
+              to="/apply"
+              onClick={closeAllAndScrollTop}
+              className={`${menuBase} ${isActive.apply ? menuActive : menuIdle}`}
+            >
+              지원하기
             </Link>
 
             <Link
               to="/cart"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.cart ? menuActive : menuIdle}`}
             >
-              CART
+              장바구니
             </Link>
 
             <Link
               to="/orders/lookup"
-              onClick={closeAll}
+              onClick={closeAllAndScrollTop}
               className={`${menuBase} ${isActive.orderLookup ? menuActive : menuIdle}`}
             >
-              ORDER LOOKUP
+              주문조회
             </Link>
 
-            {[
-              { label: 'APPLY', href: '/apply', active: isActive.apply },
-              {
-                label: 'FEEDBACK',
-                href: '/feedback',
-                active: isActive.feedback,
-              },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                onClick={closeAll}
-                className={`${menuBase} ${item.active ? menuActive : menuIdle}`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            <Link
+              to="/feedback"
+              onClick={closeAllAndScrollTop}
+              className={`${menuBase} ${isActive.feedback ? menuActive : menuIdle}`}
+            >
+              피드백
+            </Link>
 
             {isLoggedIn && (
               <button

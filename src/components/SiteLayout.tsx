@@ -214,7 +214,7 @@ export default function SiteLayout() {
         <Outlet />
       </main>
 
-      <footer className="mt-14 md:mt-100 border-t border-slate-200 bg-white">
+      <footer className="mt-14 md:mt-50 border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-7 md:py-10 text-sm text-slate-600">
           <div className="flex flex-col gap-5 md:gap-6 md:flex-row md:items-start md:justify-between">
             <div>
