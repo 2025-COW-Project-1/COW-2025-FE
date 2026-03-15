@@ -157,8 +157,8 @@ export default function MyPageProfileSection({
               required
             >
               <option value="">선택</option>
-              <option value="SEOUL">인문캠퍼스</option>
-              <option value="YONGIN">자연캠퍼스</option>
+              <option value="SEOUL">인문캠(서울)</option>
+              <option value="YONGIN">자연캠(용인)</option>
             </select>
           )}
         </div>
