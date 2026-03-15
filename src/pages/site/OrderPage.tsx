@@ -162,8 +162,8 @@ const BUYER_TYPE_LABELS: Record<BuyerType, string> = {
 };
 
 const CAMPUS_LABELS: Record<CampusType, string> = {
-  SEOUL: '서울캠퍼스',
-  YONGIN: '자연캠퍼스',
+  SEOUL: '인문캠(서울)',
+  YONGIN: '자연캠(용인)',
 };
 
 const FULFILLMENT_METHOD_LABELS: Record<FulfillmentMethod, string> = {
@@ -797,9 +797,9 @@ export default function OrderPage() {
     draft.lookup.password === draft.lookup.passwordConfirm;
   const campusLabel =
     draft.buyer.campus === 'SEOUL'
-      ? '서울캠퍼스'
+      ? '인문캠(서울)'
       : draft.buyer.campus === 'YONGIN'
-        ? '자연캠퍼스'
+        ? '자연캠(용인)'
         : '미선택';
 
   return (
@@ -1021,8 +1021,8 @@ export default function OrderPage() {
                       }
                       className={SELECT_CLASS}
                     >
-                      <option value="SEOUL">서울캠퍼스</option>
-                      <option value="YONGIN">자연캠퍼스</option>
+                      <option value="SEOUL">인문캠(서울)</option>
+                      <option value="YONGIN">자연캠(용인)</option>
                     </select>
                     <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
                       <svg

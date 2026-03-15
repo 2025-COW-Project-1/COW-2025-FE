@@ -16,8 +16,8 @@ const BUYER_TYPE_LABELS: Record<string, string> = {
 };
 
 const CAMPUS_LABELS: Record<string, string> = {
-  SEOUL: '서울캠퍼스',
-  YONGIN: '자연캠퍼스',
+  SEOUL: '인문캠(서울)',
+  YONGIN: '자연캠(용인)',
 };
 
 const FULFILLMENT_LABELS: Record<string, string> = {
