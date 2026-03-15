@@ -10,7 +10,6 @@ import {
 import { uploadToPresignedUrl } from '../../api/adminProjects';
 import { DEPARTMENT_OPTIONS } from '../../types/recruit';
 import type { DepartmentType } from '../../types/recruit';
-import { AlertCircle } from 'lucide-react';
 
 type AnswerValue = string | string[] | null;
 type FileState = {
@@ -108,8 +107,6 @@ export default function ApplicationManagePage() {
   const [openForm, setOpenForm] = useState<ApplicationFormResponse | null>(
     null,
   );
-  const [formChecking, setFormChecking] = useState(true);
-  const [formError, setFormError] = useState<string | null>(null);
 
   const [readData, setReadData] = useState<ApplicationReadResponse | null>(
     null,
@@ -133,23 +130,11 @@ export default function ApplicationManagePage() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
 
   const checkOpenForm = useCallback(async () => {
-    setFormChecking(true);
-    setFormError(null);
     try {
       const form = await applicationsApi.getForm();
       setOpenForm(form ?? null);
-      if (!form) {
-        setFormError(
-          '현재 모집 중인 지원서가 없습니다. 지원서 조회/수정은 모집 중인 지원서만 가능합니다.',
-        );
-      }
     } catch {
-      setFormError(
-        '현재 모집 중인 지원서가 없습니다. 지원서 조회/수정은 모집 중인 지원서만 가능합니다.',
-      );
       setOpenForm(null);
-    } finally {
-      setFormChecking(false);
     }
   }, []);
 
@@ -164,20 +149,24 @@ export default function ApplicationManagePage() {
     return set;
   }, [firstDepartment, secondDepartment]);
 
-  const questions = useMemo(() => {
-    const list = (openForm?.questions ?? []).slice().sort((a, b) => {
+  const questionSource = useMemo(() => {
+    const list = (readData?.questions ?? openForm?.questions ?? []).slice().sort((a, b) => {
       const ao = a.questionOrder ?? 0;
       const bo = b.questionOrder ?? 0;
       return ao - bo;
     });
-    return list.filter((q) =>
+    return list;
+  }, [readData?.questions, openForm?.questions]);
+
+  const questions = useMemo(() => {
+    return questionSource.filter((q) =>
       shouldShowByDepartment(
         q.sectionType,
         q.departmentType,
         selectedDepartments,
       ),
     );
-  }, [openForm?.questions, selectedDepartments]);
+  }, [questionSource, selectedDepartments]);
 
   const handleAnswerChange = (id: number, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [id]: value }));
@@ -214,8 +203,8 @@ export default function ApplicationManagePage() {
       });
       setAnswers(next);
 
-      const first = (res.firstDepartment as DepartmentType) ?? '';
-      const second = (res.secondDepartment as DepartmentType) ?? '';
+      const first = normalizeDepartment(String(res.firstDepartment ?? ''));
+      const second = normalizeDepartment(String(res.secondDepartment ?? ''));
       setFirstDepartment(first);
       setSecondDepartment(second);
 
@@ -320,7 +309,7 @@ export default function ApplicationManagePage() {
       }
     }
 
-    const payloadAnswers = (openForm?.questions ?? []).map((q) => {
+    const payloadAnswers = questionSource.map((q) => {
       const value = normalizeAnswerValue(answers[q.formQuestionId] ?? null);
       return { formQuestionId: q.formQuestionId, value: value ?? null };
     });
@@ -347,35 +336,6 @@ export default function ApplicationManagePage() {
       setSubmitLoading(false);
     }
   };
-
-  if (formChecking) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-12 text-sm text-slate-500">
-        확인 중...
-      </div>
-    );
-  }
-
-  if (formError || !openForm) {
-    return (
-      <div className="mx-auto flex min-h-[calc(100vh-16rem)] max-w-6xl items-center justify-center px-4 py-12">
-        <Reveal className="w-full max-w-xl rounded-3xl border border-rose-200 bg-white p-8 text-center shadow-sm">
-          <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-            <AlertCircle className="h-6 w-6" />
-          </div>
-
-          <h1 className="mt-4 font-heading text-3xl text-slate-900">
-            지원서 조회/수정
-          </h1>
-
-          <p className="mt-3 text-sm font-semibold leading-relaxed text-rose-600">
-            {formError ??
-              '현재 모집 중인 지원서가 없습니다. 지원서 조회/수정은 모집 중인 지원서만 가능합니다.'}
-          </p>
-        </Reveal>
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
