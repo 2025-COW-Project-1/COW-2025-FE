@@ -86,6 +86,19 @@ export default function ProjectsPage() {
     placeholderData: (prev) => prev,
   });
 
+  const statusCounts = useMemo(() => {
+    return projects.reduce(
+      (acc, project) => {
+        acc.all += 1;
+        if (project.status === 'OPEN') acc.OPEN += 1;
+        if (project.status === 'PREPARING') acc.PREPARING += 1;
+        if (project.status === 'CLOSED') acc.CLOSED += 1;
+        return acc;
+      },
+      { all: 0, OPEN: 0, PREPARING: 0, CLOSED: 0 },
+    );
+  }, [projects]);
+
   const filtered = useMemo(() => {
     if (status === 'all') return projects;
     if (status === 'OPEN') return projects.filter((p) => p.status === 'OPEN');
@@ -154,84 +167,114 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
         <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 font-heading text-3xl text-primary hover:opacity-90"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-                컬렉션
-              </Link>
-              <p className="mt-1.5 text-sm text-slate-600">
-                진행 중인 프로젝트와 상품을 만나보세요
-              </p>
-            </div>
-          </div>
-        </Reveal>
+          <section className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-sky-50/70 px-5 py-6 shadow-sm sm:px-8 sm:py-8">
+            <div className="pointer-events-none absolute -left-16 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-2xl" />
+            <div className="pointer-events-none absolute -right-12 bottom-0 h-28 w-28 rounded-full bg-sky-200/45 blur-2xl" />
 
-        <Reveal delayMs={60} className="mt-6">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
-              {TABS.map((t) => {
-                const active = status === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => {
-                      if (t.value === 'all') setSp({});
-                      else setSp({ status: t.value });
-                    }}
-                    className={[
-                      'rounded-xl px-4 py-2.5 text-sm font-bold transition-all',
-                      active
-                        ? 'bg-primary text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-50',
-                    ].join(' ')}
+            <div className="relative">
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-primary shadow-sm transition hover:bg-slate-50"
+                  aria-label="홈으로 이동"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
                   >
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-            {isFetching && !isLoading && (
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                <div className="h-3 w-3 animate-spin rounded-full border-2 border-slate-200 border-t-primary" />
-                새로고치는 중
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </Link>
+                <div>
+                  <h1 className="font-heading text-4xl leading-none text-primary sm:text-5xl">
+                    컬렉션
+                  </h1>
+                  <p className="mt-2 text-sm text-slate-600 sm:text-base">
+                    진행 중인 프로젝트와 상품을 만나보세요
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
+
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-white/90 p-1.5 shadow-sm backdrop-blur">
+                <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
+                  {TABS.map((t) => {
+                    const active = status === t.value;
+                    const count =
+                      t.value === 'all'
+                        ? statusCounts.all
+                        : t.value === 'OPEN'
+                          ? statusCounts.OPEN
+                          : t.value === 'PREPARING'
+                            ? statusCounts.PREPARING
+                            : t.value === 'CLOSED'
+                              ? statusCounts.CLOSED
+                              : undefined;
+
+                    return (
+                      <button
+                        key={t.value}
+                        onClick={() => {
+                          if (t.value === 'all') setSp({});
+                          else setSp({ status: t.value });
+                        }}
+                        className={[
+                          'inline-flex min-h-11 shrink-0 items-center justify-center gap-1 rounded-xl px-4 text-sm font-bold transition-all',
+                          active
+                            ? 'bg-primary text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-slate-100',
+                        ].join(' ')}
+                      >
+                        <span>{t.label}</span>
+                        {typeof count === 'number' && (
+                          <span
+                            className={[
+                              'rounded-full px-1.5 py-0.5 text-[11px] leading-none',
+                              active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500',
+                            ].join(' ')}
+                          >
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {isFetching && !isLoading && (
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-xs text-slate-500">
+                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-slate-200 border-t-primary" />
+                  새로고치는 중
+                </div>
+              )}
+            </div>
+          </section>
         </Reveal>
 
         {status === 'PAYOUT' ? (
           payoutsLoading ? (
             <section className="mt-8">
-              <Reveal className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-600">
+              <Reveal className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
                 정산 내역 불러오는 중...
               </Reveal>
             </section>
           ) : payoutsError ? (
-            <p className="mt-8 text-sm text-rose-600">
+            <Reveal className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
               정산 내역을 불러오지 못했어요
-            </p>
+            </Reveal>
           ) : sortedPayouts.length === 0 ? (
-            <p className="mt-8 text-sm text-slate-500">
+            <Reveal className="mt-8 rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-sm font-semibold text-slate-500 shadow-sm">
               등록된 정산 내역이 없어요
-            </p>
+            </Reveal>
           ) : (
             <section className="mt-8 space-y-3 md:mx-auto md:w-full md:max-w-4xl">
               {sortedPayouts.map((report, idx) => {
@@ -242,10 +285,10 @@ export default function ProjectsPage() {
                       <button
                         type="button"
                         onClick={() => togglePayout(report.id)}
-                        className="flex w-full items-center justify-between px-5 py-5 md:py-6 text-left hover:bg-slate-50"
+                        className="flex w-full items-center justify-between px-5 py-5 text-left transition hover:bg-slate-50 md:py-6"
                         aria-expanded={open}
                       >
-                        <p className="text-base md:text-base font-semibold text-slate-700">
+                        <p className="text-base font-semibold text-slate-700">
                           {formatTermLabel(report.term)}
                         </p>
 
@@ -279,37 +322,51 @@ export default function ProjectsPage() {
             </div>
           </section>
         ) : isError ? (
-          <p className="mt-8 text-sm text-rose-600">
+          <Reveal className="mt-8 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             프로젝트를 불러오지 못했어요
-          </p>
+          </Reveal>
         ) : (
           <>
             {pinnedProjects.length > 0 && (
               <section className="mt-8">
-                <h2 className="text-lg font-bold text-slate-800">
-                  추천 프로젝트
-                </h2>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-slate-800">추천 프로젝트</h2>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {pinnedProjects.length}개
+                  </span>
+                </div>
+
+                <div className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3 xl:grid-cols-4">
                   {pinnedProjects.map((p, i) => (
-                    <Reveal key={p.id} delayMs={i * 40}>
-                      <ProjectCard
-                        project={p}
-                        size="large"
-                        showApplyAction={false}
-                      />
-                    </Reveal>
+                    <div
+                      key={p.id}
+                      className="min-w-[84%] snap-start sm:min-w-0"
+                    >
+                      <Reveal delayMs={i * 40}>
+                        <ProjectCard
+                          project={p}
+                          size="large"
+                          showApplyAction={false}
+                        />
+                      </Reveal>
+                    </div>
                   ))}
                 </div>
               </section>
             )}
 
-            {yearSections.map(([year, items], sectionIndex) => (
+            {yearSections.map(([year, sectionItems], sectionIndex) => (
               <section key={year} className="mt-10 first:mt-8">
-                <h2 className="text-lg font-bold text-slate-800">
-                  {year === '기타' ? '기타' : `${year} 컬렉션`}
-                </h2>
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {items.map((p, i) => (
+                <div className="mb-4 flex items-end justify-between gap-2">
+                  <h2 className="text-lg font-bold text-slate-800">
+                    {year === '기타' ? '기타' : `${year} 컬렉션`}
+                  </h2>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {sectionItems.length}개
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {sectionItems.map((p, i) => (
                     <Reveal key={p.id} delayMs={(sectionIndex + i) * 30}>
                       <ProjectCard
                         project={p}
