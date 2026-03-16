@@ -204,21 +204,6 @@ export default function ProjectsPage() {
                 </div>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-white/70 bg-white/85 px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
-                  전체 {statusCounts.all}
-                </span>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  진행 중 {statusCounts.OPEN}
-                </span>
-                <span className="rounded-full border border-slate-200 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-600">
-                  준비중 {statusCounts.PREPARING}
-                </span>
-                <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
-                  마감 {statusCounts.CLOSED}
-                </span>
-              </div>
-
               <div className="mt-5 rounded-2xl border border-slate-200 bg-white/90 p-1.5 shadow-sm backdrop-blur">
                 <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
                   {TABS.map((t) => {
