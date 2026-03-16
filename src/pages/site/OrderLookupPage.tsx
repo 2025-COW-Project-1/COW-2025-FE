@@ -39,9 +39,9 @@ export default function OrderLookupPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-16 pb-12 md:pt-20">
+    <div className="mx-auto max-w-6xl px-4 py-12">
       <Reveal>
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <Link
             to="/"
             className="inline-flex items-center gap-2 font-heading text-3xl text-primary hover:opacity-90"
@@ -64,7 +64,11 @@ export default function OrderLookupPage() {
           <p className="mt-2 text-sm text-slate-600">
             주문 시 설정한 조회 아이디와 비밀번호로 주문 상태를 확인하세요.
           </p>
+        </div>
+      </Reveal>
 
+      <Reveal delayMs={100} className="mx-auto mt-6 max-w-4xl">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="text-sm font-semibold text-slate-700">
               조회 아이디

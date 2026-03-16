@@ -30,10 +30,10 @@ const ACTIONS = [
 
 export default function ApplyEntryPage() {
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-16rem)] max-w-4xl items-center px-4 py-12">
-      <div className="w-full">
-        <Reveal>
-          <div className="text-center">
+    <div className="mx-auto max-w-6xl px-4 py-12">
+      <Reveal>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
             <Link
               to="/"
               className="inline-flex items-center gap-2 font-heading text-3xl text-primary hover:opacity-90"
@@ -53,47 +53,47 @@ export default function ApplyEntryPage() {
               </svg>
               지원하기
             </Link>
-            <p className="mt-2 text-sm text-slate-600">
-              원하는 기능을 선택해 진행해주세요.
-            </p>
           </div>
-        </Reveal>
+          <p className="mt-2 text-sm text-slate-600">
+            원하는 기능을 선택해 진행해주세요.
+          </p>
+        </div>
+      </Reveal>
 
-        <Reveal delayMs={80} className="mt-8">
-          <div className="grid gap-4 md:grid-cols-3">
-            {ACTIONS.map((action) => (
-              <Link
-                key={action.to}
-                to={action.to}
-                className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white px-5 py-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-300/40"
+      <Reveal delayMs={80} className="mt-8">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {ACTIONS.map((action) => (
+            <Link
+              key={action.to}
+              to={action.to}
+              className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white px-5 py-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-300/40"
+            >
+              <div
+                className={[
+                  'mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br text-white shadow-md',
+                  action.accent,
+                ].join(' ')}
               >
-                <div
-                  className={[
-                    'mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br text-white shadow-md',
-                    action.accent,
-                  ].join(' ')}
-                >
-                  <action.icon className="h-5 w-5" />
-                </div>
+                <action.icon className="h-5 w-5" />
+              </div>
 
-                <p className="text-lg font-extrabold tracking-tight text-slate-900 transition-colors group-hover:text-primary">
-                  {action.title}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                  {action.description}
-                </p>
+              <p className="text-lg font-extrabold tracking-tight text-slate-900 transition-colors group-hover:text-primary">
+                {action.title}
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                {action.description}
+              </p>
 
-                <div
-                  className={[
-                    'pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100',
-                    action.accent,
-                  ].join(' ')}
-                />
-              </Link>
-            ))}
-          </div>
-        </Reveal>
-      </div>
+              <div
+                className={[
+                  'pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-linear-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100',
+                  action.accent,
+                ].join(' ')}
+              />
+            </Link>
+          ))}
+        </div>
+      </Reveal>
     </div>
   );
 }
