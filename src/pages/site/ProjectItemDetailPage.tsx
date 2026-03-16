@@ -7,17 +7,13 @@ import StatusBadge from '../../components/StatusBadge';
 import { SkeletonItemDetail } from '../../components/Skeleton';
 import { useToast } from '../../components/toast/useToast';
 import { itemsApi } from '../../api/items';
-import type { ItemResponse, ItemSaleType } from '../../api/items';
+import type { ItemResponse } from '../../api/items';
 import type { ProjectStatus } from '../../api/projects';
 import { addCartItem } from '../../utils/cart';
+import { getItemSaleTypeLabel } from '../../constants/itemLabels';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
-
-const SALETYPE_LABELS: Record<ItemSaleType, string> = {
-  NORMAL: '일반',
-  GROUPBUY: '공구',
-};
 
 function formatMoney(value?: number | null) {
   if (value === null || value === undefined) return '-';
@@ -180,10 +176,10 @@ function PurchaseCard({
           {item.saleType === 'NORMAL' && stockSummary && (
             <span
               className={[
-                'inline-flex items-center rounded-full px-3.5 py-1.5 text-sm font-semibold leading-none',
+                'inline-flex items-center rounded-full border px-3.5 py-1.5 text-sm font-semibold leading-none',
                 isSoldOut
-                  ? 'bg-rose-50 text-rose-600'
-                  : 'bg-emerald-50 text-emerald-600',
+                  ? 'border-rose-200 bg-rose-50 text-rose-600'
+                  : 'border-sky-200 bg-sky-50 text-sky-700',
               ].join(' ')}
             >
               {stockSummary}
@@ -480,7 +476,7 @@ export default function ProjectItemDetailPage() {
     );
   }
 
-  const saleTypeLabel = SALETYPE_LABELS[item.saleType] ?? item.saleType;
+  const saleTypeLabel = getItemSaleTypeLabel(item.saleType);
   const stockQty = parseCount(item.stockQty);
   const remainingQty = parseCount(item.remainingQty);
   const fundedQty = parseCount(item.fundedQty);
