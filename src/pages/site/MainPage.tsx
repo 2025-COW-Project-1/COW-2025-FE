@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import Reveal from "../../components/Reveal";
 import { SkeletonProjectCard } from "../../components/Skeleton";
-import { introApi, type IntroduceMainSummary } from "../../api/intro";
+import { introApi } from "../../api/intro";
 import IntroduceMainView from "../../features/introduce/IntroduceMainView";
 import { projectsApi, type Project } from "../../api/projects";
 import { sortProjects } from "../../utils/projectSort";
@@ -13,26 +13,19 @@ import ProjectCard from "../../components/ProjectCard";
 const CAROUSEL_PEEK = false;
 
 export default function MainPage() {
-  const [introMain, setIntroMain] = useState<IntroduceMainSummary | null>(null);
-  const [introLoading, setIntroLoading] = useState(true);
   const [isScrollable, setIsScrollable] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  const fetchedRef = useRef(false);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-
-    introApi
-      .getMain()
-      .then((data) => setIntroMain(data ?? null))
-      .catch(() => setIntroMain(null))
-      .finally(() => setIntroLoading(false));
-  }, []);
+  const { data: introMain, isLoading: introLoading } = useQuery({
+    queryKey: ["introduceMain"],
+    queryFn: () => introApi.getMain(),
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60,
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -131,7 +124,7 @@ export default function MainPage() {
   return (
     <div>
       <IntroduceMainView
-        data={introMain}
+        data={introMain ?? null}
         loading={introLoading}
         variant="public"
         linkToAbout

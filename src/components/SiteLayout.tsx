@@ -1,46 +1,32 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Header from './Header';
-import { noticesApi, type NoticeResponse } from '../api/notices';
+import { noticesApi } from '../api/notices';
 import { formatYmd, parseDateLike } from '../utils/date';
 
 export default function SiteLayout() {
-  const [notices, setNotices] = useState<NoticeResponse[]>([]);
-  const [noticeReady, setNoticeReady] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
 
   const touchStartXRef = useRef<number | null>(null);
   const isSwipingRef = useRef(false);
 
-  useEffect(() => {
-    let active = true;
+  const { data: noticesData, isFetched: noticeReady } = useQuery({
+    queryKey: ['notices'],
+    queryFn: () => noticesApi.list(),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    placeholderData: (prev) => prev,
+  });
 
-    (async () => {
-      try {
-        const list = await noticesApi.list();
-        if (!active) return;
-
-        const sorted = [...(list ?? [])].sort((a, b) => {
-          const da = parseDateLike(a.updatedAt ?? a.createdAt);
-          const db = parseDateLike(b.updatedAt ?? b.createdAt);
-          return (db?.getTime() ?? 0) - (da?.getTime() ?? 0);
-        });
-
-        setNotices(sorted);
-      } catch {
-        if (!active) return;
-        setNotices([]);
-      } finally {
-        if (active) setNoticeReady(true);
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const visibleNotices = useMemo(() => notices, [notices]);
+  const visibleNotices = useMemo(() => {
+    const list = Array.isArray(noticesData) ? noticesData : [];
+    return [...list].sort((a, b) => {
+      const da = parseDateLike(a.updatedAt ?? a.createdAt);
+      const db = parseDateLike(b.updatedAt ?? b.createdAt);
+      return (db?.getTime() ?? 0) - (da?.getTime() ?? 0);
+    });
+  }, [noticesData]);
 
   useEffect(() => {
     setSlideIndex((prev) => {
@@ -333,9 +319,7 @@ export default function SiteLayout() {
             </p>
             <p>
               Designed &amp; built by{' '}
-              <span className="font-semibold text-slate-500">
-                COW, 명지대학교 IT 서비스 개발 중앙 동아리
-              </span>
+              <span className="font-semibold text-slate-500">COW</span>
             </p>
           </div>
         </div>
