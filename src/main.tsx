@@ -16,6 +16,9 @@ const queryClient = new QueryClient({
   },
 });
 
+const showQueryDevtools =
+  import.meta.env.DEV && import.meta.env.VITE_ENABLE_RQ_DEVTOOLS !== 'false';
+
 createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>
     <ToastProvider>
@@ -25,6 +28,11 @@ createRoot(document.getElementById('root')!).render(
         </BrowserRouter>
       </ConfirmProvider>
     </ToastProvider>
-    <ReactQueryDevtools initialIsOpen={false} />
+    {showQueryDevtools && (
+      <ReactQueryDevtools
+        initialIsOpen={false}
+        buttonPosition="bottom-left"
+      />
+    )}
   </QueryClientProvider>
 );
