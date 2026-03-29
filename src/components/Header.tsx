@@ -1,4 +1,5 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import HeaderDesktop from './HeaderDesktop';
 import HeaderMobile from './HeaderMobile';
 import { useAuth } from '../hooks/useAuth';
@@ -8,6 +9,62 @@ import { showLogoutToast } from '../utils/LogoutToast';
 export default function Header() {
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileHeaderVisible, setMobileHeaderVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+  const tickingRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setMobileHeaderVisible(true);
+    lastScrollYRef.current = window.scrollY;
+  }, [location.hash, location.pathname, location.search]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleScroll = () => {
+      if (window.innerWidth >= 768) {
+        setMobileHeaderVisible(true);
+        lastScrollYRef.current = window.scrollY;
+        return;
+      }
+
+      if (tickingRef.current) return;
+      tickingRef.current = true;
+
+      requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        const deltaY = currentScrollY - lastScrollYRef.current;
+
+        if (currentScrollY <= 8) {
+          setMobileHeaderVisible(true);
+        } else if (deltaY > 8) {
+          setMobileHeaderVisible(false);
+        } else if (deltaY < -8) {
+          setMobileHeaderVisible(true);
+        }
+
+        lastScrollYRef.current = currentScrollY;
+        tickingRef.current = false;
+      });
+    };
+
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileHeaderVisible(true);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const scrollToTopAfterNav = () => {
     requestAnimationFrame(() => {
@@ -16,7 +73,13 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header
+      className={[
+        'fixed inset-x-0 top-0 z-50 transition-transform duration-200',
+        mobileHeaderVisible ? 'translate-y-0' : '-translate-y-full',
+        'md:translate-y-0',
+      ].join(' ')}
+    >
       <div className="border-b border-slate-200/60 bg-white/75 backdrop-blur">
         <div className="mx-auto grid h-16 max-w-none grid-cols-[1fr_auto_1fr] items-center px-6">
           <Link
@@ -28,7 +91,7 @@ export default function Header() {
           </Link>
 
           <HeaderDesktop />
-          <HeaderMobile />
+          <HeaderMobile visible={mobileHeaderVisible} />
 
           <div className="justify-self-end hidden md:flex items-center gap-2">
             {isLoggedIn && (

@@ -17,7 +17,13 @@ const NAV_ITEMS = [
   { key: 'payouts', label: '정산', href: '/admin#payouts' },
 ];
 
-export default function AdminHeaderMobile() {
+type AdminHeaderMobileProps = {
+  visible?: boolean;
+};
+
+export default function AdminHeaderMobile({
+  visible = true,
+}: AdminHeaderMobileProps) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -196,14 +202,22 @@ export default function AdminHeaderMobile() {
 
   return (
     <>
-      <div className="mx-auto flex items-center justify-between px-4 py-3 md:hidden">
-        <Link to="/admin" className="font-heading text-lg text-white">
+      <div className="relative mx-auto h-16 px-4 md:hidden">
+        <Link
+          to="/admin"
+          className="flex h-full items-center pr-16 font-heading text-lg text-white"
+        >
           명지공방 관리자
         </Link>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="grid h-10 w-10 place-items-center rounded-full border border-slate-700 text-slate-200"
+          className={[
+            'fixed right-4 top-3 z-60 grid h-10 w-10 place-items-center rounded-full border border-slate-700 bg-slate-950/80 text-slate-200 shadow-sm transition-all duration-200 md:hidden',
+            visible
+              ? 'translate-y-0 opacity-100'
+              : '-translate-y-4 pointer-events-none opacity-0',
+          ].join(' ')}
           aria-label="Open admin menu"
         >
           <svg width="18" height="12" viewBox="0 0 18 12" fill="none">

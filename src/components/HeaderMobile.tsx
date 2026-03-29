@@ -7,7 +7,11 @@ import { showLogoutToast } from '../utils/LogoutToast';
 
 const SWIPE_CLOSE_THRESHOLD = 60;
 
-export default function HeaderMobile() {
+type HeaderMobileProps = {
+  visible?: boolean;
+};
+
+export default function HeaderMobile({ visible = true }: HeaderMobileProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -285,7 +289,12 @@ export default function HeaderMobile() {
             setMobileOpen((v) => !v);
             setMobileProjectsOpen(false);
           }}
-          className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm"
+          className={[
+            'grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition-all duration-200',
+            visible
+              ? 'translate-y-0 opacity-100'
+              : '-translate-y-4 pointer-events-none opacity-0',
+          ].join(' ')}
           aria-label="Open menu"
         >
           <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
