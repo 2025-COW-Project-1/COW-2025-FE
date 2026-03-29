@@ -329,10 +329,10 @@ export default function AdminFeedbackListSection({
                     <span>#{entry.id}</span>
                   </div>
 
-                  <p className="mt-2[overflow-wrap:anywhere] text-sm font-semibold text-slate-900 wrap:anywhere">
+                  <p className="mt-2 break-all text-sm font-semibold text-slate-900 wrap:anywhere">
                     {entry.title}
                   </p>
-                  <p className="mt-2 whitespace-pre-wrap wrap:anywhere text-sm text-slate-700 wrap:anywhere">
+                  <p className="mt-2 whitespace-pre-wrap break-all text-sm text-slate-700 wrap:anywhere">
                     {contentPreview}
                     {!isExpanded && isLong ? '...' : ''}
                   </p>
@@ -407,50 +407,52 @@ export default function AdminFeedbackListSection({
       </div>
 
       {filteredEntries.length > 0 && totalPages > 1 && (
-        <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs font-medium text-slate-500">
+        <div className="mt-4 border-t border-slate-100 pt-4">
+          <p className="text-right text-xs font-medium text-slate-500">
             총 {filteredEntries.length}개 · {safeCurrentPage}/{totalPages}{' '}
             페이지
           </p>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handlePageChange(safeCurrentPage - 1)}
-              disabled={safeCurrentPage === 1}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              이전
-            </button>
+          <div className="mt-3 flex justify-center">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => handlePageChange(safeCurrentPage - 1)}
+                disabled={safeCurrentPage === 1}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                이전
+              </button>
 
-            {Array.from({ length: totalPages }, (_, index) => {
-              const page = index + 1;
-              const active = page === safeCurrentPage;
-              return (
-                <button
-                  key={page}
-                  type="button"
-                  onClick={() => handlePageChange(page)}
-                  className={[
-                    'min-w-9 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
-                    active
-                      ? 'border-primary bg-primary text-white'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50',
-                  ].join(' ')}
-                >
-                  {page}
-                </button>
-              );
-            })}
+              {Array.from({ length: totalPages }, (_, index) => {
+                const page = index + 1;
+                const active = page === safeCurrentPage;
+                return (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => handlePageChange(page)}
+                    className={[
+                      'min-w-9 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
+                      active
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50',
+                    ].join(' ')}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
 
-            <button
-              type="button"
-              onClick={() => handlePageChange(safeCurrentPage + 1)}
-              disabled={safeCurrentPage === totalPages}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              다음
-            </button>
+              <button
+                type="button"
+                onClick={() => handlePageChange(safeCurrentPage + 1)}
+                disabled={safeCurrentPage === totalPages}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                다음
+              </button>
+            </div>
           </div>
         </div>
       )}
