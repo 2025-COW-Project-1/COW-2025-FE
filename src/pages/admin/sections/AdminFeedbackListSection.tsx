@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Reveal from '../../../components/Reveal';
 import {
   adminFeedbackApi,
@@ -15,6 +15,8 @@ type Props = {
 
 type FilterStatus = 'all' | 'RECEIVED' | 'ANSWERED';
 type SortOrder = 'desc' | 'asc';
+
+const FEEDBACKS_PER_PAGE = 5;
 
 const STATUS_OPTIONS: { label: string; value: AdminFeedbackStatus }[] = [
   { label: '접수', value: 'RECEIVED' },
@@ -43,6 +45,7 @@ export default function AdminFeedbackListSection({
   error,
   onRefresh,
 }: Props) {
+  const sectionTopRef = useRef<HTMLDivElement | null>(null);
   const [savingIds, setSavingIds] = useState<number[]>([]);
   const [answerDrafts, setAnswerDrafts] = useState<Record<number, string>>({});
   const [statusDrafts, setStatusDrafts] = useState<
@@ -55,6 +58,7 @@ export default function AdminFeedbackListSection({
   const [expandedIds, setExpandedIds] = useState<number[]>([]);
   const [answeredOnly, setAnsweredOnly] = useState(false);
   const [deletingIds, setDeletingIds] = useState<number[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const initialAnswers = useMemo(() => {
     const map: Record<number, string> = {};
@@ -107,6 +111,31 @@ export default function AdminFeedbackListSection({
       return sortOrder === 'desc' ? diff : -diff;
     });
   }, [entries, query, statusFilter, sortOrder, answeredOnly]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredEntries.length / FEEDBACKS_PER_PAGE),
+  );
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedEntries = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * FEEDBACKS_PER_PAGE;
+    return filteredEntries.slice(startIndex, startIndex + FEEDBACKS_PER_PAGE);
+  }, [filteredEntries, safeCurrentPage]);
+
+  const scrollToSectionTop = () => {
+    requestAnimationFrame(() => {
+      sectionTopRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages);
+    setCurrentPage(nextPage);
+    scrollToSectionTop();
+  };
 
   const handleSave = async (entry: AdminFeedbackResponse) => {
     const id = entry.id;
@@ -186,7 +215,10 @@ export default function AdminFeedbackListSection({
       delayMs={280}
       className="mt-10 rounded-3xl bg-white p-8"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div
+        ref={sectionTopRef}
+        className="scroll-mt-24 flex flex-wrap items-center justify-between gap-2 sm:scroll-mt-28"
+      >
         <div>
           <h2 className="font-heading text-xl text-slate-900">
             피드백 응답 목록
@@ -211,13 +243,19 @@ export default function AdminFeedbackListSection({
       <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center">
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setCurrentPage(1);
+          }}
           placeholder="제목/내용 검색"
           className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10 md:flex-1"
         />
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value as FilterStatus);
+            setCurrentPage(1);
+          }}
           className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700"
         >
           <option value="all">전체 상태</option>
@@ -226,7 +264,10 @@ export default function AdminFeedbackListSection({
         </select>
         <select
           value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+          onChange={(e) => {
+            setSortOrder(e.target.value as SortOrder);
+            setCurrentPage(1);
+          }}
           className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700"
         >
           {SORT_OPTIONS.map((opt) => (
@@ -240,7 +281,10 @@ export default function AdminFeedbackListSection({
           <input
             type="checkbox"
             checked={answeredOnly}
-            onChange={(e) => setAnsweredOnly(e.target.checked)}
+            onChange={(e) => {
+              setAnsweredOnly(e.target.checked);
+              setCurrentPage(1);
+            }}
           />
           답변 완료만 보기
         </label>
@@ -263,7 +307,7 @@ export default function AdminFeedbackListSection({
       )}
 
       <div className="mt-4 space-y-3">
-        {filteredEntries.map((entry) => {
+        {paginatedEntries.map((entry) => {
           const isSaving = savingIds.includes(entry.id);
           const isDeleting = deletingIds.includes(entry.id);
           const isExpanded = expandedIds.includes(entry.id);
@@ -276,7 +320,7 @@ export default function AdminFeedbackListSection({
           return (
             <div
               key={entry.id}
-              className="rounded-2xl border border-slate-200 bg-white p-4"
+              className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
@@ -285,10 +329,10 @@ export default function AdminFeedbackListSection({
                     <span>#{entry.id}</span>
                   </div>
 
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
+                  <p className="mt-2[overflow-wrap:anywhere] text-sm font-semibold text-slate-900 wrap:anywhere">
                     {entry.title}
                   </p>
-                  <p className="mt-2 text-sm text-slate-700 whitespace-pre-line">
+                  <p className="mt-2 whitespace-pre-wrap wrap:anywhere text-sm text-slate-700 wrap:anywhere">
                     {contentPreview}
                     {!isExpanded && isLong ? '...' : ''}
                   </p>
@@ -361,6 +405,55 @@ export default function AdminFeedbackListSection({
           );
         })}
       </div>
+
+      {filteredEntries.length > 0 && totalPages > 1 && (
+        <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs font-medium text-slate-500">
+            총 {filteredEntries.length}개 · {safeCurrentPage}/{totalPages}{' '}
+            페이지
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handlePageChange(safeCurrentPage - 1)}
+              disabled={safeCurrentPage === 1}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              이전
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => {
+              const page = index + 1;
+              const active = page === safeCurrentPage;
+              return (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => handlePageChange(page)}
+                  className={[
+                    'min-w-9 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
+                    active
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-slate-200 text-slate-700 hover:bg-slate-50',
+                  ].join(' ')}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => handlePageChange(safeCurrentPage + 1)}
+              disabled={safeCurrentPage === totalPages}
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              다음
+            </button>
+          </div>
+        </div>
+      )}
     </Reveal>
   );
 }
