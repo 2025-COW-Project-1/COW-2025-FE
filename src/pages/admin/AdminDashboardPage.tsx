@@ -14,6 +14,7 @@ import AdminPayoutsSection from './sections/AdminPayoutsSection';
 import AdminEditSection from './sections/AdminEditSection';
 import AdminIntroduceEditorPage from './sections/AdminIntroduceEditorPage';
 import AdminProjectsSection from './sections/AdminProjectsSection';
+import AdminOrderCompletePageSection from './sections/AdminOrderCompletePageSection';
 import {
   adminFeedbackApi,
   type AdminFeedbackResponse,
@@ -48,6 +49,9 @@ export default function AdminDashboardPage() {
   const [projectSaveHandler, setProjectSaveHandler] =
     useState<SaveHandler | null>(null);
   const [projectsDirty, setProjectsDirty] = useState(false);
+  const [orderCompleteSaveHandler, setOrderCompleteSaveHandler] =
+    useState<SaveHandler | null>(null);
+  const [orderCompleteDirty, setOrderCompleteDirty] = useState(false);
 
   useEffect(() => {
     setSaveMsg(null);
@@ -73,6 +77,19 @@ export default function AdminDashboardPage() {
           setSaveMsgTone('success');
         }
         setProjectsDirty(false);
+        return;
+      }
+
+      if (
+        section === 'order-complete-page' &&
+        orderCompleteSaveHandler
+      ) {
+        const msg = await orderCompleteSaveHandler();
+        if (msg) {
+          setSaveMsg(msg);
+          setSaveMsgTone('success');
+        }
+        setOrderCompleteDirty(false);
         return;
       }
 
@@ -138,6 +155,22 @@ export default function AdminDashboardPage() {
     navigate(`/admin#about?tab=${tab}`, { replace: true });
   };
 
+  const registerProjectSave = useCallback((handler: SaveHandler) => {
+    setProjectSaveHandler(() => handler);
+  }, []);
+
+  const handleProjectsDirtyChange = useCallback((dirty: boolean) => {
+    setProjectsDirty(dirty);
+  }, []);
+
+  const registerOrderCompleteSave = useCallback((handler: SaveHandler) => {
+    setOrderCompleteSaveHandler(() => handler);
+  }, []);
+
+  const handleOrderCompleteDirtyChange = useCallback((dirty: boolean) => {
+    setOrderCompleteDirty(dirty);
+  }, []);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <Reveal>
@@ -191,8 +224,15 @@ export default function AdminDashboardPage() {
 
       {section === 'projects' && (
         <AdminProjectsSection
-          registerSave={(handler) => setProjectSaveHandler(() => handler)}
-          onDirtyChange={setProjectsDirty}
+          registerSave={registerProjectSave}
+          onDirtyChange={handleProjectsDirtyChange}
+        />
+      )}
+
+      {section === 'order-complete-page' && (
+        <AdminOrderCompletePageSection
+          registerSave={registerOrderCompleteSave}
+          onDirtyChange={handleOrderCompleteDirtyChange}
         />
       )}
 
@@ -215,6 +255,12 @@ export default function AdminDashboardPage() {
       )}
 
       {section === 'projects' && projectsDirty && (
+        <p className="mt-4 text-xs font-semibold text-slate-500">
+          변경사항이 있습니다. 저장 버튼을 눌러주세요.
+        </p>
+      )}
+
+      {section === 'order-complete-page' && orderCompleteDirty && (
         <p className="mt-4 text-xs font-semibold text-slate-500">
           변경사항이 있습니다. 저장 버튼을 눌러주세요.
         </p>
