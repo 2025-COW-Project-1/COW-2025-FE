@@ -40,16 +40,6 @@ export type IntroduceDetailPayload = {
   }>;
 };
 
-export type IntroduceSnsItem = {
-  id?: number | string;
-  type?: string;
-  title?: string;
-  url?: string;
-  iconKey?: string;
-  sortOrder?: number;
-  active?: boolean;
-};
-
 function safeGet<T>(promise: Promise<T>) {
   return promise.catch((err) => {
     if (err instanceof ApiError && err.status === 404) {
@@ -72,14 +62,6 @@ export const introApi = {
     return safeGet(
       api<IntroduceMainSummary>(withApiBase('/introduce/main')).then(
         (res) => res ?? null,
-      ),
-    );
-  },
-
-  getSns(): Promise<IntroduceSnsItem[]> {
-    return safeGet(
-      api<IntroduceSnsItem[]>(withApiBase('/introduce/sns')).then(
-        (res) => res ?? [],
       ),
     );
   },
