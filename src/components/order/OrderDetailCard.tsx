@@ -25,7 +25,7 @@ const FULFILLMENT_LABELS: Record<string, string> = {
   DELIVERY: '택배 배송',
 };
 
-function formatMoney(value?: number) {
+function formatMoney(value?: number | null) {
   if (value === undefined || value === null) return '-';
   return `${value.toLocaleString()}원`;
 }
@@ -40,6 +40,18 @@ function formatDateTime(value?: string) {
   const hh = String(date.getHours()).padStart(2, '0');
   const mi = String(date.getMinutes()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+}
+
+function hasPaymentInfo(paymentInfo: OrderDetailResponse['paymentInfo']) {
+  if (!paymentInfo) return false;
+  return Boolean(
+    paymentInfo.bankName ||
+      paymentInfo.accountNumber ||
+      paymentInfo.accountHolder ||
+      paymentInfo.amountLabel ||
+      paymentInfo.notice ||
+      paymentInfo.amount !== undefined,
+  );
 }
 
 export default function OrderDetailCard({
@@ -67,6 +79,15 @@ export default function OrderDetailCard({
       : totalAmountToShow !== undefined && order.shippingFee !== undefined
         ? totalAmountToShow + order.shippingFee
         : totalAmountToShow;
+  const paymentInformationText = order.paymentInformation?.trim() ?? '';
+  const paymentAmountText =
+    order.paymentInfo?.amountLabel ??
+    formatMoney(order.paymentInfo?.amount) ??
+    formatMoney(finalAmountToShow);
+  const shouldShowPaymentSection =
+    Boolean(paymentInformationText) ||
+    Boolean(order.paymentDescription?.trim()) ||
+    hasPaymentInfo(order.paymentInfo);
   const basicRows = [
     { label: '주문번호', value: order.orderNo },
     {
@@ -102,6 +123,61 @@ export default function OrderDetailCard({
           )}
         </div>
       </section>
+
+      {shouldShowPaymentSection && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+          <h3 className="text-lg font-bold text-slate-900">
+            {order.paymentTitle?.trim() || '입금 계좌 안내'}
+          </h3>
+          {order.paymentDescription && (
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              {order.paymentDescription}
+            </p>
+          )}
+
+          {paymentInformationText && (
+            <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base font-extrabold leading-relaxed text-red-700 shadow-sm">
+              {paymentInformationText}
+            </div>
+          )}
+
+          {(hasPaymentInfo(order.paymentInfo) || paymentAmountText !== '-') && (
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 text-sm text-slate-700">
+              {order.paymentInfo?.bankName && (
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  은행명: {order.paymentInfo.bankName}
+                </div>
+              )}
+              {order.paymentInfo?.accountNumber && (
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  계좌번호: {order.paymentInfo.accountNumber}
+                </div>
+              )}
+              {order.paymentInfo?.accountHolder && (
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  예금주: {order.paymentInfo.accountHolder}
+                </div>
+              )}
+              {paymentAmountText !== '-' && (
+                <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-3 text-center sm:col-span-2">
+                  <p className="text-xs font-semibold tracking-wide text-sky-700">
+                    입금 금액
+                  </p>
+                  <p className="mt-1 text-2xl font-extrabold text-sky-700">
+                    {paymentAmountText}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {order.paymentInfo?.notice && (
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm leading-relaxed text-amber-900">
+              {order.paymentInfo.notice}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <h3 className="text-sm font-bold text-slate-900">주문 상품</h3>

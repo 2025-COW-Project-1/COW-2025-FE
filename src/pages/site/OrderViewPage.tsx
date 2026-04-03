@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ordersApi, type OrderDetailResponse } from '../../api/orders';
+import { orderCompletePageApi } from '../../api/orderCompletePage';
 import OrderDetailCard from '../../components/order/OrderDetailCard';
 import Reveal from '../../components/Reveal';
 import { useToast } from '../../components/toast/useToast';
+import {
+  hasOrderPaymentInfo,
+  mergeOrderWithCompletePageContent,
+} from '../../utils/orderPayment';
 
 export default function OrderViewPage() {
   const toast = useToast();
@@ -20,22 +25,36 @@ export default function OrderViewPage() {
 
     let active = true;
 
-    ordersApi
-      .viewOrder(token)
-      .then((result) => {
+    const load = async () => {
+      try {
+        const result = await ordersApi.viewOrder(token);
         if (!active) return;
-        setOrder(result);
-      })
-      .catch((error) => {
+
+        if (hasOrderPaymentInfo(result)) {
+          setOrder(result);
+          return;
+        }
+
+        try {
+          const completePage = await orderCompletePageApi.getByToken(token);
+          if (!active) return;
+          setOrder(mergeOrderWithCompletePageContent(result, completePage.content));
+        } catch {
+          if (!active) return;
+          setOrder(result);
+        }
+      } catch (error) {
         if (!active) return;
         toast.error(
           error instanceof Error ? error.message : '주문 조회에 실패했어요.',
         );
-      })
-      .finally(() => {
+      } finally {
         if (!active) return;
         setLoading(false);
-      });
+      }
+    };
+
+    void load();
 
     return () => {
       active = false;

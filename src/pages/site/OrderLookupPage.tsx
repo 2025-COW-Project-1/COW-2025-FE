@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ordersApi, type OrderDetailResponse } from '../../api/orders';
+import { orderCompletePageApi } from '../../api/orderCompletePage';
 import OrderDetailCard from '../../components/order/OrderDetailCard';
 import Reveal from '../../components/Reveal';
 import { useToast } from '../../components/toast/useToast';
+import {
+  hasOrderPaymentInfo,
+  mergeOrderWithCompletePageContent,
+} from '../../utils/orderPayment';
 
 const INPUT_CLASS =
   'mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10';
@@ -14,6 +19,21 @@ export default function OrderLookupPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<OrderDetailResponse | null>(null);
+
+  const enrichOrder = async (result: OrderDetailResponse) => {
+    if (hasOrderPaymentInfo(result) || !result.viewToken?.trim()) {
+      return result;
+    }
+
+    try {
+      const completePage = await orderCompletePageApi.getByToken(
+        result.viewToken.trim(),
+      );
+      return mergeOrderWithCompletePageContent(result, completePage.content);
+    } catch {
+      return result;
+    }
+  };
 
   const handleSubmit = async () => {
     if (!lookupId.trim() || !password.trim()) {
@@ -27,7 +47,8 @@ export default function OrderLookupPage() {
         lookupId: lookupId.trim(),
         password,
       });
-      setOrder(result);
+      const enriched = await enrichOrder(result);
+      setOrder(enriched);
     } catch (error) {
       setOrder(null);
       toast.error(
