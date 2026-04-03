@@ -29,6 +29,7 @@ export default function AdminDashboardPage() {
   const rawHash = location.hash.replace('#', '');
   const [hashPath, hashQuery = ''] = rawHash.split('?');
   const section = hashPath || 'edit';
+  const isOrderCompleteSection = section === 'order-complete-page';
 
   const tabParam = new URLSearchParams(hashQuery).get('tab');
   const aboutTab = tabParam === 'detail' ? 'detail' : 'main';
@@ -172,41 +173,54 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <Reveal>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-3xl text-primary">
-              관리자 대시보드
-            </h1>
-            <p className="mt-2 text-sm text-slate-600">관리자 권한</p>
-          </div>
+    <div
+      className={[
+        'mx-auto max-w-6xl px-4',
+        isOrderCompleteSection ? 'py-3 sm:py-6' : 'py-6 sm:py-12',
+      ].join(' ')}
+    >
+      {!isOrderCompleteSection && (
+        <>
+          <Reveal>
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3">
+              <div>
+                <h1 className="font-heading text-2xl text-primary sm:text-3xl">
+                  관리자 대시보드
+                </h1>
+                <p className="mt-2 text-[15px] text-slate-600 sm:text-sm">
+                  관리자 권한
+                </p>
+              </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={saving}
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => void handleSave()}
+                  disabled={saving}
+                  className={[
+                    'w-full rounded-2xl bg-primary px-5 py-3 text-[15px] font-bold text-white shadow-lg transition sm:w-auto sm:rounded-xl sm:py-2.5 sm:text-sm',
+                    saving ? 'opacity-60' : 'hover:opacity-95',
+                  ].join(' ')}
+                >
+                  {saving ? '저장 중...' : '저장'}
+                </button>
+              </div>
+            </div>
+          </Reveal>
+
+          {saveMsg && (
+            <p
               className={[
-                'rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg transition',
-                saving ? 'opacity-60' : 'hover:opacity-95',
+                'mt-4 text-[15px] font-semibold sm:text-sm',
+                saveMsgTone === 'success'
+                  ? 'text-emerald-600'
+                  : 'text-rose-600',
               ].join(' ')}
             >
-              {saving ? '저장 중...' : '저장'}
-            </button>
-          </div>
-        </div>
-      </Reveal>
-
-      {saveMsg && (
-        <p
-          className={[
-            'mt-4 text-sm font-semibold',
-            saveMsgTone === 'success' ? 'text-emerald-600' : 'text-rose-600',
-          ].join(' ')}
-        >
-          {saveMsg}
-        </p>
+              {saveMsg}
+            </p>
+          )}
+        </>
       )}
 
       {section === 'edit' && <AdminEditSection />}
@@ -233,6 +247,11 @@ export default function AdminDashboardPage() {
         <AdminOrderCompletePageSection
           registerSave={registerOrderCompleteSave}
           onDirtyChange={handleOrderCompleteDirtyChange}
+          onSave={() => void handleSave()}
+          saving={saving}
+          isDirty={orderCompleteDirty}
+          saveMessage={saveMsg}
+          saveMessageTone={saveMsgTone}
         />
       )}
 
@@ -255,16 +274,11 @@ export default function AdminDashboardPage() {
       )}
 
       {section === 'projects' && projectsDirty && (
-        <p className="mt-4 text-xs font-semibold text-slate-500">
+        <p className="mt-4 text-[13px] font-semibold text-slate-500 sm:text-xs">
           변경사항이 있습니다. 저장 버튼을 눌러주세요.
         </p>
       )}
 
-      {section === 'order-complete-page' && orderCompleteDirty && (
-        <p className="mt-4 text-xs font-semibold text-slate-500">
-          변경사항이 있습니다. 저장 버튼을 눌러주세요.
-        </p>
-      )}
     </div>
   );
 }

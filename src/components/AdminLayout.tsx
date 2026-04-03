@@ -11,8 +11,13 @@ export default function AdminLayout() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    setMobileHeaderVisible(true);
+    const frame = window.requestAnimationFrame(() => {
+      setMobileHeaderVisible(true);
+    });
     lastScrollYRef.current = window.scrollY;
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
   }, [location.hash, location.pathname, location.search]);
 
   useEffect(() => {
@@ -73,7 +78,7 @@ export default function AdminLayout() {
         <AdminHeaderDesktop />
         <AdminHeaderMobile visible={mobileHeaderVisible} />
       </header>
-      <main className="overflow-x-hidden pt-16 md:pt-10">
+      <main className="overflow-x-hidden pt-20 md:pt-6">
         <Outlet />
       </main>
     </div>
