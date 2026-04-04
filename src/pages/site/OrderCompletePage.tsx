@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Copy } from 'lucide-react';
 import type {
   OrderCompletePageContent,
   OrderCompletePaymentInfo,
@@ -51,6 +52,23 @@ const STATUS_LABELS: Record<string, string> = {
 
 const EMPTY_CONTENT: OrderCompletePageContent = {};
 const EMPTY_ITEMS: readonly [] = [];
+
+function getStatusTextClass(status?: string) {
+  switch (status) {
+    case 'PENDING_DEPOSIT':
+      return 'font-bold text-amber-700';
+    case 'PAID':
+      return 'font-bold text-emerald-700';
+    case 'CANCELED':
+      return 'font-bold text-rose-700';
+    case 'REFUND_REQUESTED':
+      return 'font-bold text-indigo-700';
+    case 'REFUNDED':
+      return 'font-bold text-slate-700';
+    default:
+      return 'font-semibold text-slate-900';
+  }
+}
 
 function formatDateTime(value: string) {
   const date = new Date(value);
@@ -121,12 +139,33 @@ function hasPaymentInfo(
   );
 }
 
+function extractAccountNumberFromPaymentInformation(
+  paymentInformation: string | undefined | null,
+) {
+  const text = paymentInformation?.trim();
+  if (!text) return '';
+
+  const beforeSlash = text.split('/')[0]?.trim() ?? '';
+  if (!beforeSlash) return '';
+
+  const parts = beforeSlash.split(/\s+/);
+  return parts.length > 1 ? parts[parts.length - 1] : '';
+}
+
 function PaymentInfoCard({
   content,
   finalAmount,
+  depositDeadlineText,
+  showDepositDeadlineNotice,
+  paymentAccountNumberToCopy,
+  onCopyPaymentAccountNumber,
 }: {
   content: OrderCompletePageContent;
   finalAmount?: number;
+  depositDeadlineText: string;
+  showDepositDeadlineNotice: boolean;
+  paymentAccountNumberToCopy: string;
+  onCopyPaymentAccountNumber: () => void;
 }) {
   const paymentInfo = content.paymentInfo;
   const paymentInformationText = content.paymentInformation?.trim() ?? '';
@@ -148,18 +187,44 @@ function PaymentInfoCard({
 
   return (
     <Reveal className="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:rounded-3xl sm:p-6">
-      <h2 className="text-base font-bold text-slate-900 sm:text-lg">
-        {content.paymentTitle?.trim() || '입금 계좌 안내'}
-      </h2>
-      {content.paymentDescription && (
-        <p className="mt-2 text-sm leading-6 text-slate-600 sm:leading-relaxed">
-          {content.paymentDescription}
-        </p>
-      )}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-bold text-slate-900 sm:text-lg">
+            {content.paymentTitle?.trim() || '입금 계좌 안내'}
+          </h2>
+          {content.paymentDescription && (
+            <p className="mt-2 text-sm leading-6 text-slate-600 sm:leading-relaxed">
+              {content.paymentDescription}
+            </p>
+          )}
+        </div>
+        {paymentAccountNumberToCopy && (
+          <button
+            type="button"
+            onClick={onCopyPaymentAccountNumber}
+            aria-label="계좌번호 복사"
+            title="계좌번호 복사"
+            className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 sm:hidden"
+          >
+            <Copy size={12} aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
       {paymentInformationText && (
-        <div className="mt-4 rounded-2xl border border-red-200 bg-linear-to-br from-red-50 to-rose-50 px-4 py-3 text-[0.95rem] font-bold leading-6 text-red-700 shadow-sm wrap-break-word sm:px-5 sm:py-4 sm:text-base sm:leading-relaxed">
-          {paymentInformationText}
+        <div className="relative mt-4 rounded-2xl border border-red-200 bg-linear-to-br from-red-50 to-rose-50 px-4 py-3 text-center text-[0.82rem] font-bold leading-5 text-red-700 shadow-sm wrap-break-word break-keep sm:px-16 sm:py-4 sm:text-base sm:leading-relaxed">
+          <p>{paymentInformationText}</p>
+          {paymentAccountNumberToCopy && (
+            <button
+              type="button"
+              onClick={onCopyPaymentAccountNumber}
+              aria-label="계좌번호 복사"
+              title="계좌번호 복사"
+              className="absolute right-3 top-1/2 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 sm:inline-flex"
+            >
+              <Copy size={15} aria-hidden="true" />
+            </button>
+          )}
         </div>
       )}
 
@@ -190,6 +255,20 @@ function PaymentInfoCard({
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {showDepositDeadlineNotice && (
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+            입금 마감
+          </p>
+          <p className="mt-1 text-lg font-extrabold text-amber-900">
+            {depositDeadlineText}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-amber-900/90">
+            마감 전까지 입금을 완료해야 관리자의 입금 확인 후, 주문이 확정돼요.
+          </p>
         </div>
       )}
 
@@ -250,10 +329,14 @@ export default function OrderCompletePage() {
       depositDeadline:
         orderCompletePageQuery.data?.order?.depositDeadline ??
         state.depositDeadline,
-      createdAt: orderCompletePageQuery.data?.order?.createdAt ?? state.createdAt,
-      totalAmount: orderCompletePageQuery.data?.order?.totalAmount ?? state.totalAmount,
-      shippingFee: orderCompletePageQuery.data?.order?.shippingFee ?? state.shippingFee,
-      finalAmount: orderCompletePageQuery.data?.order?.finalAmount ?? state.finalAmount,
+      createdAt:
+        orderCompletePageQuery.data?.order?.createdAt ?? state.createdAt,
+      totalAmount:
+        orderCompletePageQuery.data?.order?.totalAmount ?? state.totalAmount,
+      shippingFee:
+        orderCompletePageQuery.data?.order?.shippingFee ?? state.shippingFee,
+      finalAmount:
+        orderCompletePageQuery.data?.order?.finalAmount ?? state.finalAmount,
     }),
     [orderCompletePageQuery.data, state],
   );
@@ -284,6 +367,16 @@ export default function OrderCompletePage() {
   const canCopyLookupId = Boolean(
     displayOrder.lookupId && displayOrder.lookupId.trim().length > 0,
   );
+  const paymentAccountNumberToCopy = useMemo(
+    () =>
+      pageContent.paymentInfo?.accountNumber?.trim() ||
+      extractAccountNumberFromPaymentInformation(
+        pageContent.paymentInformation,
+      ),
+    [pageContent.paymentInfo?.accountNumber, pageContent.paymentInformation],
+  );
+  const shouldHighlightDepositDeadline =
+    displayOrder.status === 'PENDING_DEPOSIT';
   const totalQuantity = useMemo(
     () =>
       items.reduce((sum, item) => {
@@ -294,27 +387,57 @@ export default function OrderCompletePage() {
   );
   const summaryRows = useMemo(
     () => [
-      { label: '주문번호', value: displayOrder.orderNo ?? '-' },
-      { label: '주문상태', value: statusLabel },
       {
-        label: '주문일',
-        value: displayOrder.createdAt
-          ? formatDateTime(displayOrder.createdAt)
-          : '-',
+        key: 'orderNo',
+        label: '주문번호',
+        value: displayOrder.orderNo ?? '-',
+        valueBreakClassName: 'break-all',
       },
-      { label: '입금 마감', value: depositDeadlineText },
       {
+        key: 'status',
+        label: '주문상태',
+        value: statusLabel,
+        rawStatus: displayOrder.status,
+      },
+      {
+        key: 'lookupId',
+        label: '조회 아이디',
+        value: displayOrder.lookupId ?? '-',
+        valueBreakClassName: 'break-all',
+      },
+      {
+        key: 'depositDeadline',
+        label: '입금 마감',
+        value: shouldHighlightDepositDeadline ? undefined : depositDeadlineText,
+      },
+      {
+        key: 'totalAmount',
         label: '총 상품금액',
         value: formatMoney(displayOrder.totalAmount) ?? '-',
       },
-      { label: '배송비', value: formatMoney(displayOrder.shippingFee) ?? '-' },
       {
+        key: 'shippingFee',
+        label: '배송비',
+        value: formatMoney(displayOrder.shippingFee) ?? '-',
+      },
+      {
+        key: 'finalAmount',
         label: '최종 결제금액',
         value: formatMoney(displayOrder.finalAmount) ?? '-',
       },
     ],
-    [depositDeadlineText, displayOrder, statusLabel],
-  );
+    [
+      depositDeadlineText,
+      displayOrder.finalAmount,
+      displayOrder.lookupId,
+      displayOrder.orderNo,
+      displayOrder.shippingFee,
+      displayOrder.status,
+      displayOrder.totalAmount,
+      shouldHighlightDepositDeadline,
+      statusLabel,
+    ],
+  ).filter((row) => row.value && row.value !== '-');
 
   const copyLookupId = async () => {
     if (!canCopyLookupId) return;
@@ -326,10 +449,20 @@ export default function OrderCompletePage() {
     }
   };
 
+  const copyPaymentAccountNumber = async () => {
+    if (!paymentAccountNumberToCopy) return;
+    try {
+      await navigator.clipboard.writeText(paymentAccountNumberToCopy);
+      toast.success('계좌번호를 복사했어요.');
+    } catch {
+      toast.error('복사에 실패했어요. 직접 입력해주세요.');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 pb-36 sm:py-12 sm:pb-12">
       <Reveal>
-        <section className="rounded-[32px] border border-emerald-200 bg-linear-to-br from-emerald-50 to-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+        <section className="rounded-[32px] border border-emerald-200 bg-linear-to-br from-emerald-50 to-white px-5 py-4 shadow-sm sm:rounded-3xl sm:p-6">
           <p className="inline-flex rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-bold text-emerald-700">
             ORDER RECEIVED
           </p>
@@ -337,11 +470,11 @@ export default function OrderCompletePage() {
             {pageContent.messageTitle?.trim() || '주문이 접수되었어요'}
           </h1>
           {pageContent.messageDescription ? (
-            <p className="mt-3 text-[0.95rem] leading-7 text-emerald-800 sm:mt-2 sm:text-sm sm:leading-relaxed">
+            <p className="mt-3 text-[0.9rem] leading-7 text-emerald-800 sm:mt-2 sm:text-sm sm:leading-relaxed">
               {pageContent.messageDescription}
             </p>
           ) : (
-            <p className="mt-3 text-sm leading-7 text-emerald-800 sm:mt-2 sm:text-sm sm:leading-relaxed">
+            <p className="mt-3 text-[0.9rem] leading-7 text-emerald-800 sm:mt-2 sm:text-sm sm:leading-relaxed">
               아래 입금 마감 시간 전까지 입금을 완료하면 주문이 확정됩니다.
             </p>
           )}
@@ -364,6 +497,10 @@ export default function OrderCompletePage() {
       <PaymentInfoCard
         content={pageContent}
         finalAmount={displayOrder.finalAmount}
+        depositDeadlineText={depositDeadlineText}
+        showDepositDeadlineNotice={shouldHighlightDepositDeadline}
+        paymentAccountNumberToCopy={paymentAccountNumberToCopy}
+        onCopyPaymentAccountNumber={() => void copyPaymentAccountNumber()}
       />
 
       <Reveal className="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:rounded-3xl sm:p-6">
@@ -372,25 +509,45 @@ export default function OrderCompletePage() {
         </h2>
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {summaryRows.map((row) => (
-            <div
-              key={row.label}
-              className="rounded-xl bg-slate-50 px-4 py-3 text-[15px] leading-7 text-slate-700 sm:px-3 sm:py-2 sm:text-sm sm:leading-normal"
-            >
-              {row.label}: {row.value}
+            <div key={row.key} className="rounded-xl bg-slate-50 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                {row.label}
+              </p>
+              {row.key === 'lookupId' && canCopyLookupId ? (
+                <div className="mt-1 flex items-center justify-between gap-3">
+                  <p
+                    className={[
+                      'text-base font-semibold text-slate-900',
+                      row.valueBreakClassName ?? 'wrap-break-word',
+                    ].join(' ')}
+                  >
+                    {row.value}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void copyLookupId()}
+                    aria-label="조회 아이디 복사"
+                    title="조회 아이디 복사"
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <Copy size={12} aria-hidden="true" />
+                  </button>
+                </div>
+              ) : (
+                <p
+                  className={[
+                    'mt-1 text-base',
+                    row.valueBreakClassName ?? 'wrap-break-word',
+                    row.key === 'status'
+                      ? getStatusTextClass(row.rawStatus)
+                      : 'font-semibold text-slate-900',
+                  ].join(' ')}
+                >
+                  {row.value}
+                </p>
+              )}
             </div>
           ))}
-          {canCopyLookupId && (
-            <div className="flex flex-col gap-3 rounded-xl bg-slate-50 px-4 py-3 text-[15px] leading-7 text-slate-700 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between sm:px-3 sm:py-2 sm:text-sm sm:leading-normal">
-              <span>조회 아이디: {displayOrder.lookupId ?? '-'}</span>
-              <button
-                type="button"
-                onClick={() => void copyLookupId()}
-                className="h-10 rounded-xl border border-slate-200 bg-white px-4 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100 sm:h-auto sm:rounded-md sm:px-2 sm:py-1 sm:text-[11px]"
-              >
-                복사
-              </button>
-            </div>
-          )}
         </div>
 
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 sm:p-4">
@@ -457,7 +614,7 @@ export default function OrderCompletePage() {
                         ` · 단가 ${formatMoney(item.unitPrice)}`}
                     </p>
                   </div>
-                  <p className="text-right text-[1.75rem] font-bold text-slate-900 sm:text-sm">
+                  <p className="text-right text-[1.4rem] font-bold text-slate-900 sm:text-sm">
                     {formatMoney(item.lineAmount) ?? '-'}
                   </p>
                 </div>
