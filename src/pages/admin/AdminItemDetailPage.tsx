@@ -407,6 +407,13 @@ export default function AdminItemDetailPage() {
   const getValidation = useCallback((current: AdminItemForm): ValidationResult | null => {
     if (!current.name.trim()) return { field: 'name', message: '상품 명을 입력해주세요' };
     if (current.itemType === 'DIGITAL_JOURNAL') {
+      if (project && project.category !== 'JOURNAL') {
+        return {
+          field: 'journalFile',
+          message:
+            '현재 프로젝트 카테고리가 JOURNAL이 아니어서 저널 상품을 저장할 수 없어요. 프로젝트 설정을 먼저 변경해주세요.',
+        };
+      }
       if (!current.journalFileKey?.trim()) {
         return { field: 'journalFile', message: '저널 파일을 업로드해주세요' };
       }
@@ -420,7 +427,7 @@ export default function AdminItemDetailPage() {
       return { field: 'targetQty', message: '목표 수량을 입력해주세요' };
     }
     return null;
-  }, []);
+  }, [project]);
 
   const buildPayloadUpdate = useCallback((current: AdminItemForm): AdminItemUpdatePayload => {
     if (current.itemType === 'DIGITAL_JOURNAL') {
@@ -670,6 +677,13 @@ export default function AdminItemDetailPage() {
   const handleJournalUpload = useCallback(
     async (files: File[]) => {
       if (!item || !files.length || !project?.id || journalUploading) return;
+      if (project.category !== 'JOURNAL') {
+        const message =
+          '현재 프로젝트 카테고리가 JOURNAL이 아니라 저널 파일 업로드를 할 수 없어요. 프로젝트 설정에서 카테고리를 먼저 변경해주세요.';
+        setError(message);
+        toast.error(message);
+        return;
+      }
       const file = files[0];
       const contentType = resolveContentType(file);
       const prevJournalFileKey = item.journalFileKey?.trim();
@@ -724,7 +738,17 @@ export default function AdminItemDetailPage() {
         setJournalUploading(false);
       }
     },
-    [buildPayloadUpdate, confirm, item, journalUploading, loadItemDetail, navigate, project?.id, toast],
+    [
+      buildPayloadUpdate,
+      confirm,
+      item,
+      journalUploading,
+      loadItemDetail,
+      navigate,
+      project?.category,
+      project?.id,
+      toast,
+    ],
   );
 
   const handleJournalDownload = useCallback(async () => {
@@ -968,6 +992,12 @@ export default function AdminItemDetailPage() {
 
   const imageIds = useMemo(() => item?.images.map((image) => image.id) ?? [], [item?.images]);
   const isJournalItem = item?.itemType === 'DIGITAL_JOURNAL';
+  const isJournalProject = project?.category === 'JOURNAL';
+  const projectCategoryLabel = isJournalProject
+    ? '저널(JOURNAL)'
+    : project
+      ? '상품(GOODS)'
+      : '미확인';
   const hasJournalFile = Boolean(item?.journalFileKey?.trim());
   const journalFileName = getFileNameFromKey(item?.journalFileKey);
   const thumbnailSrc = item?.thumbnailPreviewUrl ?? item?.thumbnailUrl;
@@ -1110,10 +1140,13 @@ export default function AdminItemDetailPage() {
               <div className="mt-2 inline-flex rounded-xl border border-slate-200 bg-white p-1">
                 {ITEMTYPE_OPTIONS.map((option) => {
                   const active = item.itemType === option.value;
+                  const isJournalType = option.value === 'DIGITAL_JOURNAL';
+                  const disabled = isJournalType && Boolean(project) && !isJournalProject;
                   return (
                     <button
                       key={option.value}
                       type="button"
+                      disabled={disabled}
                       onClick={() => {
                         if (option.value === item.itemType) return;
                         if (option.value === 'DIGITAL_JOURNAL') {
@@ -1138,6 +1171,7 @@ export default function AdminItemDetailPage() {
                       }}
                       className={[
                         'rounded-lg px-4 py-2 text-sm font-bold transition',
+                        disabled ? 'cursor-not-allowed opacity-50' : '',
                         active
                           ? 'bg-primary text-white shadow-sm'
                           : 'text-slate-600 hover:bg-slate-100',
@@ -1149,6 +1183,23 @@ export default function AdminItemDetailPage() {
                 })}
               </div>
               <p className="mt-2 text-xs text-slate-500">{ITEMTYPE_HELPER_TEXT[item.itemType]}</p>
+              <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600">
+                <p className="font-semibold">현재 프로젝트 카테고리: {projectCategoryLabel}</p>
+                {project && !isJournalProject && (
+                  <>
+                    <p className="mt-1 text-amber-700">
+                      저널 상품/저널 파일 업로드를 사용하려면 프로젝트 카테고리를 JOURNAL로 바꿔야 해요.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/projects/${project.id}/edit`)}
+                      className="mt-2 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold text-amber-800 hover:bg-amber-100"
+                    >
+                      프로젝트 설정으로 이동
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -1474,25 +1525,32 @@ export default function AdminItemDetailPage() {
                   onDrop={(e) => {
                     e.preventDefault();
                     const files = Array.from(e.dataTransfer.files ?? []);
-                    if (!journalUploading && files.length) void handleJournalUpload([files[0]]);
+                    if (!journalUploading && isJournalProject && files.length) {
+                      void handleJournalUpload([files[0]]);
+                    }
                   }}
                   className={[
                     'mt-3 flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
-                    journalUploading
+                    journalUploading || !isJournalProject
                       ? 'pointer-events-none border-slate-200 text-slate-400 opacity-60'
                       : 'border-slate-200 text-slate-500 hover:border-primary/60 hover:text-primary',
                   ].join(' ')}
                 >
                   <input
                     type="file"
+                    disabled={!isJournalProject}
                     onChange={(e) => {
                       const files = Array.from(e.target.files ?? []);
-                      if (!journalUploading && files.length) void handleJournalUpload([files[0]]);
+                      if (!journalUploading && isJournalProject && files.length) {
+                        void handleJournalUpload([files[0]]);
+                      }
                       e.currentTarget.value = '';
                     }}
                     className="hidden"
                   />
-                  드래그 & 드롭하거나 클릭해서 파일을 선택해주세요
+                  {isJournalProject
+                    ? '드래그 & 드롭하거나 클릭해서 파일을 선택해주세요'
+                    : '프로젝트 카테고리를 JOURNAL로 변경하면 업로드할 수 있어요'}
                 </label>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">

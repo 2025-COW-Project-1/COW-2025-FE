@@ -6,8 +6,8 @@ import Reveal from "../../components/Reveal";
 import { SkeletonProjectCard } from "../../components/Skeleton";
 import { introApi } from "../../api/intro";
 import IntroduceMainView from "../../features/introduce/IntroduceMainView";
-import { projectsApi, type Project } from "../../api/projects";
-import { sortProjects } from "../../utils/projectSort";
+import { projectsApi } from "../../api/projects";
+import { parseDateLike } from "../../utils/date";
 import ProjectCard from "../../components/ProjectCard";
 
 const CAROUSEL_PEEK = false;
@@ -52,16 +52,24 @@ export default function MainPage() {
   });
 
   const orderedProjects = useMemo(() => {
-    const sorted = sortProjects(projectsData ?? []);
-    const order: Project["status"][] = ["OPEN", "PREPARING", "CLOSED"];
-    const grouped = order.flatMap((status) =>
-      sorted.filter((project) => project.status === status),
-    );
-    const pinnedFirst = [
-      ...grouped.filter((project) => project.pinned),
-      ...grouped.filter((project) => !project.pinned),
-    ];
-    return pinnedFirst.slice(0, 9);
+    const toTimestamp = (value: unknown) => {
+      const parsed = parseDateLike(value as string | number[] | null | undefined);
+      return parsed?.getTime() ?? Number.NEGATIVE_INFINITY;
+    };
+
+    const toNumericId = (id: string) => {
+      const parsed = Number(id);
+      return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+    };
+
+    return [...(projectsData ?? [])]
+      .sort((a, b) => {
+        const aTimestamp = toTimestamp(a.updatedAt ?? a.deadlineDate ?? a.endAt);
+        const bTimestamp = toTimestamp(b.updatedAt ?? b.deadlineDate ?? b.endAt);
+        if (aTimestamp !== bTimestamp) return bTimestamp - aTimestamp;
+        return toNumericId(b.id) - toNumericId(a.id);
+      })
+      .slice(0, 9);
   }, [projectsData]);
 
   const scrollByCard = useCallback(

@@ -288,9 +288,14 @@ export default function ProjectsPage() {
                         className="flex w-full items-center justify-between px-5 py-5 text-left transition hover:bg-slate-50 md:py-6"
                         aria-expanded={open}
                       >
-                        <p className="text-base font-semibold text-slate-700">
-                          {formatTermLabel(report.term)}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="truncate text-base font-semibold text-slate-800">
+                            {report.projectTitle?.trim() || '프로젝트명 미입력'}
+                          </p>
+                          <p className="mt-1 text-sm font-medium text-slate-500">
+                            {formatTermLabel(report.term)}
+                          </p>
+                        </div>
 
                         <span className="text-sm font-bold text-slate-500">
                           {open ? '닫기' : '보기'}

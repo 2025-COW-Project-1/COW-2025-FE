@@ -18,6 +18,16 @@ type OrderCompleteState = {
   lookupId?: string;
   depositDeadline?: string;
   viewToken?: string;
+  createdAt?: string;
+  totalAmount?: number;
+  shippingFee?: number;
+  finalAmount?: number;
+  messageTitle?: string;
+  messageDescription?: string;
+  paymentInformation?: string;
+  paymentTitle?: string;
+  paymentDescription?: string;
+  paymentInfo?: OrderCompletePaymentInfo | null;
 };
 
 type DisplayOrder = {
@@ -210,7 +220,24 @@ export default function OrderCompletePage() {
     retry: 1,
   });
 
-  const pageContent = orderCompletePageQuery.data?.content ?? EMPTY_CONTENT;
+  const stateContent = useMemo<OrderCompletePageContent>(() => {
+    return {
+      messageTitle: state.messageTitle,
+      messageDescription: state.messageDescription,
+      paymentInformation: state.paymentInformation,
+      paymentTitle: state.paymentTitle,
+      paymentDescription: state.paymentDescription,
+      paymentInfo: state.paymentInfo ?? undefined,
+    };
+  }, [state]);
+  const queriedContent = orderCompletePageQuery.data?.content ?? EMPTY_CONTENT;
+  const pageContent = useMemo<OrderCompletePageContent>(() => {
+    return {
+      ...stateContent,
+      ...queriedContent,
+      paymentInfo: queriedContent.paymentInfo ?? stateContent.paymentInfo,
+    };
+  }, [queriedContent, stateContent]);
   const items = useMemo(
     () => orderCompletePageQuery.data?.items ?? EMPTY_ITEMS,
     [orderCompletePageQuery.data?.items],
@@ -223,10 +250,10 @@ export default function OrderCompletePage() {
       depositDeadline:
         orderCompletePageQuery.data?.order?.depositDeadline ??
         state.depositDeadline,
-      createdAt: orderCompletePageQuery.data?.order?.createdAt,
-      totalAmount: orderCompletePageQuery.data?.order?.totalAmount,
-      shippingFee: orderCompletePageQuery.data?.order?.shippingFee,
-      finalAmount: orderCompletePageQuery.data?.order?.finalAmount,
+      createdAt: orderCompletePageQuery.data?.order?.createdAt ?? state.createdAt,
+      totalAmount: orderCompletePageQuery.data?.order?.totalAmount ?? state.totalAmount,
+      shippingFee: orderCompletePageQuery.data?.order?.shippingFee ?? state.shippingFee,
+      finalAmount: orderCompletePageQuery.data?.order?.finalAmount ?? state.finalAmount,
     }),
     [orderCompletePageQuery.data, state],
   );
