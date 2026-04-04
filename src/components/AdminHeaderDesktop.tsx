@@ -1,25 +1,46 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { adminApi } from '../api/admin';
 
 const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
 
-const NAV_ITEMS = [
+const LEADING_NAV_ITEMS = [
   { key: 'edit', label: '회원정보', href: '/admin#edit' },
   { key: 'about', label: '소개', href: '/admin#about?tab=main' },
   { key: 'links', label: '링크', href: '/admin#links' },
+];
+
+const TRAILING_NAV_ITEMS = [
   { key: 'projects', label: '프로젝트/상품', href: '/admin/projects' },
-  { key: 'orders', label: '주문', href: '/admin/orders' },
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
   { key: 'forms', label: '모집 양식', href: '/admin/forms' },
   { key: 'payouts', label: '정산', href: '/admin#payouts' },
-  { key: 'feedback', label: '피드백', href: '/admin#feedback' },
 ];
+
+const ORDER_MENU_ITEMS = [
+  { key: 'orders', label: '주문 관리', href: '/admin/orders' },
+  {
+    key: 'order-complete-page',
+    label: '주문 완료 설정',
+    href: '/admin#order-complete-page',
+  },
+];
+
+const FEEDBACK_MENU_ITEMS = [
+  { key: 'form', label: '폼 수정', href: '/admin#form' },
+  { key: 'feedback', label: '목록', href: '/admin#feedback' },
+];
+
+type OpenMenu = null | 'feedback' | 'orders';
 
 export default function AdminHeaderDesktop() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [open, setOpen] = useState<null | 'feedback'>(null);
+  const [open, setOpen] = useState<OpenMenu>(null);
+
+  useEffect(() => {
+    setOpen(null);
+  }, [location.hash, location.pathname]);
 
   const rawActive = location.hash || '#edit';
   const [activePath = 'edit'] = rawActive.replace('#', '').split('?');
@@ -42,6 +63,10 @@ export default function AdminHeaderDesktop() {
               ? 'forms'
               : normalizedActive;
 
+  const orderMenuActive =
+    activeKey === 'orders' || activeKey === 'order-complete-page';
+  const feedbackMenuActive = activeKey === 'form' || activeKey === 'feedback';
+
   return (
     <div className="mx-auto hidden max-w-none grid-cols-[1fr_auto_1fr] items-center px-6 py-4 md:grid">
       <Link
@@ -52,69 +77,8 @@ export default function AdminHeaderDesktop() {
       </Link>
 
       <nav className="flex flex-wrap items-center gap-1 justify-self-center">
-        {NAV_ITEMS.map((item) => {
+        {LEADING_NAV_ITEMS.map((item) => {
           const isActive = activeKey === item.key;
-          if (item.key === 'feedback') {
-            return (
-              <div key="feedback" className="relative">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setOpen(open === 'feedback' ? null : 'feedback')
-                  }
-                  className={[
-                    'rounded-full px-3 py-1 text-sm font-semibold transition-colors',
-                    isActive
-                      ? 'bg-white text-slate-900'
-                      : 'text-slate-300 hover:bg-slate-800',
-                  ].join(' ')}
-                  aria-expanded={open === 'feedback'}
-                  aria-haspopup="menu"
-                >
-                  피드백 <span className="ml-1 text-slate-400">▾</span>
-                </button>
-
-                {open === 'feedback' && (
-                  <>
-                    <button
-                      type="button"
-                      aria-label="close dropdown"
-                      className="fixed inset-0 z-40 cursor-default"
-                      onClick={() => setOpen(null)}
-                    />
-                    <div
-                      className="absolute left-0 z-50 mt-2 w-40 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-lg"
-                      role="menu"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOpen(null);
-                          navigate('/admin#form');
-                        }}
-                        className="w-full px-4 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-slate-800"
-                        role="menuitem"
-                      >
-                        폼 수정
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOpen(null);
-                          navigate('/admin#feedback');
-                        }}
-                        className="w-full px-4 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-slate-800"
-                        role="menuitem"
-                      >
-                        목록
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          }
-
           return (
             <Link
               key={item.key}
@@ -130,6 +94,44 @@ export default function AdminHeaderDesktop() {
             </Link>
           );
         })}
+
+        <DropdownMenu
+          label="주문"
+          active={orderMenuActive}
+          open={open === 'orders'}
+          onToggle={() => setOpen(open === 'orders' ? null : 'orders')}
+          onClose={() => setOpen(null)}
+          items={ORDER_MENU_ITEMS}
+          onNavigate={(href) => navigate(href)}
+        />
+
+        {TRAILING_NAV_ITEMS.map((item) => {
+          const isActive = activeKey === item.key;
+          return (
+            <Link
+              key={item.key}
+              to={item.href}
+              className={[
+                'rounded-full px-3 py-1 text-sm font-semibold transition-colors',
+                isActive
+                  ? 'bg-white text-slate-900'
+                  : 'text-slate-300 hover:bg-slate-800',
+              ].join(' ')}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+
+        <DropdownMenu
+          label="피드백"
+          active={feedbackMenuActive}
+          open={open === 'feedback'}
+          onToggle={() => setOpen(open === 'feedback' ? null : 'feedback')}
+          onClose={() => setOpen(null)}
+          items={FEEDBACK_MENU_ITEMS}
+          onNavigate={(href) => navigate(href)}
+        />
       </nav>
 
       <div className="justify-self-end">
@@ -148,6 +150,71 @@ export default function AdminHeaderDesktop() {
           LOGOUT
         </button>
       </div>
+    </div>
+  );
+}
+
+function DropdownMenu({
+  label,
+  active,
+  open,
+  onToggle,
+  onClose,
+  items,
+  onNavigate,
+}: {
+  label: string;
+  active: boolean;
+  open: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  items: Array<{ key: string; label: string; href: string }>;
+  onNavigate: (href: string) => void;
+}) {
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        className={[
+          'rounded-full px-3 py-1 text-sm font-semibold transition-colors',
+          active ? 'bg-white text-slate-900' : 'text-slate-300 hover:bg-slate-800',
+        ].join(' ')}
+        aria-expanded={open}
+        aria-haspopup="menu"
+      >
+        {label} <span className="ml-1 text-slate-400">▾</span>
+      </button>
+
+      {open && (
+        <>
+          <button
+            type="button"
+            aria-label="close dropdown"
+            className="fixed inset-0 z-40 cursor-default"
+            onClick={onClose}
+          />
+          <div
+            className="absolute left-0 z-50 mt-2 w-40 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-lg"
+            role="menu"
+          >
+            {items.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onNavigate(item.href);
+                }}
+                className="w-full px-4 py-2 text-left text-xs font-semibold text-slate-200 hover:bg-slate-800"
+                role="menuitem"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { api, withApiBase } from './client';
-import type { DateTimeArray } from '../types/order';
+import type { DateTimeArray, OrderCompletePaymentInfo } from '../types/order';
 
 export type LookupIdAvailabilityResponse = {
   lookupId: string;
@@ -77,7 +77,12 @@ export type OrderDetailResponse = {
   finalAmount?: number;
   depositDeadline?: string;
   lookupId?: string;
+  viewToken?: string;
   depositorName?: string;
+  paymentInformation?: string;
+  paymentTitle?: string;
+  paymentDescription?: string;
+  paymentInfo?: OrderCompletePaymentInfo | null;
   paidAt?: string;
   canceledAt?: string;
   cancelReason?: string;
@@ -267,6 +272,14 @@ function pickNumber(
   return undefined;
 }
 
+function pickFirstRecord(...values: unknown[]): Record<string, unknown> | null {
+  for (const value of values) {
+    const record = asRecord(value);
+    if (record) return record;
+  }
+  return null;
+}
+
 function pickNumberish(
   record: Record<string, unknown> | null,
   ...keys: string[]
@@ -319,11 +332,91 @@ function toOrderDetailItem(raw: unknown): OrderDetailItem | null {
   };
 }
 
+function toOrderPaymentInfo(raw: unknown): OrderCompletePaymentInfo | null {
+  const record = asRecord(raw);
+  if (!record) return null;
+
+  const bankName = pickString(
+    record,
+    'bankName',
+    'bank',
+    'accountBank',
+    'paymentBank',
+  );
+  const accountNumber = pickString(
+    record,
+    'accountNumber',
+    'bankAccountNumber',
+    'paymentAccountNumber',
+    'accountNo',
+  );
+  const accountHolder = pickString(
+    record,
+    'accountHolder',
+    'holder',
+    'accountOwner',
+    'depositor',
+  );
+  const amount = pickNumberish(
+    record,
+    'amount',
+    'depositAmount',
+    'paymentAmount',
+  );
+  const amountLabel = pickString(record, 'amountLabel', 'formattedAmount');
+  const notice = pickString(
+    record,
+    'notice',
+    'paymentNotice',
+    'paymentGuide',
+    'guide',
+    'memo',
+    'description',
+  );
+
+  if (
+    !bankName &&
+    !accountNumber &&
+    !accountHolder &&
+    amount === undefined &&
+    !amountLabel &&
+    !notice
+  ) {
+    return null;
+  }
+
+  return {
+    bankName,
+    accountNumber,
+    accountHolder,
+    amount,
+    amountLabel,
+    notice,
+  };
+}
+
 function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
   const record = asRecord(raw);
   const orderRecord = asRecord(record?.order);
   const summaryRecord = asRecord(record?.summary);
   const infoRecord = orderRecord ?? summaryRecord ?? record;
+  const contentRecord = pickFirstRecord(
+    record?.orderCompletePage,
+    record?.completePage,
+    record?.page,
+    record?.content,
+    record?.settings,
+  );
+  const paymentRecord = pickFirstRecord(
+    record?.paymentInfo,
+    record?.payment,
+    record?.account,
+    record?.accountInfo,
+    contentRecord?.paymentInfo,
+    contentRecord?.payment,
+    contentRecord?.account,
+    contentRecord?.accountInfo,
+  );
   const buyerRecord = asRecord(record?.buyer);
   const fulfillmentRecord = asRecord(
     record?.fulfillment ?? record?.delivery ?? record?.shipment,
@@ -354,7 +447,69 @@ function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
       'deadline',
     ),
     lookupId: pickString(infoRecord, 'lookupId', 'lookup_id'),
+    viewToken: pickString(infoRecord, 'viewToken', 'view_token'),
     depositorName: pickString(infoRecord, 'depositorName', 'depositor_name'),
+    paymentInformation: pickString(
+      contentRecord ?? record,
+      'paymentInformation',
+      'payment_information',
+      'paymentInfoText',
+    ),
+    paymentTitle: pickString(
+      contentRecord ?? record,
+      'paymentTitle',
+      'accountTitle',
+      'paymentHeadline',
+    ),
+    paymentDescription: pickString(
+      contentRecord ?? record,
+      'paymentDescription',
+      'paymentGuide',
+      'accountDescription',
+      'paymentNoticeDescription',
+    ),
+    paymentInfo:
+      toOrderPaymentInfo(paymentRecord) ??
+      toOrderPaymentInfo({
+        bankName: pickString(
+          contentRecord ?? record,
+          'bankName',
+          'bank',
+          'accountBank',
+          'paymentBank',
+        ),
+        accountNumber: pickString(
+          contentRecord ?? record,
+          'accountNumber',
+          'bankAccountNumber',
+          'paymentAccountNumber',
+          'accountNo',
+        ),
+        accountHolder: pickString(
+          contentRecord ?? record,
+          'accountHolder',
+          'holder',
+          'accountOwner',
+          'depositor',
+        ),
+        amount: pickNumberish(
+          contentRecord ?? record,
+          'amount',
+          'depositAmount',
+          'paymentAmount',
+        ),
+        amountLabel: pickString(
+          contentRecord ?? record,
+          'amountLabel',
+          'formattedAmount',
+        ),
+        notice: pickString(
+          contentRecord ?? record,
+          'paymentNotice',
+          'notice',
+          'paymentGuideNotice',
+        ),
+      }),
     paidAt: pickDateTime(infoRecord, 'paidAt', 'paid_at'),
     canceledAt: pickDateTime(infoRecord, 'canceledAt', 'canceled_at'),
     cancelReason: pickString(infoRecord, 'cancelReason', 'cancel_reason'),

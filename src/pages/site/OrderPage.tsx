@@ -765,13 +765,17 @@ export default function OrderPage() {
         clearCartItems();
       }
       toast.success('주문이 접수되었어요. 입금 확인을 기다려주세요.');
-      navigate('/order/complete', {
+      const nextPath = result.viewToken?.trim()
+        ? `/order/complete?token=${encodeURIComponent(result.viewToken.trim())}`
+        : '/order/complete';
+      navigate(nextPath, {
         replace: true,
         state: {
           orderNo: result.orderNo,
           status: result.status,
           lookupId: result.lookupId ?? payload.lookupId,
           depositDeadline: result.depositDeadline,
+          viewToken: result.viewToken,
         },
       });
     } catch (error) {

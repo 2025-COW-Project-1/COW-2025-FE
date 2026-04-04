@@ -6,15 +6,31 @@ import { adminApi } from '../api/admin';
 const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY ?? 'access_token';
 const SWIPE_CLOSE_THRESHOLD = 60;
 
-const NAV_ITEMS = [
+const LEADING_NAV_ITEMS = [
   { key: 'edit', label: '회원정보', href: '/admin#edit' },
   { key: 'about', label: '소개', href: '/admin#about?tab=main' },
   { key: 'links', label: '링크', href: '/admin#links' },
+];
+
+const TRAILING_NAV_ITEMS = [
   { key: 'projects', label: '프로젝트/상품', href: '/admin/projects' },
-  { key: 'orders', label: '주문', href: '/admin/orders' },
   { key: 'notices', label: '공지사항', href: '/admin/notices' },
   { key: 'forms', label: '모집 양식', href: '/admin/forms' },
   { key: 'payouts', label: '정산', href: '/admin#payouts' },
+];
+
+const ORDER_MENU_ITEMS = [
+  { key: 'orders', label: '주문 관리', href: '/admin/orders' },
+  {
+    key: 'order-complete-page',
+    label: '주문 완료 설정',
+    href: '/admin#order-complete-page',
+  },
+];
+
+const FEEDBACK_MENU_ITEMS = [
+  { key: 'form', label: '폼 수정', href: '/admin#form' },
+  { key: 'feedback', label: '목록', href: '/admin#feedback' },
 ];
 
 type AdminHeaderMobileProps = {
@@ -26,6 +42,7 @@ export default function AdminHeaderMobile({
 }: AdminHeaderMobileProps) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [orderOpen, setOrderOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
@@ -61,6 +78,7 @@ export default function AdminHeaderMobile({
   const closeMenu = () => {
     resetSwipeState();
     setOpen(false);
+    setOrderOpen(false);
     setFeedbackOpen(false);
   };
 
@@ -124,7 +142,7 @@ export default function AdminHeaderMobile({
         </div>
 
         <nav className="mt-6 flex-1 space-y-2">
-          {NAV_ITEMS.map((item) => (
+          {LEADING_NAV_ITEMS.map((item) => (
             <Link
               key={item.key}
               to={item.href}
@@ -135,51 +153,32 @@ export default function AdminHeaderMobile({
             </Link>
           ))}
 
-          <button
-            type="button"
-            onClick={() => setFeedbackOpen((v) => !v)}
-            className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
-            aria-expanded={feedbackOpen}
-          >
-            피드백
-            <span
-              className={[
-                'text-slate-400 transition-transform',
-                feedbackOpen ? 'rotate-90' : 'rotate-0',
-              ].join(' ')}
-            >
-              ›
-            </span>
-          </button>
+          <ExpandableMenu
+            label="주문"
+            open={orderOpen}
+            onToggle={() => setOrderOpen((value) => !value)}
+            items={ORDER_MENU_ITEMS}
+            onClose={closeMenu}
+          />
 
-          <div
-            className={[
-              'ml-2 overflow-hidden transition-all duration-200',
-              feedbackOpen ? 'mt-1 max-h-40' : 'mt-0 max-h-0',
-            ].join(' ')}
-          >
-            <div
-              className={[
-                'space-y-1 rounded-xl border border-slate-800 bg-slate-900/40 p-2',
-                feedbackOpen ? 'opacity-100' : 'opacity-0',
-              ].join(' ')}
+          {TRAILING_NAV_ITEMS.map((item) => (
+            <Link
+              key={item.key}
+              to={item.href}
+              onClick={closeMenu}
+              className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
             >
-              <Link
-                to="/admin#form"
-                onClick={closeMenu}
-                className="block rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-              >
-                폼 수정
-              </Link>
-              <Link
-                to="/admin#feedback"
-                onClick={closeMenu}
-                className="block rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
-              >
-                목록
-              </Link>
-            </div>
-          </div>
+              {item.label}
+            </Link>
+          ))}
+
+          <ExpandableMenu
+            label="피드백"
+            open={feedbackOpen}
+            onToggle={() => setFeedbackOpen((value) => !value)}
+            items={FEEDBACK_MENU_ITEMS}
+            onClose={closeMenu}
+          />
         </nav>
 
         <button
@@ -234,6 +233,66 @@ export default function AdminHeaderMobile({
       {typeof document !== 'undefined'
         ? createPortal(menuLayer, document.body)
         : menuLayer}
+    </>
+  );
+}
+
+function ExpandableMenu({
+  label,
+  open,
+  onToggle,
+  items,
+  onClose,
+}: {
+  label: string;
+  open: boolean;
+  onToggle: () => void;
+  items: Array<{ key: string; label: string; href: string }>;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+        aria-expanded={open}
+      >
+        {label}
+        <span
+          className={[
+            'text-slate-400 transition-transform',
+            open ? 'rotate-90' : 'rotate-0',
+          ].join(' ')}
+        >
+          ›
+        </span>
+      </button>
+
+      <div
+        className={[
+          'ml-2 overflow-hidden transition-all duration-200',
+          open ? 'mt-1 max-h-40' : 'mt-0 max-h-0',
+        ].join(' ')}
+      >
+        <div
+          className={[
+            'space-y-1 rounded-xl border border-slate-800 bg-slate-900/40 p-2',
+            open ? 'opacity-100' : 'opacity-0',
+          ].join(' ')}
+        >
+          {items.map((item) => (
+            <Link
+              key={item.key}
+              to={item.href}
+              onClick={onClose}
+              className="block rounded-lg px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
     </>
   );
 }
