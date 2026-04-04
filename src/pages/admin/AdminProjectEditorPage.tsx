@@ -72,6 +72,10 @@ const STATUS_OPTIONS: { label: string; value: AdminProjectStatus }[] = [
   { label: '진행중', value: 'OPEN' },
   { label: '마감', value: 'CLOSED' },
 ];
+const CATEGORY_OPTIONS: { label: string; value: AdminProjectCategory }[] = [
+  { label: '상품 (GOODS)', value: 'GOODS' },
+  { label: '저널 (JOURNAL)', value: 'JOURNAL' },
+];
 
 const INPUT_CLASS =
   'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-primary/60 focus:ring-4 focus:ring-primary/10';
@@ -945,6 +949,29 @@ export default function AdminProjectEditorPage() {
                 className={INPUT_CLASS}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className={FORM_LABEL_CLASS}>프로젝트 카테고리</label>
+            <select
+              value={project.category}
+              onChange={(e) =>
+                updateProject({
+                  category: e.target.value as AdminProjectCategory,
+                  validationError: null,
+                })
+              }
+              className={INPUT_CLASS}
+            >
+              {CATEGORY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-slate-500">
+              저널 파일 업로드를 사용하려면 카테고리를 <b>저널(JOURNAL)</b>로 저장해야 해요.
+            </p>
           </div>
 
           <div
