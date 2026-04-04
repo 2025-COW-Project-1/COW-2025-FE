@@ -776,6 +776,16 @@ export default function OrderPage() {
           lookupId: result.lookupId ?? payload.lookupId,
           depositDeadline: result.depositDeadline,
           viewToken: result.viewToken,
+          createdAt: result.createdAt,
+          totalAmount: result.totalAmount,
+          shippingFee: result.shippingFee,
+          finalAmount: result.finalAmount,
+          messageTitle: result.messageTitle,
+          messageDescription: result.messageDescription,
+          paymentInformation: result.paymentInformation,
+          paymentTitle: result.paymentTitle,
+          paymentDescription: result.paymentDescription,
+          paymentInfo: result.paymentInfo,
         },
       });
     } catch (error) {

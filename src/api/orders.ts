@@ -50,8 +50,15 @@ export type OrderCreateResponse = {
   shippingFee?: number;
   finalAmount?: number;
   depositDeadline?: string;
+  createdAt?: string;
   lookupId?: string;
   viewToken?: string;
+  messageTitle?: string;
+  messageDescription?: string;
+  paymentInformation?: string;
+  paymentTitle?: string;
+  paymentDescription?: string;
+  paymentInfo?: OrderCompletePaymentInfo | null;
   raw: unknown;
 };
 
@@ -153,53 +160,119 @@ function toOrderCreateResponse(raw: unknown): OrderCreateResponse {
   if (!raw || typeof raw !== 'object') return { raw };
 
   const record = raw as Record<string, unknown>;
+  const orderRecord = asRecord(record.order);
+  const summaryRecord = asRecord(record.summary);
+  const infoRecord = orderRecord ?? summaryRecord ?? record;
+  const contentRecord = pickFirstRecord(
+    record.orderCompletePage,
+    record.completePage,
+    record.page,
+    record.content,
+    record.settings,
+  );
+  const paymentRecord = pickFirstRecord(
+    record.paymentInfo,
+    record.payment,
+    record.account,
+    record.accountInfo,
+    contentRecord?.paymentInfo,
+    contentRecord?.payment,
+    contentRecord?.account,
+    contentRecord?.accountInfo,
+  );
+
   return {
-    orderId:
-      typeof record.orderId === 'number'
-        ? record.orderId
-        : typeof record.order_id === 'number'
-          ? record.order_id
-          : undefined,
-    orderNo:
-      typeof record.orderNo === 'string'
-        ? record.orderNo
-        : typeof record.order_no === 'string'
-          ? record.order_no
-          : undefined,
-    status: typeof record.status === 'string' ? record.status : undefined,
-    totalAmount:
-      typeof record.totalAmount === 'number'
-        ? record.totalAmount
-        : typeof record.total_amount === 'number'
-          ? record.total_amount
-          : undefined,
-    shippingFee:
-      typeof record.shippingFee === 'number'
-        ? record.shippingFee
-        : typeof record.shipping_fee === 'number'
-          ? record.shipping_fee
-          : undefined,
-    finalAmount:
-      typeof record.finalAmount === 'number'
-        ? record.finalAmount
-        : typeof record.final_amount === 'number'
-          ? record.final_amount
-          : undefined,
-    depositDeadline: normalizeDateValue(
-      record.depositDeadline ?? record.deposit_deadline,
+    orderId: pickNumberish(infoRecord, 'orderId', 'order_id', 'id'),
+    orderNo: pickString(infoRecord, 'orderNo', 'order_no'),
+    status: pickString(infoRecord, 'status', 'orderStatus', 'order_status'),
+    totalAmount: pickNumberish(infoRecord, 'totalAmount', 'total_amount'),
+    shippingFee: pickNumberish(infoRecord, 'shippingFee', 'shipping_fee'),
+    finalAmount: pickNumberish(infoRecord, 'finalAmount', 'final_amount'),
+    depositDeadline: pickDateTime(
+      infoRecord,
+      'depositDeadline',
+      'deposit_deadline',
+      'deadline',
     ),
-    lookupId:
-      typeof record.lookupId === 'string'
-        ? record.lookupId
-        : typeof record.lookup_id === 'string'
-          ? record.lookup_id
-          : undefined,
-    viewToken:
-      typeof record.viewToken === 'string'
-        ? record.viewToken
-        : typeof record.view_token === 'string'
-          ? record.view_token
-          : undefined,
+    createdAt: pickDateTime(infoRecord, 'createdAt', 'created_at'),
+    lookupId: pickString(infoRecord, 'lookupId', 'lookup_id'),
+    viewToken: pickString(infoRecord, 'viewToken', 'view_token'),
+    messageTitle: pickString(
+      contentRecord ?? record,
+      'messageTitle',
+      'title',
+      'message',
+      'headline',
+    ),
+    messageDescription: pickString(
+      contentRecord ?? record,
+      'messageDescription',
+      'messageDesc',
+      'description',
+      'messageBody',
+      'body',
+    ),
+    paymentInformation: pickString(
+      contentRecord ?? record,
+      'paymentInformation',
+      'payment_information',
+      'paymentInfoText',
+    ),
+    paymentTitle: pickString(
+      contentRecord ?? record,
+      'paymentTitle',
+      'accountTitle',
+      'paymentHeadline',
+    ),
+    paymentDescription: pickString(
+      contentRecord ?? record,
+      'paymentDescription',
+      'paymentGuide',
+      'accountDescription',
+      'paymentNoticeDescription',
+    ),
+    paymentInfo:
+      toOrderPaymentInfo(paymentRecord) ??
+      toOrderPaymentInfo({
+        bankName: pickString(
+          contentRecord ?? record,
+          'bankName',
+          'bank',
+          'accountBank',
+          'paymentBank',
+        ),
+        accountNumber: pickString(
+          contentRecord ?? record,
+          'accountNumber',
+          'bankAccountNumber',
+          'paymentAccountNumber',
+          'accountNo',
+        ),
+        accountHolder: pickString(
+          contentRecord ?? record,
+          'accountHolder',
+          'holder',
+          'accountOwner',
+          'depositor',
+        ),
+        amount: pickNumberish(
+          contentRecord ?? record,
+          'amount',
+          'depositAmount',
+          'paymentAmount',
+        ),
+        amountLabel: pickString(
+          contentRecord ?? record,
+          'amountLabel',
+          'formattedAmount',
+        ),
+        notice: pickString(
+          contentRecord ?? record,
+          'paymentNotice',
+          'notice',
+          'paymentGuideNotice',
+        ),
+      }),
     raw,
   };
 }
