@@ -83,6 +83,7 @@ export type OrderDetailResponse = {
   shippingFee?: number;
   finalAmount?: number;
   depositDeadline?: string;
+  createdAt?: string;
   lookupId?: string;
   viewToken?: string;
   depositorName?: string;
@@ -321,6 +322,17 @@ function pickString(
   return undefined;
 }
 
+function pickStringFromRecords(
+  records: Array<Record<string, unknown> | null>,
+  ...keys: string[]
+): string | undefined {
+  for (const record of records) {
+    const value = pickString(record, ...keys);
+    if (value !== undefined) return value;
+  }
+  return undefined;
+}
+
 function pickDateTime(
   record: Record<string, unknown> | null,
   ...keys: string[]
@@ -365,6 +377,17 @@ function pickNumberish(
       const n = Number(value);
       if (Number.isFinite(n)) return n;
     }
+  }
+  return undefined;
+}
+
+function pickNumberishFromRecords(
+  records: Array<Record<string, unknown> | null>,
+  ...keys: string[]
+): number | undefined {
+  for (const record of records) {
+    const value = pickNumberish(record, ...keys);
+    if (value !== undefined) return value;
   }
   return undefined;
 }
@@ -490,6 +513,7 @@ function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
     contentRecord?.account,
     contentRecord?.accountInfo,
   );
+  const paymentTextSources = [record, contentRecord];
   const buyerRecord = asRecord(record?.buyer);
   const fulfillmentRecord = asRecord(
     record?.fulfillment ?? record?.delivery ?? record?.shipment,
@@ -519,23 +543,24 @@ function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
       'deposit_deadline',
       'deadline',
     ),
+    createdAt: pickDateTime(infoRecord, 'createdAt', 'created_at'),
     lookupId: pickString(infoRecord, 'lookupId', 'lookup_id'),
     viewToken: pickString(infoRecord, 'viewToken', 'view_token'),
     depositorName: pickString(infoRecord, 'depositorName', 'depositor_name'),
-    paymentInformation: pickString(
-      contentRecord ?? record,
+    paymentInformation: pickStringFromRecords(
+      paymentTextSources,
       'paymentInformation',
       'payment_information',
       'paymentInfoText',
     ),
-    paymentTitle: pickString(
-      contentRecord ?? record,
+    paymentTitle: pickStringFromRecords(
+      paymentTextSources,
       'paymentTitle',
       'accountTitle',
       'paymentHeadline',
     ),
-    paymentDescription: pickString(
-      contentRecord ?? record,
+    paymentDescription: pickStringFromRecords(
+      paymentTextSources,
       'paymentDescription',
       'paymentGuide',
       'accountDescription',
@@ -544,40 +569,40 @@ function toOrderDetailResponse(raw: unknown): OrderDetailResponse {
     paymentInfo:
       toOrderPaymentInfo(paymentRecord) ??
       toOrderPaymentInfo({
-        bankName: pickString(
-          contentRecord ?? record,
+        bankName: pickStringFromRecords(
+          paymentTextSources,
           'bankName',
           'bank',
           'accountBank',
           'paymentBank',
         ),
-        accountNumber: pickString(
-          contentRecord ?? record,
+        accountNumber: pickStringFromRecords(
+          paymentTextSources,
           'accountNumber',
           'bankAccountNumber',
           'paymentAccountNumber',
           'accountNo',
         ),
-        accountHolder: pickString(
-          contentRecord ?? record,
+        accountHolder: pickStringFromRecords(
+          paymentTextSources,
           'accountHolder',
           'holder',
           'accountOwner',
           'depositor',
         ),
-        amount: pickNumberish(
-          contentRecord ?? record,
+        amount: pickNumberishFromRecords(
+          paymentTextSources,
           'amount',
           'depositAmount',
           'paymentAmount',
         ),
-        amountLabel: pickString(
-          contentRecord ?? record,
+        amountLabel: pickStringFromRecords(
+          paymentTextSources,
           'amountLabel',
           'formattedAmount',
         ),
-        notice: pickString(
-          contentRecord ?? record,
+        notice: pickStringFromRecords(
+          paymentTextSources,
           'paymentNotice',
           'notice',
           'paymentGuideNotice',
