@@ -4,7 +4,7 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, Receipt } from 'lucide-reac
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import Reveal from '../../components/Reveal';
 import StatusBadge from '../../components/StatusBadge';
 import { SkeletonProjectDetail } from '../../components/Skeleton';
@@ -32,6 +32,22 @@ function parseCount(value: unknown): number | null {
 function normalizeSelectionQuantity(value: number) {
   if (!Number.isFinite(value)) return 0;
   return Math.min(99, Math.max(0, Math.trunc(value)));
+}
+
+function toInlinePreviewText(value?: string | null) {
+  if (!value) return '';
+  return value
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]*)`/g, '$1')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s*/gm, '')
+    .replace(/^\s{0,3}(?:[-*+]|\d+\.)\s+/gm, '')
+    .replace(/^\s{0,3}>\s?/gm, '')
+    .replace(/[*_~]/g, '')
+    .replace(/\r?\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 function getAvailableStock(item: ItemResponse) {
@@ -85,6 +101,28 @@ export default function ProjectDetailPage() {
     () => (Array.isArray(itemsData) ? itemsData : []),
     [itemsData],
   );
+  const itemDetailQueries = useQueries({
+    queries: items.map((item) => ({
+      queryKey: ['projectItemDetail', projectId, String(item.id)],
+      queryFn: () => itemsApi.getById(projectId!, String(item.id)),
+      enabled:
+        Boolean(projectId) &&
+        (!item.description || item.description.trim().length === 0),
+      staleTime: 1000 * 60 * 5,
+    })),
+  });
+  const fallbackDescriptions = useMemo(() => {
+    const next: Record<string, string> = {};
+    itemDetailQueries.forEach((query, index) => {
+      const item = items[index];
+      if (!item) return;
+      const description = query.data?.description?.trim();
+      if (description) {
+        next[String(item.id)] = description;
+      }
+    });
+    return next;
+  }, [itemDetailQueries, items]);
 
   const physicalItems = useMemo(
     () => items.filter((item) => item.itemType !== 'DIGITAL_JOURNAL'),
@@ -180,8 +218,9 @@ export default function ProjectDetailPage() {
     setSelectedQuantities((prev) => {
       if (normalized <= 0) {
         if (!prev[key]) return prev;
-        const { [key]: _removed, ...rest } = prev;
-        return rest;
+        const next = { ...prev };
+        delete next[key];
+        return next;
       }
       return { ...prev, [key]: normalized };
     });
@@ -461,6 +500,7 @@ export default function ProjectDetailPage() {
                   등록된 상세 설명이 없어요
                 </p>
               )}
+
             </div>
 
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
@@ -595,6 +635,11 @@ export default function ProjectDetailPage() {
                     const selectedQty = getSelectedQuantity(item.id);
                     const soldOut = isItemSoldOut(item);
                     const isPurchasable = isPurchasableItem(item);
+                    const descriptionPreview = toInlinePreviewText(
+                      item.description?.trim() ||
+                        fallbackDescriptions[String(item.id)] ||
+                        '',
+                    );
                     const availableStock = getAvailableStock(item);
                     const fundedQty = parseCount(item.fundedQty);
                     const targetQty = parseCount(item.targetQty);
@@ -697,6 +742,10 @@ export default function ProjectDetailPage() {
                                 >
                                   {item.summary?.trim() || '상품 요약 정보가 아직 없어요.'}
                                 </p>
+                                <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                                  {descriptionPreview ||
+                                    '구매/수령/유의사항은 상세 보기에서 확인해주세요.'}
+                                </p>
                               </div>
                               <p
                                 className={[
@@ -760,6 +809,12 @@ export default function ProjectDetailPage() {
                                   </div>
                                 )}
                               </div>
+                              <Link
+                                to={`/projects/${projectId}/items/${item.id}`}
+                                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-primary"
+                              >
+                                상세 보기
+                              </Link>
                             </div>
                           </div>
                         </div>
@@ -774,6 +829,11 @@ export default function ProjectDetailPage() {
                         {journalItems.map((item) => {
                           const isJournalDownloadable = item.status === 'OPEN';
                           const isFreeDistribution = (item.price ?? 0) <= 0;
+                          const descriptionPreview = toInlinePreviewText(
+                            item.description?.trim() ||
+                              fallbackDescriptions[String(item.id)] ||
+                              '',
+                          );
                           return (
                             <div
                               key={item.id}
@@ -816,8 +876,12 @@ export default function ProjectDetailPage() {
                                       ? '무료'
                                       : `${formatMoney(item.price)}원`}
                                   </p>
+                                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                                    {descriptionPreview ||
+                                      '구매/수령/유의사항은 상세 보기에서 확인해주세요.'}
+                                  </p>
 
-                                  <div className="mt-2">
+                                  <div className="mt-2 flex flex-wrap items-center gap-2">
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -834,6 +898,12 @@ export default function ProjectDetailPage() {
                                         ? '다운로드 중...'
                                         : '다운로드'}
                                     </button>
+                                    <Link
+                                      to={`/projects/${projectId}/items/${item.id}`}
+                                      className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 hover:text-primary"
+                                    >
+                                      상세 보기
+                                    </Link>
                                   </div>
                                 </div>
                               </div>
