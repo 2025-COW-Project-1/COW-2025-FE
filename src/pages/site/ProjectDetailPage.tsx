@@ -661,6 +661,15 @@ export default function ProjectDetailPage() {
                     const selectedQty = getSelectedQuantity(item.id);
                     const soldOut = isItemSoldOut(item);
                     const isPurchasable = isPurchasableItem(item);
+                    const normalizedName = item.name.trim();
+                    const normalizedSummary = item.summary?.trim() ?? '';
+                    const hasDistinctSummary =
+                      normalizedSummary.length > 0 && normalizedSummary !== normalizedName;
+                    const descriptionPreview = toInlinePreviewText(
+                      item.description?.trim() ||
+                        fallbackDescriptions[String(item.id)] ||
+                        '',
+                    );
                     const availableStock = getAvailableStock(item);
                     const fundedQty = parseCount(item.fundedQty);
                     const targetQty = parseCount(item.targetQty);
@@ -736,7 +745,22 @@ export default function ProjectDetailPage() {
                               {item.name}
                             </h3>
 
-                            <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
+                            {hasDistinctSummary && (
+                              <p
+                                className={[
+                                  'mt-1 text-sm',
+                                  soldOut ? 'text-slate-500' : 'text-slate-600',
+                                ].join(' ')}
+                              >
+                                {normalizedSummary}
+                              </p>
+                            )}
+                            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                              {descriptionPreview ||
+                                '구매/수령/유의사항은 상세 보기에서 확인해주세요.'}
+                            </p>
+
+                            <div className="mt-2.5 flex flex-wrap items-baseline gap-2">
                               <span
                                 className={[
                                   'text-xl font-bold',
