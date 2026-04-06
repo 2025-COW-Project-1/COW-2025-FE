@@ -15,6 +15,13 @@ import type { ItemResponse } from '../../api/items';
 import { addCartItem } from '../../utils/cart';
 import { getItemSaleTypeLabel, getItemTypeLabel } from '../../constants/itemLabels';
 
+type NormalStockTag = {
+  label: string;
+  tone: 'info' | 'warning' | 'neutral';
+};
+
+const LOW_STOCK_THRESHOLD = 5;
+
 function formatMoney(value?: number | null) {
   if (value === null || value === undefined) return '-';
   return value.toLocaleString();
@@ -65,6 +72,25 @@ function isItemSoldOut(item: ItemResponse) {
 function isPurchasableItem(item: ItemResponse) {
   if (item.itemType === 'DIGITAL_JOURNAL') return false;
   return item.status === 'OPEN' && !isItemSoldOut(item);
+}
+
+function getNormalStockTag(availableStock: number | null): NormalStockTag | null {
+  if (availableStock === null) {
+    return { label: '재고 확인 중', tone: 'neutral' };
+  }
+  if (availableStock <= 0) {
+    return null;
+  }
+  if (availableStock <= LOW_STOCK_THRESHOLD) {
+    return {
+      label: `재고 ${availableStock.toLocaleString()}개 남음`,
+      tone: 'warning',
+    };
+  }
+  return {
+    label: `재고 ${availableStock.toLocaleString()}개`,
+    tone: 'info',
+  };
 }
 
 export default function ProjectDetailPage() {
@@ -635,6 +661,10 @@ export default function ProjectDetailPage() {
                     const selectedQty = getSelectedQuantity(item.id);
                     const soldOut = isItemSoldOut(item);
                     const isPurchasable = isPurchasableItem(item);
+                    const normalizedName = item.name.trim();
+                    const normalizedSummary = item.summary?.trim() ?? '';
+                    const hasDistinctSummary =
+                      normalizedSummary.length > 0 && normalizedSummary !== normalizedName;
                     const descriptionPreview = toInlinePreviewText(
                       item.description?.trim() ||
                         fallbackDescriptions[String(item.id)] ||
@@ -644,13 +674,9 @@ export default function ProjectDetailPage() {
                     const fundedQty = parseCount(item.fundedQty);
                     const targetQty = parseCount(item.targetQty);
                     const achievementRate = parseCount(item.achievementRate);
-                    const stockSummary =
+                    const normalStockTag =
                       item.saleType === 'NORMAL'
-                        ? availableStock !== null
-                          ? availableStock > 0
-                            ? `재고 ${availableStock.toLocaleString()}개`
-                            : '재고 소진'
-                          : '재고 정보 확인 중'
+                        ? getNormalStockTag(availableStock)
                         : null;
                     const groupBuySummary =
                       item.saleType === 'GROUPBUY'
@@ -665,19 +691,14 @@ export default function ProjectDetailPage() {
                       <article
                         key={item.id}
                         className={[
-                          'relative overflow-hidden rounded-2xl border p-4 shadow-sm transition',
+                          'rounded-2xl border p-5 transition',
                           soldOut
-                            ? 'border-rose-200 bg-rose-50/45'
-                            : 'border-slate-200 bg-white',
+                            ? 'border-slate-200 bg-slate-50/60'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md',
                         ].join(' ')}
                       >
-                        {soldOut && (
-                          <span className="pointer-events-none absolute right-3 top-3 z-10 inline-flex items-center rounded-full border border-rose-300 bg-gradient-to-r from-rose-600 via-red-500 to-rose-600 px-3 py-1.5 text-[11px] font-extrabold tracking-[0.14em] text-white shadow-[0_6px_16px_rgba(225,29,72,0.35)] ring-2 ring-white/80">
-                            SOLD OUT
-                          </span>
-                        )}
-                        <div className="grid gap-4 sm:grid-cols-[130px_1fr]">
-                          <div className="aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                        <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
+                          <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
                             {item.thumbnailUrl ? (
                               <img
                                 src={item.thumbnailUrl}
@@ -685,135 +706,154 @@ export default function ProjectDetailPage() {
                                 loading="lazy"
                                 decoding="async"
                                 className={[
-                                  'h-full w-full object-cover',
-                                  soldOut ? 'grayscale-[0.95] brightness-90' : '',
+                                  'h-full w-full object-cover transition',
+                                  soldOut ? 'grayscale-[0.8] brightness-95' : '',
                                 ].join(' ')}
                               />
                             ) : (
                               <div className="flex h-full items-center justify-center text-xs font-semibold text-slate-400">
-                                대표 이미지 없음
+                                이미지 없음
                               </div>
+                            )}
+                            {soldOut && (
+                              <>
+                                <div className="pointer-events-none absolute inset-0 bg-rose-950/20" />
+                                <div className="pointer-events-none absolute left-2 top-2 inline-flex items-center rounded-full border border-rose-200 bg-rose-50/95 px-2.5 py-1 text-[10px] font-black tracking-[0.08em] text-rose-700 shadow-sm">
+                                  SOLD OUT
+                                </div>
+                              </>
                             )}
                           </div>
 
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex min-w-0 flex-col">
+                            <div className="flex flex-wrap items-center gap-1.5">
                               <StatusBadge
                                 status={item.status}
-                                className="px-3 py-1 text-xs"
+                                className="px-2.5 py-0.5 text-xs"
                               />
-                              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">
+                              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500">
                                 {saleTypeLabel}
                               </span>
-                              {item.saleType === 'NORMAL' && stockSummary && (
+                            </div>
+
+                            <h3
+                              className={[
+                                'mt-2 text-base font-bold leading-snug',
+                                soldOut ? 'text-slate-400' : 'text-slate-900',
+                              ].join(' ')}
+                            >
+                              {item.name}
+                            </h3>
+
+                            {hasDistinctSummary && (
+                              <p
+                                className={[
+                                  'mt-1 text-sm',
+                                  soldOut ? 'text-slate-500' : 'text-slate-600',
+                                ].join(' ')}
+                              >
+                                {normalizedSummary}
+                              </p>
+                            )}
+                            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">
+                              {descriptionPreview ||
+                                '구매/수령/유의사항은 상세 보기에서 확인해주세요.'}
+                            </p>
+
+                            <div className="mt-2.5 flex flex-wrap items-baseline gap-2">
+                              <span
+                                className={[
+                                  'text-xl font-bold',
+                                  soldOut ? 'text-slate-400' : 'text-slate-900',
+                                ].join(' ')}
+                              >
+                                {formatMoney(item.price)}원
+                              </span>
+                              {item.saleType === 'NORMAL' && normalStockTag && (
                                 <span
                                   className={[
-                                    'rounded-full border px-2.5 py-1 text-xs font-semibold',
-                                    soldOut
-                                      ? 'border-rose-300 bg-rose-100 text-rose-700'
-                                      : 'border-sky-200 bg-sky-50 text-sky-700',
+                                    'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold leading-none',
+                                    normalStockTag.tone === 'warning'
+                                      ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                      : normalStockTag.tone === 'neutral'
+                                        ? 'border-slate-200 bg-slate-100 text-slate-500'
+                                        : 'border-sky-200 bg-sky-50 text-sky-700',
                                   ].join(' ')}
                                 >
-                                  {stockSummary}
+                                  {normalStockTag.tone === 'warning' && (
+                                    <span
+                                      className="h-1.5 w-1.5 rounded-full bg-amber-500"
+                                      aria-hidden="true"
+                                    />
+                                  )}
+                                  {normalStockTag.label}
                                 </span>
                               )}
                               {item.saleType === 'GROUPBUY' && groupBuySummary && (
-                                <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
+                                <span className="text-xs font-semibold text-sky-500">
                                   {groupBuySummary}
                                 </span>
                               )}
                             </div>
 
-                            <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <h3
-                                  className={[
-                                    'text-base font-bold',
-                                    soldOut ? 'text-slate-700' : 'text-slate-900',
-                                  ].join(' ')}
-                                >
-                                  {item.name}
-                                </h3>
-                                <p
-                                  className={[
-                                    'mt-1 text-sm',
-                                    soldOut ? 'text-slate-500' : 'text-slate-600',
-                                  ].join(' ')}
-                                >
-                                  {item.summary?.trim() || '상품 요약 정보가 아직 없어요.'}
-                                </p>
-                                <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-slate-500">
-                                  {descriptionPreview ||
-                                    '구매/수령/유의사항은 상세 보기에서 확인해주세요.'}
-                                </p>
-                              </div>
-                              <p
-                                className={[
-                                  'text-lg font-bold',
-                                  soldOut ? 'text-slate-700' : 'text-slate-900',
-                                ].join(' ')}
-                              >
-                                {formatMoney(item.price)}원
-                              </p>
-                            </div>
-
-                            <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => incrementSelected(item.id)}
-                                  disabled={!isPurchasable}
-                                  className={[
-                                    'rounded-lg px-3.5 py-2 text-sm font-semibold transition',
-                                    isPurchasable
-                                      ? 'border border-primary/25 bg-primary/[0.08] text-primary hover:bg-primary/[0.12]'
-                                    : soldOut
-                                        ? 'border border-rose-300 bg-gradient-to-r from-rose-600 to-red-500 text-white'
-                                        : 'border border-slate-200 bg-slate-100 text-slate-400',
-                                  ].join(' ')}
-                                >
-                                  {soldOut
-                                    ? '재고 소진'
-                                    : item.status === 'PREPARING'
+                            <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+                              <div className="flex items-center gap-2">
+                                {isPurchasable ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => incrementSelected(item.id)}
+                                      className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 active:scale-95"
+                                    >
+                                      담기
+                                    </button>
+                                    {selectedQty > 0 && (
+                                      <div className="inline-flex h-9 items-center overflow-hidden rounded-xl border border-slate-200 bg-white">
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setSelectedQuantity(item.id, selectedQty - 1)
+                                          }
+                                          className="h-full w-9 text-slate-600 hover:bg-slate-50"
+                                          aria-label={`${item.name} 수량 감소`}
+                                        >
+                                          −
+                                        </button>
+                                        <span className="grid h-full min-w-9 place-items-center border-x border-slate-200 px-2 text-sm font-bold text-slate-800">
+                                          {selectedQty}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setSelectedQuantity(item.id, selectedQty + 1)
+                                          }
+                                          className="h-full w-9 text-slate-600 hover:bg-slate-50"
+                                          aria-label={`${item.name} 수량 증가`}
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    )}
+                                  </>
+                                ) : soldOut ? (
+                                  <span className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-sm font-semibold text-rose-600">
+                                    구매 불가
+                                  </span>
+                                ) : (
+                                  <span className="text-sm font-semibold text-slate-400">
+                                    {item.status === 'PREPARING'
                                       ? '준비중'
-                                    : item.status === 'CLOSED'
+                                      : item.status === 'CLOSED'
                                         ? '마감'
-                                        : '선택'}
-                                </button>
-
-                                {selectedQty > 0 && (
-                                  <div className="inline-flex h-9 items-center overflow-hidden rounded-lg border border-slate-200 bg-white">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        setSelectedQuantity(item.id, selectedQty - 1)
-                                      }
-                                      className="h-full w-9 text-slate-600 hover:bg-slate-50"
-                                      aria-label={`${item.name} 수량 감소`}
-                                    >
-                                      −
-                                    </button>
-                                    <span className="grid h-full min-w-9 place-items-center border-x border-slate-200 px-2 text-sm font-semibold text-slate-800">
-                                      {selectedQty}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        setSelectedQuantity(item.id, selectedQty + 1)
-                                      }
-                                      className="h-full w-9 text-slate-600 hover:bg-slate-50"
-                                      aria-label={`${item.name} 수량 증가`}
-                                    >
-                                      +
-                                    </button>
-                                  </div>
+                                        : ''}
+                                  </span>
                                 )}
                               </div>
                               <Link
                                 to={`/projects/${projectId}/items/${item.id}`}
-                                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-primary"
+                                className="text-xs font-semibold text-slate-400 transition hover:text-primary"
                               >
-                                상세 보기
+                                상세 보기 →
                               </Link>
                             </div>
                           </div>

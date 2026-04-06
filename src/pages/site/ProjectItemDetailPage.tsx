@@ -22,6 +22,13 @@ function formatMoney(value?: number | null) {
 
 type ItemImageLike = { imageUrl?: string | null; url?: string | null };
 
+type NormalStockTag = {
+  label: string;
+  tone: 'info' | 'warning' | 'neutral';
+};
+
+const LOW_STOCK_THRESHOLD = 5;
+
 type ProductGalleryProps = {
   name: string;
   images: string[];
@@ -36,7 +43,7 @@ type PurchaseCardProps = {
   saleTypeLabel: string;
   isPurchasable: boolean;
   isSoldOut: boolean;
-  stockSummary: string | null;
+  normalStockTag: NormalStockTag | null;
   groupBuySummary: string | null;
   onAddToCart: () => void;
   onBuyNow: () => void;
@@ -140,7 +147,7 @@ function PurchaseCard({
   saleTypeLabel,
   isPurchasable,
   isSoldOut,
-  stockSummary,
+  normalStockTag,
   groupBuySummary,
   onAddToCart,
   onBuyNow,
@@ -173,16 +180,29 @@ function PurchaseCard({
           {formatMoney(item.price)}원
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
-          {item.saleType === 'NORMAL' && stockSummary && (
+          {item.saleType === 'NORMAL' && isSoldOut && (
+            <span className="inline-flex items-center rounded-full border border-rose-300 bg-rose-100 px-3.5 py-1.5 text-sm font-semibold leading-none text-rose-700">
+              SOLD OUT
+            </span>
+          )}
+          {item.saleType === 'NORMAL' && normalStockTag && (
             <span
               className={[
-                'inline-flex items-center rounded-full border px-3.5 py-1.5 text-sm font-semibold leading-none',
-                isSoldOut
-                  ? 'border-rose-200 bg-rose-50 text-rose-600'
-                  : 'border-sky-200 bg-sky-50 text-sky-700',
+                'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold leading-none',
+                normalStockTag.tone === 'warning'
+                  ? 'border-amber-200 bg-amber-50 text-amber-700'
+                  : normalStockTag.tone === 'neutral'
+                    ? 'border-slate-200 bg-slate-100 text-slate-500'
+                    : 'border-sky-200 bg-sky-50 text-sky-700',
               ].join(' ')}
             >
-              {stockSummary}
+              {normalStockTag.tone === 'warning' && (
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-amber-500"
+                  aria-hidden="true"
+                />
+              )}
+              {normalStockTag.label}
             </span>
           )}
           {item.saleType === 'GROUPBUY' && groupBuySummary && (
@@ -206,9 +226,9 @@ function PurchaseCard({
           <button
             type="button"
             disabled
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-6 text-sm font-semibold text-rose-500 sm:flex-1"
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-6 text-sm font-semibold text-slate-500 sm:flex-1"
           >
-            재고 소진
+            장바구니 불가
           </button>
         ) : (
           <button
@@ -232,9 +252,9 @@ function PurchaseCard({
           <button
             type="button"
             disabled
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-6 text-sm font-semibold text-rose-500 sm:flex-1"
+            className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 px-6 text-sm font-semibold text-slate-500 sm:flex-1"
           >
-            재고 소진
+            구매 불가
           </button>
         ) : item.status === 'PREPARING' ? (
           <button
@@ -385,6 +405,25 @@ export default function ProjectItemDetailPage() {
     return null;
   };
 
+  const getNormalStockTag = (availableStock: number | null): NormalStockTag | null => {
+    if (availableStock === null) {
+      return { label: '재고 확인 중', tone: 'neutral' };
+    }
+    if (availableStock <= 0) {
+      return null;
+    }
+    if (availableStock <= LOW_STOCK_THRESHOLD) {
+      return {
+        label: `재고 ${availableStock.toLocaleString()}개 남음`,
+        tone: 'warning',
+      };
+    }
+    return {
+      label: `재고 ${availableStock.toLocaleString()}개`,
+      tone: 'info',
+    };
+  };
+
   const detailImages = useMemo(() => {
     if (!item) return [];
     const rawUrls = (item as ItemResponse & { imageUrls?: string[] }).imageUrls;
@@ -488,13 +527,9 @@ export default function ProjectItemDetailPage() {
     availableStock !== null &&
     availableStock <= 0;
   const isPurchasable = item.status === 'OPEN' && !isSoldOut;
-  const stockSummary =
+  const normalStockTag =
     item.saleType === 'NORMAL'
-      ? availableStock !== null
-        ? availableStock > 0
-          ? `재고 ${availableStock.toLocaleString()}개`
-          : '재고 소진'
-        : '재고 정보 확인 중'
+      ? getNormalStockTag(availableStock)
       : null;
   const groupBuySummary =
     item.saleType === 'GROUPBUY'
@@ -584,7 +619,7 @@ export default function ProjectItemDetailPage() {
               saleTypeLabel={saleTypeLabel}
               isPurchasable={isPurchasable}
               isSoldOut={isSoldOut}
-              stockSummary={stockSummary}
+              normalStockTag={normalStockTag}
               groupBuySummary={groupBuySummary}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
