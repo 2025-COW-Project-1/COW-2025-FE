@@ -1,4 +1,6 @@
-﻿type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+﻿import { clearAuth } from "../utils/auth";
+
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(
   /\/$/,
@@ -68,6 +70,9 @@ export async function api<T>(
   const data: unknown = text ? safeJsonParse(text) : null;
 
   if (!res.ok) {
+    if (res.status === 401) {
+      clearAuth();
+    }
     let msg = extractErrorMessage(data);
     if (!msg && data) {
       msg = typeof data === "string" ? data : JSON.stringify(data, null, 2);
