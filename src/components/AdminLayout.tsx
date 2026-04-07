@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import AdminHeaderDesktop from './AdminHeaderDesktop';
 import AdminHeaderMobile from './AdminHeaderMobile';
+import { isLoggedIn } from '../utils/auth';
 
 export default function AdminLayout() {
+  if (!isLoggedIn()) {
+    return <Navigate to="/login" replace />;
+  }
+
   const location = useLocation();
   const [mobileHeaderVisible, setMobileHeaderVisible] = useState(true);
   const lastScrollYRef = useRef(0);
