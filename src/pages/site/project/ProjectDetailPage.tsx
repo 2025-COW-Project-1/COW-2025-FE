@@ -19,10 +19,8 @@ import { projectsApi } from '../../../api/site/projects';
 import { itemsApi } from '../../../api/site/items';
 import type { ItemResponse } from '../../../api/site/items';
 import { addCartItem } from '../../../utils/cart/cart';
-import {
-  getItemSaleTypeLabel,
-  getItemTypeLabel,
-} from '../../../constants/itemLabels';
+import { getItemSaleTypeLabel, getItemTypeLabel } from '../../../constants/itemLabels';
+import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 type NormalStockTag = {
   label: string;
@@ -425,6 +423,11 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
+      <RouteMetadata
+        title={`${project.title} | 명지공방`}
+        description={project.description?.trim() || project.summary}
+        image={project.thumbnailUrl ?? project.imageUrls?.[0]}
+      />
       <Reveal>
         <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
@@ -442,14 +445,7 @@ export default function ProjectDetailPage() {
                   className="px-4 py-2 text-sm"
                 />
 
-                {deadlineText && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                    <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
-                    마감일 {deadlineText}
-                  </span>
-                )}
-
-                {project.status === 'CLOSED' ? (
+                {project.status === 'CLOSED' && (
                   <button
                     type="button"
                     onClick={() => navigate(`/payouts?projectId=${project.id}`)}
@@ -459,20 +455,6 @@ export default function ProjectDetailPage() {
                     <Receipt className="h-4 w-4" />
                     정산
                   </button>
-                ) : (
-                  dDayLabel && (
-                    <span
-                      className={[
-                        'inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700',
-                        typeof project.dDay === 'number' && project.dDay <= 7
-                          ? 'font-bold text-rose-600'
-                          : '',
-                      ].join(' ')}
-                    >
-                      <Clock className="h-4 w-4 shrink-0 text-slate-500" />
-                      {dDayLabel}
-                    </span>
-                  )
                 )}
               </div>
 
@@ -556,6 +538,34 @@ export default function ProjectDetailPage() {
                   등록된 상세 설명이 없어요
                 </p>
               )}
+
+              {(deadlineText || (project.status !== 'CLOSED' && dDayLabel)) && (
+                <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-sm font-semibold text-slate-600">
+                  {deadlineText && (
+                    <span className="inline-flex items-center gap-2">
+                      <Calendar className="h-4 w-4 shrink-0 text-slate-400" />
+                      <span className="text-slate-500">마감일</span>
+                      <time dateTime={deadlineText} className="text-slate-700">
+                        {deadlineText}
+                      </time>
+                    </span>
+                  )}
+                  {project.status !== 'CLOSED' && dDayLabel && (
+                    <span
+                      className={[
+                        'inline-flex items-center gap-2',
+                        typeof project.dDay === 'number' && project.dDay <= 7
+                          ? 'font-bold text-rose-600'
+                          : '',
+                      ].join(' ')}
+                    >
+                      <Clock className="h-4 w-4 shrink-0 text-slate-400" />
+                      {dDayLabel}
+                    </span>
+                  )}
+                </div>
+              )}
+
             </div>
 
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">

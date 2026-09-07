@@ -10,6 +10,7 @@ import { itemsApi } from '../../../api/site/items';
 import type { ItemResponse } from '../../../api/site/items';
 import type { ProjectStatus } from '../../../api/site/projects';
 import { addCartItem } from '../../../utils/cart/cart';
+import RouteMetadata from '../../../components/seo/RouteMetadata';
 import { getItemSaleTypeLabel } from '../../../constants/itemLabels';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
@@ -119,7 +120,7 @@ function ProductGallery({
                 key={`${url}-${idx}`}
                 type="button"
                 onClick={() => onSelect(idx)}
-                className={`shrink-0 overflow-hidden rounded-2xl border transition ${
+                className={`shrink-0 overflow-hidden rounded-2xl border bg-slate-100 transition ${
                   idx === activeIndex
                     ? 'border-primary/70'
                     : 'border-slate-200 hover:border-primary/40'
@@ -345,7 +346,7 @@ function DetailImagesViewer({
             key={`${url}-${idx}`}
             type="button"
             onClick={() => onSelect(idx)}
-            className={`shrink-0 overflow-hidden rounded-2xl border transition ${
+            className={`shrink-0 overflow-hidden rounded-2xl border bg-slate-100 transition ${
               idx === activeIndex
                 ? 'border-primary/70'
                 : 'border-slate-200 hover:border-primary/40'
@@ -593,6 +594,11 @@ export default function ProjectItemDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
+      <RouteMetadata
+        title={`${item.name} | 명지공방`}
+        description={item.description?.trim() || item.summary?.trim() || `${item.name} 상품 정보`}
+        image={item.thumbnailUrl}
+      />
       <Reveal>
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <Link

@@ -7,6 +7,7 @@ import Reveal from '../../../components/ui/Reveal';
 import { noticesApi, type NoticeResponse } from '../../../api/site/notices';
 import { API_BASE } from '../../../api/core/client';
 import { formatYmd, parseDateLike } from '../../../utils/common/date';
+import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 const PUBLIC_ASSET_BASE = API_BASE.replace(/\/api\/?$/, '');
 
@@ -108,6 +109,11 @@ export default function NoticeDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
+      <RouteMetadata
+        title={`${notice.title} | 명지공방`}
+        description={notice.content?.trim() || '명지공방 공지사항'}
+        image={images[0]}
+      />
       <Reveal>
         <Link
           to="/notices"
