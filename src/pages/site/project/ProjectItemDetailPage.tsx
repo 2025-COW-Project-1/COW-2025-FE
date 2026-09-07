@@ -85,14 +85,14 @@ function ProductGallery({
   const activeImage = images[activeIndex];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="aspect-5/6 w-full">
+        <div className="aspect-3/4 w-full">
           {activeImage ? (
             <button
               type="button"
               onClick={() => onOpen(activeImage)}
-              className="h-full w-full"
+              className="block h-full w-full"
               aria-label="대표 이미지 크게 보기"
             >
               <img
@@ -100,7 +100,7 @@ function ProductGallery({
                 alt={name}
                 loading="eager"
                 decoding="async"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             </button>
           ) : (
@@ -131,7 +131,7 @@ function ProductGallery({
                   alt={`${name} 썸네일 ${idx + 1}`}
                   loading="lazy"
                   decoding="async"
-                  className="h-20 w-20 object-cover"
+                  className="block h-20 w-15 bg-white object-contain"
                 />
               </button>
             ))}
@@ -319,7 +319,7 @@ function DetailImagesViewer({
   return (
     <div className="mt-5 space-y-4">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-        <div className="aspect-5/6 w-full">
+        <div className="aspect-3/4 w-full">
           {preview && (
             <button
               type="button"
@@ -332,7 +332,7 @@ function DetailImagesViewer({
                 alt={`${name} 상세 이미지 ${activeIndex + 1}`}
                 loading="eager"
                 decoding="async"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             </button>
           )}
@@ -357,7 +357,7 @@ function DetailImagesViewer({
               alt={`${name} 상세 썸네일 ${idx + 1}`}
               loading="lazy"
               decoding="async"
-              className="h-20 w-20 object-cover"
+              className="block h-20 w-15 bg-white object-contain"
             />
           </button>
         ))}
@@ -405,7 +405,9 @@ export default function ProjectItemDetailPage() {
     return null;
   };
 
-  const getNormalStockTag = (availableStock: number | null): NormalStockTag | null => {
+  const getNormalStockTag = (
+    availableStock: number | null,
+  ): NormalStockTag | null => {
     if (availableStock === null) {
       return { label: '재고 확인 중', tone: 'neutral' };
     }
@@ -528,9 +530,7 @@ export default function ProjectItemDetailPage() {
     availableStock <= 0;
   const isPurchasable = item.status === 'OPEN' && !isSoldOut;
   const normalStockTag =
-    item.saleType === 'NORMAL'
-      ? getNormalStockTag(availableStock)
-      : null;
+    item.saleType === 'NORMAL' ? getNormalStockTag(availableStock) : null;
   const groupBuySummary =
     item.saleType === 'GROUPBUY'
       ? targetQty !== null && fundedQty !== null

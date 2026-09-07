@@ -146,7 +146,10 @@ function getJournalErrorMessage(error: unknown): string {
       if (normalized.includes('itemtype')) {
         return '저널 아이템만 사용할 수 있어요.';
       }
-      if (normalized.includes('journalfilekey') || normalized.includes('journal file')) {
+      if (
+        normalized.includes('journalfilekey') ||
+        normalized.includes('journal file')
+      ) {
         return '저널 파일이 등록되어 있지 않아요.';
       }
     }
@@ -156,7 +159,9 @@ function getJournalErrorMessage(error: unknown): string {
     }
   }
 
-  return rawMessage || '파일 처리 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.';
+  return (
+    rawMessage || '파일 처리 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.'
+  );
 }
 
 function isProjectCategoryJournalError(error: unknown): boolean {
@@ -183,7 +188,10 @@ function resolveContentType(file: File): string {
   return 'application/octet-stream';
 }
 
-function matchPresignItems(files: File[], items: PresignPutItem[]): PresignPutItem[] {
+function matchPresignItems(
+  files: File[],
+  items: PresignPutItem[],
+): PresignPutItem[] {
   const map = new Map<string, PresignPutItem[]>();
   items.forEach((item) => {
     const list = map.get(item.fileName) ?? [];
@@ -204,9 +212,20 @@ type SortableImageProps = {
   isDeleting?: boolean;
 };
 
-function SortableImageCard({ item, onRemove, isDeleting = false }: SortableImageProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
-    useSortable({ id: item.id });
+function SortableImageCard({
+  item,
+  onRemove,
+  isDeleting = false,
+}: SortableImageProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({ id: item.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -220,15 +239,19 @@ function SortableImageCard({ item, onRemove, isDeleting = false }: SortableImage
       ref={setNodeRef}
       style={style}
       className={[
-        'group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100',
+        'group relative h-28 w-21 overflow-hidden rounded-xl border border-slate-200 bg-white',
         isDragging ? 'opacity-60' : '',
         isOver ? 'ring-2 ring-primary/30' : '',
       ].join(' ')}
     >
       {src ? (
-        <img src={src} alt="상세 이미지 미리보기" className="h-28 w-full object-cover" />
+        <img
+          src={src}
+          alt="상세 이미지 미리보기"
+          className="block h-full w-full object-contain"
+        />
       ) : (
-        <div className="flex h-28 items-center justify-center text-[10px] font-semibold text-slate-400">
+        <div className="flex h-full items-center justify-center text-[10px] font-semibold text-slate-400">
           이미지가 없어요
         </div>
       )}
@@ -276,7 +299,8 @@ export default function AdminProjectItemCreatePage() {
   const confirm = useConfirm();
   const toast = useToast();
   const [item, setItem] = useState<AdminItemForm | null>(null);
-  const [projectCategory, setProjectCategory] = useState<AdminProjectCategory>('GOODS');
+  const [projectCategory, setProjectCategory] =
+    useState<AdminProjectCategory>('GOODS');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -296,7 +320,8 @@ export default function AdminProjectItemCreatePage() {
   const objectUrlsRef = useRef<string[]>([]);
   const itemRef = useRef<AdminItemForm | null>(null);
   const initialItemRef = useRef<AdminItemForm | null>(null);
-  const thumbnailSrc = item?.thumbnailPreviewUrl || item?.thumbnailUrl || undefined;
+  const thumbnailSrc =
+    item?.thumbnailPreviewUrl || item?.thumbnailUrl || undefined;
   const justSavedTimerRef = useRef<number | null>(null);
 
   const sensors = useSensors(
@@ -312,7 +337,9 @@ export default function AdminProjectItemCreatePage() {
   const revokePreviewUrl = useCallback((url?: string) => {
     if (!url) return;
     URL.revokeObjectURL(url);
-    objectUrlsRef.current = objectUrlsRef.current.filter((item) => item !== url);
+    objectUrlsRef.current = objectUrlsRef.current.filter(
+      (item) => item !== url,
+    );
   }, []);
 
   useEffect(() => {
@@ -320,7 +347,11 @@ export default function AdminProjectItemCreatePage() {
     if (!initialItemRef.current && item) {
       initialItemRef.current = {
         ...item,
-        images: item.images.map((image) => ({ ...image, file: undefined, previewUrl: undefined })),
+        images: item.images.map((image) => ({
+          ...image,
+          file: undefined,
+          previewUrl: undefined,
+        })),
       };
     }
   }, [item]);
@@ -329,7 +360,8 @@ export default function AdminProjectItemCreatePage() {
     return () => {
       objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       objectUrlsRef.current = [];
-      if (justSavedTimerRef.current) window.clearTimeout(justSavedTimerRef.current);
+      if (justSavedTimerRef.current)
+        window.clearTimeout(justSavedTimerRef.current);
     };
   }, []);
 
@@ -348,7 +380,10 @@ export default function AdminProjectItemCreatePage() {
     setStockQtyInput(item.stockQty === undefined ? '' : String(item.stockQty));
   }, [item?.stockQty, isEditingStockQty, item]);
 
-  const digitsOnly = useCallback((value: string) => value.replace(/[^\d]/g, ''), []);
+  const digitsOnly = useCallback(
+    (value: string) => value.replace(/[^\d]/g, ''),
+    [],
+  );
 
   const normalizeDigits = useCallback(
     (value: string) => {
@@ -373,7 +408,11 @@ export default function AdminProjectItemCreatePage() {
         setItem(createEmptyItem());
       } catch (err) {
         if (!active) return;
-        setError(err instanceof Error ? err.message : '프로젝트 정보를 불러오지 못했어요.');
+        setError(
+          err instanceof Error
+            ? err.message
+            : '프로젝트 정보를 불러오지 못했어요.',
+        );
       } finally {
         if (active) setLoading(false);
       }
@@ -393,7 +432,8 @@ export default function AdminProjectItemCreatePage() {
 
   const getValidation = useCallback(
     (current: AdminItemForm): ValidationResult | null => {
-      if (!current.name.trim()) return { field: 'name', message: '상품 명을 입력해주세요' };
+      if (!current.name.trim())
+        return { field: 'name', message: '상품 명을 입력해주세요' };
       if (current.itemType === 'DIGITAL_JOURNAL') {
         if (projectCategory !== 'JOURNAL') {
           return {
@@ -403,7 +443,10 @@ export default function AdminProjectItemCreatePage() {
           };
         }
         if (!current.journalFileKey?.trim()) {
-          return { field: 'journalFile', message: '저널 파일을 업로드해주세요' };
+          return {
+            field: 'journalFile',
+            message: '저널 파일을 업로드해주세요',
+          };
         }
         return null;
       }
@@ -414,7 +457,10 @@ export default function AdminProjectItemCreatePage() {
         return { field: 'description', message: '상세 설명을 입력해주세요' };
       if (!Number.isFinite(current.price) || current.price <= 0)
         return { field: 'price', message: '가격을 입력해주세요' };
-      if (current.saleType === 'GROUPBUY' && (!current.targetQty || current.targetQty <= 0)) {
+      if (
+        current.saleType === 'GROUPBUY' &&
+        (!current.targetQty || current.targetQty <= 0)
+      ) {
         return { field: 'targetQty', message: '목표 수량을 입력해주세요' };
       }
       return null;
@@ -450,8 +496,12 @@ export default function AdminProjectItemCreatePage() {
       status: current.status,
       journalFileKey: null,
       thumbnailKey: current.thumbnailKey?.trim() ?? '',
-      targetQty: current.saleType === 'GROUPBUY' ? Number(current.targetQty ?? 0) || null : null,
-      fundedQty: current.saleType === 'GROUPBUY' ? Number(current.fundedQty ?? 0) : null,
+      targetQty:
+        current.saleType === 'GROUPBUY'
+          ? Number(current.targetQty ?? 0) || null
+          : null,
+      fundedQty:
+        current.saleType === 'GROUPBUY' ? Number(current.fundedQty ?? 0) : null,
       stockQty:
         current.saleType === 'NORMAL'
           ? current.stockQty === undefined || current.stockQty === null
@@ -463,13 +513,19 @@ export default function AdminProjectItemCreatePage() {
   }, []);
 
   const uploadImages = useCallback(
-    async (targetItemId: string, uploadItems: Array<{ id: string; file: File }>, baseOrder: number) => {
+    async (
+      targetItemId: string,
+      uploadItems: Array<{ id: string; file: File }>,
+      baseOrder: number,
+    ) => {
       if (!uploadItems.length) return;
 
       setItem((prev) => {
         if (!prev) return prev;
         const nextImages = prev.images.map((img) =>
-          uploadItems.some((u) => u.id === img.id) ? { ...img, isUploading: true, error: null } : img,
+          uploadItems.some((u) => u.id === img.id)
+            ? { ...img, isUploading: true, error: null }
+            : img,
         );
         return { ...prev, images: nextImages, imageUploadError: null };
       });
@@ -480,9 +536,14 @@ export default function AdminProjectItemCreatePage() {
       }));
 
       try {
-        const res = await adminItemsApi.presignImages(targetItemId, { files: payloadFiles });
+        const res = await adminItemsApi.presignImages(targetItemId, {
+          files: payloadFiles,
+        });
         const items = res.items ?? [];
-        const matched = matchPresignItems(uploadItems.map((i) => i.file), items);
+        const matched = matchPresignItems(
+          uploadItems.map((i) => i.file),
+          items,
+        );
 
         await Promise.all(
           matched.map((target, idx) =>
@@ -520,7 +581,8 @@ export default function AdminProjectItemCreatePage() {
             const target = matched[index];
             if (!target) return image;
             const expectedOrder = baseOrder + index;
-            const saved = savedByOrder.get(expectedOrder) ?? savedByKey.get(target.key);
+            const saved =
+              savedByOrder.get(expectedOrder) ?? savedByKey.get(target.key);
             return {
               ...image,
               key: target.key,
@@ -540,7 +602,8 @@ export default function AdminProjectItemCreatePage() {
           return {
             ...prev,
             images: prev.images.filter((image) => !failedIds.has(image.id)),
-            imageUploadError: err instanceof Error ? err.message : '업로드에 실패했어요',
+            imageUploadError:
+              err instanceof Error ? err.message : '업로드에 실패했어요',
           };
         });
       }
@@ -570,7 +633,8 @@ export default function AdminProjectItemCreatePage() {
         return target.key;
       } catch (err) {
         updateItem({
-          thumbnailUploadError: err instanceof Error ? err.message : '업로드에 실패했어요',
+          thumbnailUploadError:
+            err instanceof Error ? err.message : '업로드에 실패했어요',
         });
         toast.error(err instanceof Error ? err.message : '업로드에 실패했어요');
         return null;
@@ -586,7 +650,8 @@ export default function AdminProjectItemCreatePage() {
       if (!item || !files.length) return;
       const file = files[0];
       if (!(file instanceof File) || file.size <= 0) {
-        const message = '유효한 파일이 아니거나 0바이트 파일이에요. 다시 선택해 주세요.';
+        const message =
+          '유효한 파일이 아니거나 0바이트 파일이에요. 다시 선택해 주세요.';
         updateItem({ thumbnailUploadError: message });
         toast.error(message);
         return;
@@ -604,7 +669,14 @@ export default function AdminProjectItemCreatePage() {
 
       await uploadThumbnail(file, { itemId: item.id });
     },
-    [createPreviewUrl, item, revokePreviewUrl, toast, updateItem, uploadThumbnail],
+    [
+      createPreviewUrl,
+      item,
+      revokePreviewUrl,
+      toast,
+      updateItem,
+      uploadThumbnail,
+    ],
   );
 
   const handleImagesUpload = useCallback(
@@ -635,7 +707,9 @@ export default function AdminProjectItemCreatePage() {
       if (!item.id) return;
       const current = itemRef.current;
       if (!current) return;
-      const baseOrder = current.images.filter((img) => Boolean(img.imageId)).length;
+      const baseOrder = current.images.filter((img) =>
+        Boolean(img.imageId),
+      ).length;
       await uploadImages(item.id, uploadItems, baseOrder);
     },
     [createPreviewUrl, item, uploadImages],
@@ -666,7 +740,11 @@ export default function AdminProjectItemCreatePage() {
         if (!target) throw new Error('업로드 URL이 없어요');
 
         await uploadToPresignedUrl(target.uploadUrl, file, contentType);
-        if (currentItemId && prevJournalFileKey && prevJournalFileKey !== target.key) {
+        if (
+          currentItemId &&
+          prevJournalFileKey &&
+          prevJournalFileKey !== target.key
+        ) {
           try {
             await adminItemsApi.deleteJournal(currentItemId);
           } catch {
@@ -698,7 +776,15 @@ export default function AdminProjectItemCreatePage() {
         setJournalUploading(false);
       }
     },
-    [confirm, journalUploading, navigate, projectCategory, projectId, toast, updateItem],
+    [
+      confirm,
+      journalUploading,
+      navigate,
+      projectCategory,
+      projectId,
+      toast,
+      updateItem,
+    ],
   );
 
   const handleJournalDownload = useCallback(async () => {
@@ -772,7 +858,9 @@ export default function AdminProjectItemCreatePage() {
       toast.success('삭제했어요');
     } catch (err) {
       updateItem(prev);
-      setError(err instanceof Error ? err.message : '대표 이미지 삭제에 실패했어요.');
+      setError(
+        err instanceof Error ? err.message : '대표 이미지 삭제에 실패했어요.',
+      );
       toast.error('삭제에 실패했어요');
     } finally {
       setThumbnailDeleting(false);
@@ -801,7 +889,10 @@ export default function AdminProjectItemCreatePage() {
       if (target.previewUrl) revokePreviewUrl(target.previewUrl);
       setItem((prev) => {
         if (!prev) return prev;
-        return { ...prev, images: prev.images.filter((image) => image.id !== id) };
+        return {
+          ...prev,
+          images: prev.images.filter((image) => image.id !== id),
+        };
       });
 
       if (!current.id || !target.imageId) {
@@ -819,7 +910,8 @@ export default function AdminProjectItemCreatePage() {
           return {
             ...prev,
             images: prevImages,
-            imageUploadError: err instanceof Error ? err.message : '삭제에 실패했어요',
+            imageUploadError:
+              err instanceof Error ? err.message : '삭제에 실패했어요',
           };
         });
         toast.error('삭제에 실패했어요');
@@ -830,43 +922,45 @@ export default function AdminProjectItemCreatePage() {
     [confirm, deletingImageIds, revokePreviewUrl, toast],
   );
 
-  const handleDragEnd = useCallback(
-    async (event: DragEndEvent) => {
-      const current = itemRef.current;
-      if (!current) return;
-      if (current.images.some((img) => img.isUploading)) {
-        setError('업로드 중에는 순서를 바꿀 수 없어요.');
-        return;
-      }
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-      const oldIndex = current.images.findIndex((image) => image.id === active.id);
-      const newIndex = current.images.findIndex((image) => image.id === over.id);
-      if (oldIndex < 0 || newIndex < 0) return;
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const current = itemRef.current;
+    if (!current) return;
+    if (current.images.some((img) => img.isUploading)) {
+      setError('업로드 중에는 순서를 바꿀 수 없어요.');
+      return;
+    }
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = current.images.findIndex(
+      (image) => image.id === active.id,
+    );
+    const newIndex = current.images.findIndex((image) => image.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
 
-      const prevImages = current.images;
-      const nextImages = arrayMove(prevImages, oldIndex, newIndex);
-      setItem((prev) => (prev ? { ...prev, images: nextImages } : prev));
+    const prevImages = current.images;
+    const nextImages = arrayMove(prevImages, oldIndex, newIndex);
+    setItem((prev) => (prev ? { ...prev, images: nextImages } : prev));
 
-      if (!current.id) return;
-      const imageIds = nextImages
-        .map((image) => image.imageId)
-        .filter((imageId): imageId is string | number => imageId !== undefined && imageId !== null);
-      if (imageIds.length !== nextImages.length) {
-        setItem((prev) => (prev ? { ...prev, images: prevImages } : prev));
-        setError('정렬을 저장할 수 없어요. 잠시 후 다시 시도해 주세요.');
-        return;
-      }
+    if (!current.id) return;
+    const imageIds = nextImages
+      .map((image) => image.imageId)
+      .filter(
+        (imageId): imageId is string | number =>
+          imageId !== undefined && imageId !== null,
+      );
+    if (imageIds.length !== nextImages.length) {
+      setItem((prev) => (prev ? { ...prev, images: prevImages } : prev));
+      setError('정렬을 저장할 수 없어요. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
 
-      try {
-        await adminItemsApi.updateImagesOrder(current.id, { imageIds });
-      } catch (err) {
-        setItem((prev) => (prev ? { ...prev, images: prevImages } : prev));
-        setError(err instanceof Error ? err.message : '정렬 저장에 실패했어요.');
-      }
-    },
-    [],
-  );
+    try {
+      await adminItemsApi.updateImagesOrder(current.id, { imageIds });
+    } catch (err) {
+      setItem((prev) => (prev ? { ...prev, images: prevImages } : prev));
+      setError(err instanceof Error ? err.message : '정렬 저장에 실패했어요.');
+    }
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!item || !projectId) return;
@@ -876,8 +970,12 @@ export default function AdminProjectItemCreatePage() {
     const normalizedBase = {
       ...item,
       price: normalizedPriceStr === '' ? 0 : Number(normalizedPriceStr),
-      fundedQty: normalizedFundedQtyStr === '' ? 0 : Number(normalizedFundedQtyStr),
-      stockQty: normalizedStockQtyStr === '' ? undefined : Number(normalizedStockQtyStr),
+      fundedQty:
+        normalizedFundedQtyStr === '' ? 0 : Number(normalizedFundedQtyStr),
+      stockQty:
+        normalizedStockQtyStr === ''
+          ? undefined
+          : Number(normalizedStockQtyStr),
     };
     const normalized =
       normalizedBase.itemType === 'DIGITAL_JOURNAL'
@@ -891,10 +989,15 @@ export default function AdminProjectItemCreatePage() {
           }
         : normalizedBase;
     let nextForSave: AdminItemForm = normalized;
-    if (normalized.itemType === 'PHYSICAL' && !normalized.thumbnailKey?.trim()) {
+    if (
+      normalized.itemType === 'PHYSICAL' &&
+      !normalized.thumbnailKey?.trim()
+    ) {
       const pendingFile = pendingThumbnailRef.current;
       if (pendingFile) {
-        const uploadedKey = await uploadThumbnail(pendingFile, { itemId: normalized.id });
+        const uploadedKey = await uploadThumbnail(pendingFile, {
+          itemId: normalized.id,
+        });
         if (uploadedKey) {
           nextForSave = { ...normalized, thumbnailKey: uploadedKey };
         }
@@ -926,14 +1029,20 @@ export default function AdminProjectItemCreatePage() {
         const pendingImages = current.images
           .filter((img) => img.file && !img.imageId)
           .map((img) => ({ id: img.id, file: img.file as File }));
-        const baseOrder = current.images.filter((img) => Boolean(img.imageId)).length;
+        const baseOrder = current.images.filter((img) =>
+          Boolean(img.imageId),
+        ).length;
         await uploadImages(String(saved.id), pendingImages, baseOrder);
       }
 
       toast.success('저장했어요');
-      if (justSavedTimerRef.current) window.clearTimeout(justSavedTimerRef.current);
+      if (justSavedTimerRef.current)
+        window.clearTimeout(justSavedTimerRef.current);
       setJustSaved(true);
-      justSavedTimerRef.current = window.setTimeout(() => setJustSaved(false), 1500);
+      justSavedTimerRef.current = window.setTimeout(
+        () => setJustSaved(false),
+        1500,
+      );
       navigate(`/admin/projects/${projectId}/items`);
     } catch (err) {
       const message = err instanceof Error ? err.message : '저장에 실패했어요';
@@ -1007,17 +1116,24 @@ export default function AdminProjectItemCreatePage() {
     }
   }, [confirm, isDirty, navigate, projectId]);
 
-  const imageIds = useMemo(() => item?.images.map((image) => image.id) ?? [], [item?.images]);
+  const imageIds = useMemo(
+    () => item?.images.map((image) => image.id) ?? [],
+    [item?.images],
+  );
   const isJournalItem = item?.itemType === 'DIGITAL_JOURNAL';
   const isJournalProject = projectCategory === 'JOURNAL';
-  const projectCategoryLabel = isJournalProject ? '저널(JOURNAL)' : '상품(GOODS)';
+  const projectCategoryLabel = isJournalProject
+    ? '저널(JOURNAL)'
+    : '상품(GOODS)';
   const hasJournalFile = Boolean(item?.journalFileKey?.trim());
   const journalFileName = getFileNameFromKey(item?.journalFileKey);
   const isUploading =
     Boolean(item?.isUploadingThumbnail) ||
     Boolean(item?.images.some((img) => img.isUploading)) ||
     journalUploading;
-  const isDetailUploading = Boolean(item?.images.some((img) => img.isUploading));
+  const isDetailUploading = Boolean(
+    item?.images.some((img) => img.isUploading),
+  );
   const isCreateMode = !item?.id;
   const hasThumbnailKey = Boolean(item?.thumbnailKey?.trim());
   const hasAnyInput =
@@ -1031,9 +1147,14 @@ export default function AdminProjectItemCreatePage() {
     Boolean(item?.images.length);
   const hasPrice = isJournalItem ? true : normalizeDigits(priceInput) !== '';
   const isFormValid =
-    Boolean(item?.name.trim()) && hasPrice && (isJournalItem ? hasJournalFile : hasThumbnailKey);
+    Boolean(item?.name.trim()) &&
+    hasPrice &&
+    (isJournalItem ? hasJournalFile : hasThumbnailKey);
   const isSaveEnabled =
-    !saving && !isUploading && isFormValid && (isCreateMode ? hasAnyInput : isDirty);
+    !saving &&
+    !isUploading &&
+    isFormValid &&
+    (isCreateMode ? hasAnyInput : isDirty);
 
   if (!projectId) {
     return (
@@ -1056,7 +1177,9 @@ export default function AdminProjectItemCreatePage() {
               <BackArrowIcon className="h-5 w-5" />
               프로젝트 관리
             </button>
-            <h1 className="mt-2 font-heading text-3xl text-primary">상품 관리</h1>
+            <h1 className="mt-2 font-heading text-3xl text-primary">
+              상품 관리
+            </h1>
             <p className="mt-2 text-sm text-slate-600">
               상품 정보를 편집할 수 있어요
             </p>
@@ -1074,35 +1197,46 @@ export default function AdminProjectItemCreatePage() {
               {saving
                 ? '저장 중...'
                 : isUploading
-                ? '업로드 중...'
-                : justSaved
-                ? '저장 완료 ✓'
-                : '저장'}
+                  ? '업로드 중...'
+                  : justSaved
+                    ? '저장 완료 ✓'
+                    : '저장'}
             </button>
           </div>
         </div>
       </Reveal>
 
-      <Reveal delayMs={120} className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <Reveal
+        delayMs={120}
+        className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
         {loading && <p className="text-sm text-slate-500">불러오는 중...</p>}
-        {error && <p className="mb-4 text-sm font-semibold text-rose-600">{error}</p>}
+        {error && (
+          <p className="mb-4 text-sm font-semibold text-rose-600">{error}</p>
+        )}
 
         {item && (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 {item.name.trim() ? (
-                  <span className="text-base font-bold text-slate-900">{item.name}</span>
+                  <span className="text-base font-bold text-slate-900">
+                    {item.name}
+                  </span>
                 ) : (
                   <span className="inline-flex h-4 w-32 rounded-full bg-slate-200/80" />
                 )}
                 {item.summary && (
-                  <span className="text-xs font-semibold text-slate-500">{item.summary}</span>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {item.summary}
+                  </span>
                 )}
               </div>
               <select
                 value={item.status}
-                onChange={(e) => updateItem({ status: e.target.value as AdminItemStatus })}
+                onChange={(e) =>
+                  updateItem({ status: e.target.value as AdminItemStatus })
+                }
                 className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
               >
                 {STATUS_OPTIONS.map((option) => (
@@ -1160,17 +1294,24 @@ export default function AdminProjectItemCreatePage() {
                   );
                 })}
               </div>
-              <p className="mt-2 text-xs text-slate-500">{ITEMTYPE_HELPER_TEXT[item.itemType]}</p>
+              <p className="mt-2 text-xs text-slate-500">
+                {ITEMTYPE_HELPER_TEXT[item.itemType]}
+              </p>
               <div className="mt-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs text-slate-600">
-                <p className="font-semibold">현재 프로젝트 카테고리: {projectCategoryLabel}</p>
+                <p className="font-semibold">
+                  현재 프로젝트 카테고리: {projectCategoryLabel}
+                </p>
                 {!isJournalProject && (
                   <>
                     <p className="mt-1 text-amber-700">
-                      저널 상품/저널 파일 업로드를 사용하려면 프로젝트 카테고리를 JOURNAL로 바꿔야 해요.
+                      저널 상품/저널 파일 업로드를 사용하려면 프로젝트
+                      카테고리를 JOURNAL로 바꿔야 해요.
                     </p>
                     <button
                       type="button"
-                      onClick={() => navigate(`/admin/projects/${projectId}/edit`)}
+                      onClick={() =>
+                        navigate(`/admin/projects/${projectId}/edit`)
+                      }
                       className="mt-2 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold text-amber-800 hover:bg-amber-100"
                     >
                       프로젝트 설정으로 이동
@@ -1194,13 +1335,21 @@ export default function AdminProjectItemCreatePage() {
                 <input
                   type="text"
                   value={item.name}
-                  onChange={(e) => updateItem({ name: e.target.value, validationError: null })}
-                  placeholder={isJournalItem ? '저널명을 입력해주세요' : '상품명을 입력해주세요'}
+                  onChange={(e) =>
+                    updateItem({ name: e.target.value, validationError: null })
+                  }
+                  placeholder={
+                    isJournalItem
+                      ? '저널명을 입력해주세요'
+                      : '상품명을 입력해주세요'
+                  }
                   className={`${INPUT_CLASS} mt-2`}
                 />
               </div>
               <div>
-                <label className="text-sm font-bold text-slate-700">한 줄 설명</label>
+                <label className="text-sm font-bold text-slate-700">
+                  한 줄 설명
+                </label>
                 <input
                   type="text"
                   maxLength={255}
@@ -1209,11 +1358,15 @@ export default function AdminProjectItemCreatePage() {
                   placeholder="한 줄 설명을 입력해주세요 (최대 255자)"
                   className={`${INPUT_CLASS} mt-2`}
                 />
-                <p className="mt-1 text-[11px] text-slate-400">255자 이내로 입력해주세요</p>
+                <p className="mt-1 text-[11px] text-slate-400">
+                  255자 이내로 입력해주세요
+                </p>
               </div>
               {!isJournalItem && (
                 <div>
-                  <label className="text-sm font-bold text-slate-700">가격</label>
+                  <label className="text-sm font-bold text-slate-700">
+                    가격
+                  </label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -1243,7 +1396,9 @@ export default function AdminProjectItemCreatePage() {
               )}
               {!isJournalItem && (
                 <div>
-                  <label className="text-sm font-bold text-slate-700">판매 유형</label>
+                  <label className="text-sm font-bold text-slate-700">
+                    판매 유형
+                  </label>
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     {SALETYPE_OPTIONS.map((option) => (
                       <button
@@ -1252,9 +1407,16 @@ export default function AdminProjectItemCreatePage() {
                         onClick={() =>
                           updateItem({
                             saleType: option.value,
-                            targetQty: option.value === 'GROUPBUY' ? item.targetQty : undefined,
-                            fundedQty: option.value === 'GROUPBUY' ? item.fundedQty : 0,
-                            stockQty: option.value === 'NORMAL' ? item.stockQty : undefined,
+                            targetQty:
+                              option.value === 'GROUPBUY'
+                                ? item.targetQty
+                                : undefined,
+                            fundedQty:
+                              option.value === 'GROUPBUY' ? item.fundedQty : 0,
+                            stockQty:
+                              option.value === 'NORMAL'
+                                ? item.stockQty
+                                : undefined,
                           })
                         }
                         className={[
@@ -1272,7 +1434,9 @@ export default function AdminProjectItemCreatePage() {
               )}
               {!isJournalItem && item.saleType === 'NORMAL' && (
                 <div>
-                  <label className="text-sm font-bold text-slate-700">재고</label>
+                  <label className="text-sm font-bold text-slate-700">
+                    재고
+                  </label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -1282,13 +1446,18 @@ export default function AdminProjectItemCreatePage() {
                     onChange={(e) => {
                       const next = digitsOnly(e.target.value);
                       setStockQtyInput(next);
-                      updateItem({ stockQty: next === '' ? undefined : Number(next) });
+                      updateItem({
+                        stockQty: next === '' ? undefined : Number(next),
+                      });
                     }}
                     onBlur={() => {
                       setIsEditingStockQty(false);
                       const normalized = normalizeDigits(stockQtyInput);
                       setStockQtyInput(normalized);
-                      updateItem({ stockQty: normalized === '' ? undefined : Number(normalized) });
+                      updateItem({
+                        stockQty:
+                          normalized === '' ? undefined : Number(normalized),
+                      });
                     }}
                     className={`${INPUT_CLASS} mt-2`}
                   />
@@ -1296,7 +1465,9 @@ export default function AdminProjectItemCreatePage() {
               )}
               {!isJournalItem && item.saleType === 'GROUPBUY' && (
                 <div>
-                  <label className="text-sm font-bold text-slate-700">펀딩 수량</label>
+                  <label className="text-sm font-bold text-slate-700">
+                    펀딩 수량
+                  </label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -1312,7 +1483,9 @@ export default function AdminProjectItemCreatePage() {
                       setIsEditingFundedQty(false);
                       const normalized = normalizeDigits(fundedQtyInput);
                       setFundedQtyInput(normalized);
-                      updateItem({ fundedQty: normalized === '' ? 0 : Number(normalized) });
+                      updateItem({
+                        fundedQty: normalized === '' ? 0 : Number(normalized),
+                      });
                     }}
                     className={`${INPUT_CLASS} mt-2`}
                   />
@@ -1320,11 +1493,15 @@ export default function AdminProjectItemCreatePage() {
               )}
               {item.saleType === 'GROUPBUY' && !isJournalItem && (
                 <div>
-                  <label className="text-sm font-bold text-slate-700">목표 수량</label>
+                  <label className="text-sm font-bold text-slate-700">
+                    목표 수량
+                  </label>
                   <input
                     type="number"
                     value={item.targetQty ?? ''}
-                    onChange={(e) => updateItem({ targetQty: Number(e.target.value) })}
+                    onChange={(e) =>
+                      updateItem({ targetQty: Number(e.target.value) })
+                    }
                     placeholder="목표 수량을 입력해주세요"
                     className={`${INPUT_CLASS} mt-2`}
                   />
@@ -1348,13 +1525,36 @@ export default function AdminProjectItemCreatePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl bg-slate-50/70 p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-slate-500">대표 이미지</p>
+                  <p className="text-xs font-semibold text-slate-500">
+                    대표 이미지
+                  </p>
                   {item.isUploadingThumbnail && (
-                    <span className="text-xs font-semibold text-slate-400">업로드 중...</span>
+                    <span className="text-xs font-semibold text-slate-400">
+                      업로드 중...
+                    </span>
                   )}
                 </div>
 
-                <p className="mt-1 text-[11px] text-slate-400">대표 이미지는 1개만 등록할 수 있어요</p>
+                <p className="mt-1 text-[11px] text-slate-400">
+                  대표 이미지는 1개만 등록할 수 있어요. 상품 목록은 3:4 비율,
+                  상세 화면은 원본 비율을 유지해 표시돼요.
+                </p>
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
+                  <p className="text-[11px] font-bold text-slate-600">
+                    권장 등록 기준
+                  </p>
+                  <ul className="mt-2 space-y-1 text-[11px] leading-relaxed text-slate-500">
+                    <li>목록 대표 이미지: 3:4 비율, 최소 900x1200px 권장</li>
+                    <li>
+                      상세 이미지: 원본 비율 유지, 긴 이미지는 세로형으로 등록
+                      권장
+                    </li>
+                    <li>
+                      이미지 여백이 필요한 경우 흰 배경 위에 상품 전체가
+                      보이도록 제작
+                    </li>
+                  </ul>
+                </div>
                 {!thumbnailSrc && (
                   <label
                     onDragOver={(e) => e.preventDefault()}
@@ -1364,7 +1564,7 @@ export default function AdminProjectItemCreatePage() {
                       if (files.length) void handleThumbnailSelect([files[0]]);
                     }}
                     className={[
-                      'mt-3 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
+                      'mt-3 flex min-h-35 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
                       item.isUploadingThumbnail
                         ? 'pointer-events-none border-slate-200 text-slate-400 opacity-60'
                         : 'border-slate-200 text-slate-500 hover:border-primary/60 hover:text-primary',
@@ -1375,7 +1575,8 @@ export default function AdminProjectItemCreatePage() {
                       accept="image/*"
                       onChange={(e) => {
                         const files = Array.from(e.target.files ?? []);
-                        if (files.length) void handleThumbnailSelect([files[0]]);
+                        if (files.length)
+                          void handleThumbnailSelect([files[0]]);
                         e.currentTarget.value = '';
                       }}
                       className="hidden"
@@ -1393,12 +1594,39 @@ export default function AdminProjectItemCreatePage() {
                 )}
 
                 {item.thumbnailUploadError && (
-                  <p className="mt-2 text-xs text-rose-600">{item.thumbnailUploadError}</p>
+                  <p className="mt-2 text-xs text-rose-600">
+                    {item.thumbnailUploadError}
+                  </p>
                 )}
 
                 {thumbnailSrc && (
                   <div className="mt-3 overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
-                    <img src={thumbnailSrc} alt="대표 이미지 미리보기" className="h-56 w-full object-cover" />
+                    <div className="grid gap-4 p-3 sm:grid-cols-[minmax(0,260px)_96px] sm:items-start">
+                      <div>
+                        <p className="mb-2 text-[11px] font-bold text-slate-500">
+                          상세 화면 미리보기
+                        </p>
+                        <div className="aspect-3/4 w-full max-w-65 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                          <img
+                            src={thumbnailSrc}
+                            alt="대표 이미지 미리보기"
+                            className="h-full w-full object-contain object-top"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="mb-2 text-[11px] font-bold text-slate-500">
+                          목록 카드
+                        </p>
+                        <div className="aspect-3/4 w-24 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                          <img
+                            src={thumbnailSrc}
+                            alt="목록 카드 이미지 미리보기"
+                            className="h-full w-full object-contain object-top"
+                          />
+                        </div>
+                      </div>
+                    </div>
                     <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 bg-white px-4 py-3">
                       <label className="cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
                         교체 업로드
@@ -1407,7 +1635,8 @@ export default function AdminProjectItemCreatePage() {
                           accept="image/*"
                           onChange={(e) => {
                             const files = Array.from(e.target.files ?? []);
-                            if (files.length) void handleThumbnailSelect([files[0]]);
+                            if (files.length)
+                              void handleThumbnailSelect([files[0]]);
                             e.currentTarget.value = '';
                           }}
                           className="hidden"
@@ -1430,7 +1659,9 @@ export default function AdminProjectItemCreatePage() {
                 <div className="rounded-2xl bg-slate-50/70 p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-semibold text-slate-500">상세 이미지</p>
+                      <p className="text-xs font-semibold text-slate-500">
+                        상세 이미지
+                      </p>
                       <p className="mt-1 text-[11px] text-slate-400">
                         상세 이미지는 여러 장 등록할 수 있어요
                       </p>
@@ -1452,7 +1683,7 @@ export default function AdminProjectItemCreatePage() {
                       const files = Array.from(e.dataTransfer.files ?? []);
                       if (files.length) void handleImagesUpload(files);
                     }}
-                    className="mt-3 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 px-4 py-4 text-center text-xs font-semibold text-slate-500 transition hover:border-primary/60 hover:text-primary"
+                    className="mt-3 flex min-h-35 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 px-4 py-4 text-center text-xs font-semibold text-slate-500 transition hover:border-primary/60 hover:text-primary"
                   >
                     <input
                       type="file"
@@ -1465,7 +1696,9 @@ export default function AdminProjectItemCreatePage() {
                       }}
                       className="hidden"
                     />
-                    {isDetailUploading ? '업로드 중...' : '드래그 & 드롭하거나 클릭해서 업로드해주세요'}
+                    {isDetailUploading
+                      ? '업로드 중...'
+                      : '드래그 & 드롭하거나 클릭해서 업로드해주세요'}
                   </label>
 
                   {item.images.length === 0 ? (
@@ -1473,9 +1706,16 @@ export default function AdminProjectItemCreatePage() {
                       업로드된 이미지가 없어요
                     </div>
                   ) : (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                      <SortableContext items={imageIds} strategy={rectSortingStrategy}>
-                        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={imageIds}
+                        strategy={rectSortingStrategy}
+                      >
+                        <div className="mt-3 flex flex-wrap gap-3">
                           {item.images.map((image) => (
                             <SortableImageCard
                               key={image.id}
@@ -1496,24 +1736,34 @@ export default function AdminProjectItemCreatePage() {
               <div className="space-y-4">
                 <div className="rounded-2xl bg-slate-50/70 p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-slate-500">저널 파일</p>
+                    <p className="text-xs font-semibold text-slate-500">
+                      저널 파일
+                    </p>
                     {journalUploading && (
-                      <span className="text-xs font-semibold text-slate-400">업로드 중...</span>
+                      <span className="text-xs font-semibold text-slate-400">
+                        업로드 중...
+                      </span>
                     )}
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-400">파일을 업로드해 주세요.</p>
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    파일을 업로드해 주세요.
+                  </p>
 
                   <label
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
                       e.preventDefault();
                       const files = Array.from(e.dataTransfer.files ?? []);
-                      if (!journalUploading && isJournalProject && files.length) {
+                      if (
+                        !journalUploading &&
+                        isJournalProject &&
+                        files.length
+                      ) {
                         void handleJournalUpload([files[0]]);
                       }
                     }}
                     className={[
-                      'mt-3 flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
+                      'mt-3 flex min-h-30 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
                       journalUploading || !isJournalProject
                         ? 'pointer-events-none border-slate-200 text-slate-400 opacity-60'
                         : 'border-slate-200 text-slate-500 hover:border-primary/60 hover:text-primary',
@@ -1524,7 +1774,11 @@ export default function AdminProjectItemCreatePage() {
                       disabled={!isJournalProject}
                       onChange={(e) => {
                         const files = Array.from(e.target.files ?? []);
-                        if (!journalUploading && isJournalProject && files.length) {
+                        if (
+                          !journalUploading &&
+                          isJournalProject &&
+                          files.length
+                        ) {
                           void handleJournalUpload([files[0]]);
                         }
                         e.currentTarget.value = '';
@@ -1541,7 +1795,9 @@ export default function AdminProjectItemCreatePage() {
                       <label
                         className={[
                           'cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50',
-                          journalUploading ? 'pointer-events-none opacity-60' : '',
+                          journalUploading
+                            ? 'pointer-events-none opacity-60'
+                            : '',
                         ].join(' ')}
                       >
                         교체
@@ -1549,7 +1805,8 @@ export default function AdminProjectItemCreatePage() {
                           type="file"
                           onChange={(e) => {
                             const files = Array.from(e.target.files ?? []);
-                            if (!journalUploading && files.length) void handleJournalUpload([files[0]]);
+                            if (!journalUploading && files.length)
+                              void handleJournalUpload([files[0]]);
                             e.currentTarget.value = '';
                           }}
                           className="hidden"
@@ -1579,7 +1836,9 @@ export default function AdminProjectItemCreatePage() {
                   </div>
 
                   {hasJournalFile ? (
-                    <p className="mt-3 text-xs font-semibold text-slate-600">{journalFileName}</p>
+                    <p className="mt-3 text-xs font-semibold text-slate-600">
+                      {journalFileName}
+                    </p>
                   ) : (
                     <div className="mt-3 flex h-20 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white/60 text-xs font-semibold text-slate-400">
                       등록된 파일이 없습니다.
@@ -1588,7 +1847,6 @@ export default function AdminProjectItemCreatePage() {
                 </div>
               </div>
             )}
-
           </div>
         )}
       </Reveal>
