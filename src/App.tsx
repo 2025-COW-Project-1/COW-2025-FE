@@ -37,6 +37,7 @@ import AdminFormsListPage from './pages/admin/forms/AdminFormsListPage';
 import AdminFormDetailPage from './pages/admin/forms/AdminFormDetailPage';
 import FloatingSns from './components/social/FloatingSns';
 import GoogleAnalytics from './components/analytics/GoogleAnalytics';
+import { ApplicationRouteMetadata } from './components/seo/RouteMetadata';
 
 export default function App() {
   const location = useLocation();
@@ -46,6 +47,7 @@ export default function App() {
 
   return (
     <>
+      <ApplicationRouteMetadata />
       <GoogleAnalytics />
       <Routes>
         <Route element={<SiteLayout />}>

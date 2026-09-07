@@ -5,6 +5,7 @@ import Reveal from '../../../components/ui/Reveal';
 import { noticesApi, type NoticeResponse } from '../../../api/site/notices';
 import { API_BASE } from '../../../api/core/client';
 import { formatYmd } from '../../../utils/common/date';
+import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 const FILTER_OPTIONS = [
   { value: 'all', label: '전체' },
@@ -141,6 +142,11 @@ export default function NoticesPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
+      <RouteMetadata
+        title="공지사항 | 명지공방"
+        description="명지공방 프로젝트 소식과 공지사항을 확인하세요."
+        image={notices[0] ? getNoticeImages(notices[0])[0] : undefined}
+      />
       <Reveal>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

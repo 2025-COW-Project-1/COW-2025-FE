@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { loadAdminContent, type AdminContent } from '../../../utils/admin/content';
 import { introApi } from '../../../api/site/intro';
 import IntroduceDetailView from '../../../features/introduce/IntroduceDetailView';
+import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 type FallbackDetail = {
   brandTitle?: string;
@@ -45,6 +46,11 @@ export default function AboutPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
+      <RouteMetadata
+        title={`${detail?.brand?.title ?? fallback.brandTitle ?? '명지공방 소개'} | 명지공방`}
+        description={detail?.intro?.body ?? fallback.introBody ?? '명지공방의 소개와 활동 방향을 확인하세요.'}
+        image={detail?.currentLogo?.imageUrl}
+      />
       <IntroduceDetailView data={detail ?? null} fallback={fallback} />
     </div>
   );
