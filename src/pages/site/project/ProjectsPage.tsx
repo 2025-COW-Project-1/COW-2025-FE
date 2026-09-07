@@ -10,6 +10,7 @@ import { payoutsApi } from '../../../api/site/payouts';
 import type { PayoutReport } from '../../../types/payouts';
 import type { Project } from '../../../api/site/projects';
 import { sortProjects } from '../../../utils/project/sort';
+import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 type TabValue = 'all' | 'OPEN' | 'PREPARING' | 'CLOSED' | 'PAYOUT';
 
@@ -167,6 +168,11 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <RouteMetadata
+        title="프로젝트 목록 | 명지공방"
+        description="명지공방의 진행 중인 프로젝트와 상품을 확인하세요."
+        image={projects[0]?.thumbnailUrl}
+      />
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
         <Reveal>
           <section className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-sky-50/70 px-5 py-6 shadow-sm sm:px-8 sm:py-8">
