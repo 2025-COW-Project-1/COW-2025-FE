@@ -226,15 +226,19 @@ function SortableImageCard({ item, onRemove, isDeleting = false }: SortableImage
       ref={setNodeRef}
       style={style}
       className={[
-        'group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100',
+        'group relative h-28 w-[84px] overflow-hidden rounded-xl border border-slate-200 bg-white',
         isDragging ? 'opacity-60' : '',
         isOver ? 'ring-2 ring-primary/30' : '',
       ].join(' ')}
     >
       {src ? (
-        <img src={src} alt="상세 이미지 미리보기" className="aspect-square w-full object-contain" />
+        <img
+          src={src}
+          alt="상세 이미지 미리보기"
+          className="block h-full w-full object-contain"
+        />
       ) : (
-        <div className="flex h-28 items-center justify-center text-[10px] font-semibold text-slate-400">
+        <div className="flex h-full items-center justify-center text-[10px] font-semibold text-slate-400">
           이미지가 없어요
         </div>
       )}
@@ -1370,7 +1374,17 @@ export default function AdminItemDetailPage() {
                   )}
                 </div>
 
-                <p className="mt-1 text-[11px] text-slate-400">대표 이미지는 1개만 등록할 수 있어요</p>
+                <p className="mt-1 text-[11px] text-slate-400">
+                  대표 이미지는 1개만 등록할 수 있어요. 상품 목록은 3:4 비율, 상세 화면은 원본 비율을 유지해 표시돼요.
+                </p>
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
+                  <p className="text-[11px] font-bold text-slate-600">권장 등록 기준</p>
+                  <ul className="mt-2 space-y-1 text-[11px] leading-relaxed text-slate-500">
+                    <li>목록 대표 이미지: 3:4 비율, 최소 900x1200px 권장</li>
+                    <li>상세 이미지: 원본 비율 유지, 긴 이미지는 세로형으로 등록 권장</li>
+                    <li>이미지 여백이 필요한 경우 흰 배경 위에 상품 전체가 보이도록 제작</li>
+                  </ul>
+                </div>
 
                 {!thumbnailSrc && (
                   <label
@@ -1415,7 +1429,32 @@ export default function AdminItemDetailPage() {
 
                 {thumbnailSrc && (
                   <div className="mt-3 overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
-                    <img src={thumbnailSrc} alt="대표 이미지 미리보기" className="aspect-square w-full object-contain" />
+                    <div className="grid gap-4 p-3 sm:grid-cols-[minmax(0,260px)_96px] sm:items-start">
+                      <div>
+                        <p className="mb-2 text-[11px] font-bold text-slate-500">
+                          상세 화면 미리보기
+                        </p>
+                        <div className="aspect-3/4 w-full max-w-[260px] overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                          <img
+                            src={thumbnailSrc}
+                            alt="대표 이미지 미리보기"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="mb-2 text-[11px] font-bold text-slate-500">
+                          목록 카드
+                        </p>
+                        <div className="aspect-3/4 w-24 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                          <img
+                            src={thumbnailSrc}
+                            alt="목록 카드 이미지 미리보기"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+                      </div>
+                    </div>
                     <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 bg-white px-4 py-3">
                       <label className="cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
                         교체
@@ -1492,7 +1531,7 @@ export default function AdminItemDetailPage() {
                   ) : (
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                       <SortableContext items={imageIds} strategy={rectSortingStrategy}>
-                        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+                        <div className="mt-3 flex flex-wrap gap-3">
                           {item.images.map((image) => (
                             <SortableImageCard
                               key={image.id}
