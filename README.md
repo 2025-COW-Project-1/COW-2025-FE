@@ -64,12 +64,15 @@ src/
 - 개발 확인용 footer 배지는 로컬 개발 환경에서 자동 표시되며, 배포 환경에서는 `VITE_SHOW_GA4_FOOTER_BADGE=true`일 때만 표시됩니다.
 - `VITE_GA4_DEBUG_MODE=true`를 설정하면 GA4 DebugView에서 page_view 이벤트를 확인할 수 있습니다.
 - `VITE_GA4_REPORT_URL`에 Analytics 리포트 URL을 넣으면 footer 배지에서 GA4 화면으로 이동할 수 있습니다.
+- `SITE_ORIGIN`(prerender)과 `VITE_SITE_ORIGIN`(SPA)은 canonical, Open Graph, sitemap에 쓰는 같은 운영 origin이며 기본값은 `https://mju-craft.shop`입니다. localhost URL은 prerender에서 허용하지 않습니다.
 
 ## 스크립트
 
 ```bash
 npm run dev      # 개발 서버 실행
 npm run build    # 타입 체크 + 프로덕션 빌드
+npm run prerender # Vite build 결과에 공개 콘텐츠 raw HTML, sitemap, robots 생성
+npm run verify:prerender # 생성 HTML의 metadata와 콘텐츠 확인
 npm run preview  # 빌드 결과 미리보기
 npm run lint     # ESLint 실행
 ```

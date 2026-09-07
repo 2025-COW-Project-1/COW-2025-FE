@@ -14,6 +14,7 @@ import { itemsApi } from '../../../api/site/items';
 import type { ItemResponse } from '../../../api/site/items';
 import { addCartItem } from '../../../utils/cart/cart';
 import { getItemSaleTypeLabel, getItemTypeLabel } from '../../../constants/itemLabels';
+import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 type NormalStockTag = {
   label: string;
@@ -399,6 +400,11 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
+      <RouteMetadata
+        title={`${project.title} | 명지공방`}
+        description={project.description?.trim() || project.summary}
+        image={project.thumbnailUrl ?? project.imageUrls?.[0]}
+      />
       <Reveal>
         <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">

@@ -9,6 +9,7 @@ import IntroduceMainView from "../../../features/introduce/IntroduceMainView";
 import { projectsApi } from "../../../api/site/projects";
 import { parseDateLike } from "../../../utils/common/date";
 import ProjectCard from "../../../components/project/ProjectCard";
+import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 const CAROUSEL_PEEK = false;
 
@@ -131,6 +132,11 @@ export default function MainPage() {
 
   return (
     <div>
+      <RouteMetadata
+        title={`${introMain?.title ?? '명지공방'} | 명지공방`}
+        description={introMain?.summary ?? introMain?.subtitle ?? '명지대학교 문화와 굿즈를 만드는 명지공방입니다.'}
+        image={introMain?.heroLogos?.[0]?.imageUrl}
+      />
       <IntroduceMainView
         data={introMain ?? null}
         loading={introLoading}
