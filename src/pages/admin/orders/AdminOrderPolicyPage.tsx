@@ -43,7 +43,7 @@ export default function AdminOrderPolicyPage() {
   }
 
   const save = async () => {
-    if (lock.current || policy.isFetching || policy.isError || !policy.data || amount === null || amount === policy.data.defaultShippingFee) return;
+    if (lock.current || policy.isFetching || !policy.data || amount === null || amount === policy.data.defaultShippingFee) return;
     const nextFee = amount;
     lock.current = true;
     setPending(true);
