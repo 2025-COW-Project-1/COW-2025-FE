@@ -390,7 +390,9 @@ export default function AdminProjectsSection({
       notifyDirty(true);
 
       try {
-        const res = await adminProjectsApi.presignImages({ files: payloadFiles });
+        const res = await adminProjectsApi.presignImages({
+          files: payloadFiles,
+        });
         const items = res.items ?? [];
         const matched = matchPresignItems(files, items);
 
@@ -427,14 +429,17 @@ export default function AdminProjectsSection({
     [createPreviewUrl, notifyDirty, updateProject],
   );
 
-  const handleThumbnailClear = useCallback((localId: string) => {
-    updateProject(localId, {
-      thumbnailKey: undefined,
-      thumbnailUrl: undefined,
-      thumbnailPreviewUrl: undefined,
-      isDirty: true,
-    });
-  }, [updateProject]);
+  const handleThumbnailClear = useCallback(
+    (localId: string) => {
+      updateProject(localId, {
+        thumbnailKey: undefined,
+        thumbnailUrl: undefined,
+        thumbnailPreviewUrl: undefined,
+        isDirty: true,
+      });
+    },
+    [updateProject],
+  );
 
   const handleImageRemove = useCallback(
     (localId: string, index: number) => {
@@ -623,7 +628,9 @@ export default function AdminProjectsSection({
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-slate-500">상세 설명</p>
+                  <p className="text-xs font-semibold text-slate-500">
+                    상세 설명
+                  </p>
                   <textarea
                     value={item.description}
                     onChange={(e) =>
@@ -652,8 +659,27 @@ export default function AdminProjectsSection({
                     )}
                   </div>
                   <p className="mt-1 text-[11px] text-slate-400">
-                    대표 이미지는 1개만 업로드 가능해요.
+                    대표 이미지는 1개만 업로드 가능해요. 프로젝트 카드와 상세
+                    상단에 16:9 비율로 표시돼요.
                   </p>
+                  <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
+                    <p className="text-[11px] font-bold text-slate-600">
+                      권장 등록 기준
+                    </p>
+                    <ul className="mt-2 space-y-1 text-[11px] leading-relaxed text-slate-500">
+                      <li>
+                        프로젝트 대표 이미지: 16:9 비율, 최소 1280x720px 권장
+                      </li>
+                      <li>
+                        카드와 상세 상단에서 배너처럼 보이므로 주요 내용은
+                        중앙에 배치
+                      </li>
+                      <li>
+                        모바일에서도 잘 보이도록 가장자리의 중요한 텍스트나
+                        요소는 피해서 제작
+                      </li>
+                    </ul>
+                  </div>
 
                   <label
                     onDragOver={(e) => {
@@ -667,7 +693,7 @@ export default function AdminProjectsSection({
                       }
                     }}
                     className={[
-                      'mt-3 flex min-h-[110px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
+                      'mt-3 flex min-h-27.5 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
                       item.isUploadingThumbnail
                         ? 'pointer-events-none border-slate-200 text-slate-400 opacity-60'
                         : 'border-slate-200 text-slate-500 hover:border-primary/60 hover:text-primary',
@@ -702,7 +728,7 @@ export default function AdminProjectsSection({
                         <img
                           src={thumbnailSrc}
                           alt="대표 이미지 미리보기"
-                          className="h-32 w-full object-cover"
+                          className="h-40 w-full object-cover"
                         />
                         <button
                           type="button"
@@ -751,7 +777,7 @@ export default function AdminProjectsSection({
                       }
                     }}
                     className={[
-                      'mt-3 flex min-h-[110px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
+                      'mt-3 flex min-h-27.5 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
                       item.isUploadingImages
                         ? 'pointer-events-none border-slate-200 text-slate-400 opacity-60'
                         : 'border-slate-200 text-slate-500 hover:border-primary/60 hover:text-primary',

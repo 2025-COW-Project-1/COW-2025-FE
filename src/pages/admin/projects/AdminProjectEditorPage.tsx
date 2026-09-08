@@ -98,7 +98,7 @@ function toIsoDate(value: unknown): string {
     if (!year || !month || !day) return '';
     return `${String(year).padStart(4, '0')}-${String(month).padStart(
       2,
-      '0'
+      '0',
     )}-${String(day).padStart(2, '0')}`;
   }
 
@@ -129,7 +129,7 @@ function resolveContentType(file: File): string {
 
 function buildImageItems(
   keys?: string[] | null,
-  urls?: string[] | null
+  urls?: string[] | null,
 ): ImageItem[] {
   const safeKeys = keys ?? [];
   const safeUrls = urls ?? [];
@@ -159,7 +159,7 @@ function mapProjectToForm(project: AdminProjectResponse): AdminProjectForm {
 
 function mergeServerProject(
   form: AdminProjectForm,
-  saved: AdminProjectResponse | null
+  saved: AdminProjectResponse | null,
 ): AdminProjectForm {
   if (!saved) return { ...form, isDirty: false };
 
@@ -187,7 +187,7 @@ function mergeServerProject(
 
 function matchPresignItems(
   files: File[],
-  items: PresignPutItem[]
+  items: PresignPutItem[],
 ): PresignPutItem[] {
   const map = new Map<string, PresignPutItem[]>();
   items.forEach((item) => {
@@ -319,7 +319,7 @@ export default function AdminProjectEditorPage() {
   });
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
   const createPreviewUrl = useCallback((file: File) => {
@@ -332,7 +332,7 @@ export default function AdminProjectEditorPage() {
     if (!url) return;
     URL.revokeObjectURL(url);
     objectUrlsRef.current = objectUrlsRef.current.filter(
-      (item) => item !== url
+      (item) => item !== url,
     );
   }, []);
 
@@ -358,7 +358,9 @@ export default function AdminProjectEditorPage() {
           if (active) {
             const empty = createEmptyProject();
             setProject(empty);
-            setInitialProjectSnapshot((prev) => prev ?? { ...empty, images: [] });
+            setInitialProjectSnapshot(
+              (prev) => prev ?? { ...empty, images: [] },
+            );
           }
           return;
         }
@@ -409,12 +411,12 @@ export default function AdminProjectEditorPage() {
       setProject((prev) => {
         if (!prev) return prev;
         const images = prev.images.map((item) =>
-          item.id === id ? { ...item, ...patch } : item
+          item.id === id ? { ...item, ...patch } : item,
         );
         return { ...prev, images, isDirty: true };
       });
     },
-    []
+    [],
   );
 
   const snapshotProject = useCallback((value: AdminProjectForm | null) => {
@@ -438,7 +440,7 @@ export default function AdminProjectEditorPage() {
       const now = snapshotProject(current);
       return JSON.stringify(initial) !== JSON.stringify(now);
     },
-    [snapshotProject, initialProjectSnapshot]
+    [snapshotProject, initialProjectSnapshot],
   );
 
   const getValidation = useCallback(
@@ -458,7 +460,7 @@ export default function AdminProjectEditorPage() {
         return { field: 'title', message: '상태를 선택해주세요' };
       return null;
     },
-    [isEditMode]
+    [isEditMode],
   );
 
   const buildPayload = useCallback((item: AdminProjectForm) => {
@@ -592,7 +594,7 @@ export default function AdminProjectEditorPage() {
         updateProject({ isUploadingThumbnail: false, isDirty: true });
       }
     },
-    [createPreviewUrl, project, revokePreviewUrl, updateProject]
+    [createPreviewUrl, project, revokePreviewUrl, updateProject],
   );
 
   const handleImagesUpload = useCallback(
@@ -635,7 +637,7 @@ export default function AdminProjectEditorPage() {
         const items = res.items ?? [];
         const matched = matchPresignItems(
           uploadItems.map((i) => i.file),
-          items
+          items,
         );
 
         await Promise.all(
@@ -645,7 +647,7 @@ export default function AdminProjectEditorPage() {
               await uploadToPresignedUrl(
                 target.uploadUrl,
                 uploadItem.file,
-                payloadFiles[idx].contentType
+                payloadFiles[idx].contentType,
               );
               updateImageItem(uploadItem.id, {
                 key: target.key,
@@ -660,7 +662,7 @@ export default function AdminProjectEditorPage() {
                   err instanceof Error ? err.message : '업로드에 실패했어요',
               });
             }
-          })
+          }),
         );
       } catch (err) {
         updateProject({
@@ -675,7 +677,7 @@ export default function AdminProjectEditorPage() {
         });
       }
     },
-    [createPreviewUrl, project, updateImageItem, updateProject]
+    [createPreviewUrl, project, updateImageItem, updateProject],
   );
 
   const handleThumbnailClear = useCallback(async () => {
@@ -704,7 +706,14 @@ export default function AdminProjectEditorPage() {
     // React Compiler가 project?.thumbnailPreviewUrl 같은 optional chaining 경로를
     // 안정적으로 추적하지 못해 메모이제이션을 보존할 수 없다는 경고가 발생한다.
     // project 객체 자체를 의존성으로 사용해 컴파일러 추론과 일치시킨다.
-  }, [confirm, project, revokePreviewUrl, thumbnailDeleting, toast, updateProject]);
+  }, [
+    confirm,
+    project,
+    revokePreviewUrl,
+    thumbnailDeleting,
+    toast,
+    updateProject,
+  ]);
 
   const handleImageRemove = useCallback(
     async (id: string) => {
@@ -728,7 +737,7 @@ export default function AdminProjectEditorPage() {
       toast.success('이미지를 목록에서 제거했어요! 저장하면 반영돼요');
       setDeletingImageIds((prev) => prev.filter((imageId) => imageId !== id));
     },
-    [confirm, deletingImageIds, revokePreviewUrl, toast]
+    [confirm, deletingImageIds, revokePreviewUrl, toast],
   );
 
   const handleImageRetry = useCallback(
@@ -761,7 +770,7 @@ export default function AdminProjectEditorPage() {
         });
       }
     },
-    [updateImageItem]
+    [updateImageItem],
   );
 
   const handleImageDragEnd = useCallback((event: DragEndEvent) => {
@@ -890,7 +899,9 @@ export default function AdminProjectEditorPage() {
           <div className="flex items-center gap-2">
             <select
               value={project.status}
-              onChange={(e) => updateProject({ status: e.target.value as AdminProjectStatus })}
+              onChange={(e) =>
+                updateProject({ status: e.target.value as AdminProjectStatus })
+              }
               className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700"
             >
               {STATUS_OPTIONS.map((option) => (
@@ -970,7 +981,8 @@ export default function AdminProjectEditorPage() {
               ))}
             </select>
             <p className="text-xs text-slate-500">
-              저널 파일 업로드를 사용하려면 카테고리를 <b>저널(JOURNAL)</b>로 저장해야 해요.
+              저널 파일 업로드를 사용하려면 카테고리를 <b>저널(JOURNAL)</b>로
+              저장해야 해요.
             </p>
           </div>
 
@@ -1031,8 +1043,24 @@ export default function AdminProjectEditorPage() {
             </div>
 
             <p className="mt-1 text-[11px] text-slate-400">
-              대표 이미지는 1개만 등록할 수 있어요
+              대표 이미지는 1개만 등록할 수 있어요. 프로젝트 카드와 상세 상단에
+              16:9 비율로 표시돼요.
             </p>
+            <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
+              <p className="text-[11px] font-bold text-slate-600">
+                권장 등록 기준
+              </p>
+              <ul className="mt-2 space-y-1 text-[11px] leading-relaxed text-slate-500">
+                <li>프로젝트 대표 이미지: 16:9 비율, 최소 1280x720px 권장</li>
+                <li>
+                  카드와 상세 상단에서 배너처럼 보이므로 주요 내용은 중앙에 배치
+                </li>
+                <li>
+                  모바일에서도 잘 보이도록 가장자리의 중요한 텍스트나 요소는
+                  피해서 제작
+                </li>
+              </ul>
+            </div>
 
             {!thumbnailSrc && (
               <label
@@ -1043,7 +1071,7 @@ export default function AdminProjectEditorPage() {
                   if (files.length) void handleThumbnailUpload([files[0]]);
                 }}
                 className={[
-                  'mt-3 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
+                  'mt-3 flex min-h-35 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-4 text-center text-xs font-semibold transition',
                   project.isUploadingThumbnail
                     ? 'pointer-events-none border-slate-200 text-slate-400 opacity-60'
                     : 'border-slate-200 text-slate-500 hover:border-primary/60 hover:text-primary',
@@ -1082,7 +1110,7 @@ export default function AdminProjectEditorPage() {
                 <img
                   src={thumbnailSrc}
                   alt="대표 이미지 미리보기"
-                  className="h-56 w-full object-cover"
+                  className="h-64 w-full object-cover"
                 />
                 <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 bg-white px-4 py-3">
                   <label className="cursor-pointer rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">
@@ -1133,7 +1161,7 @@ export default function AdminProjectEditorPage() {
                 const files = Array.from(e.dataTransfer.files ?? []);
                 if (files.length) void handleImagesUpload(files);
               }}
-              className="mt-3 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 px-4 py-4 text-center text-xs font-semibold text-slate-500 transition hover:border-primary/60 hover:text-primary"
+              className="mt-3 flex min-h-35 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 px-4 py-4 text-center text-xs font-semibold text-slate-500 transition hover:border-primary/60 hover:text-primary"
             >
               <input
                 type="file"
