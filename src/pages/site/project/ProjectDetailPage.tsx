@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, ChevronLeft, ChevronRight, Clock, Receipt } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Package, Receipt } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -18,7 +18,7 @@ import RouteMetadata from '../../../components/seo/RouteMetadata';
 
 type NormalStockTag = {
   label: string;
-  tone: 'info' | 'warning' | 'neutral';
+  tone: 'info' | 'warning' | 'neutral' | 'danger';
 };
 
 const LOW_STOCK_THRESHOLD = 5;
@@ -75,12 +75,14 @@ function isPurchasableItem(item: ItemResponse) {
   return item.status === 'OPEN' && !isItemSoldOut(item);
 }
 
-function getNormalStockTag(availableStock: number | null): NormalStockTag | null {
+function getNormalStockTag(
+  availableStock: number | null,
+): NormalStockTag | null {
   if (availableStock === null) {
     return { label: '재고 확인 중', tone: 'neutral' };
   }
   if (availableStock <= 0) {
-    return null;
+    return { label: '품절', tone: 'danger' };
   }
   if (availableStock <= LOW_STOCK_THRESHOLD) {
     return {
@@ -100,9 +102,13 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [downloadingId, setDownloadingId] = useState<string | number | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | number | null>(
+    null,
+  );
   const [carouselIndex, setCarouselIndex] = useState(0);
-  const [selectedQuantities, setSelectedQuantities] = useState<Record<string, number>>({});
+  const [selectedQuantities, setSelectedQuantities] = useState<
+    Record<string, number>
+  >({});
 
   const {
     data: project,
@@ -198,7 +204,8 @@ export default function ProjectDetailPage() {
       if (!target) return false;
 
       const headerOffset = 80;
-      const y = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      const y =
+        target.getBoundingClientRect().top + window.scrollY - headerOffset;
       window.scrollTo({ top: Math.max(0, y), left: 0, behavior: 'auto' });
       return true;
     };
@@ -243,23 +250,29 @@ export default function ProjectDetailPage() {
     [selectedQuantities],
   );
 
-  const setSelectedQuantity = useCallback((itemId: string | number, quantity: number) => {
-    const key = String(itemId);
-    const normalized = normalizeSelectionQuantity(quantity);
-    setSelectedQuantities((prev) => {
-      if (normalized <= 0) {
-        if (!prev[key]) return prev;
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      }
-      return { ...prev, [key]: normalized };
-    });
-  }, []);
+  const setSelectedQuantity = useCallback(
+    (itemId: string | number, quantity: number) => {
+      const key = String(itemId);
+      const normalized = normalizeSelectionQuantity(quantity);
+      setSelectedQuantities((prev) => {
+        if (normalized <= 0) {
+          if (!prev[key]) return prev;
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        }
+        return { ...prev, [key]: normalized };
+      });
+    },
+    [],
+  );
 
-  const incrementSelected = useCallback((itemId: string | number) => {
-    setSelectedQuantity(itemId, getSelectedQuantity(itemId) + 1);
-  }, [getSelectedQuantity, setSelectedQuantity]);
+  const incrementSelected = useCallback(
+    (itemId: string | number) => {
+      setSelectedQuantity(itemId, getSelectedQuantity(itemId) + 1);
+    },
+    [getSelectedQuantity, setSelectedQuantity],
+  );
 
   const selectedEntries = useMemo(() => {
     return physicalItems
@@ -273,7 +286,11 @@ export default function ProjectDetailPage() {
     [selectedEntries],
   );
   const selectedTotalPrice = useMemo(
-    () => selectedEntries.reduce((sum, entry) => sum + entry.item.price * entry.quantity, 0),
+    () =>
+      selectedEntries.reduce(
+        (sum, entry) => sum + entry.item.price * entry.quantity,
+        0,
+      ),
     [selectedEntries],
   );
 
@@ -549,7 +566,7 @@ export default function ProjectDetailPage() {
               {carouselImages.length > 0 ? (
                 <>
                   <div
-                    className="flex h-72 md:h-80"
+                    className="flex h-64 md:h-73"
                     style={{
                       width: `${carouselImages.length * 100}%`,
                       transform: `translateX(-${(carouselIndex / carouselImages.length) * 100}%)`,
@@ -571,7 +588,7 @@ export default function ProjectDetailPage() {
                           }
                           loading={idx === 0 ? undefined : 'lazy'}
                           decoding="async"
-                          className="h-full w-full object-cover"
+                          className="block h-full w-full object-contain"
                         />
                       </div>
                     ))}
@@ -581,7 +598,9 @@ export default function ProjectDetailPage() {
                     <>
                       <button
                         type="button"
-                        onClick={() => setCarouselIndex((i) => Math.max(0, i - 1))}
+                        onClick={() =>
+                          setCarouselIndex((i) => Math.max(0, i - 1))
+                        }
                         disabled={!canCarouselPrev}
                         className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-md transition hover:bg-white disabled:pointer-events-none disabled:opacity-30"
                         aria-label="이전 이미지"
@@ -680,7 +699,8 @@ export default function ProjectDetailPage() {
                     const normalizedName = item.name.trim();
                     const normalizedSummary = item.summary?.trim() ?? '';
                     const hasDistinctSummary =
-                      normalizedSummary.length > 0 && normalizedSummary !== normalizedName;
+                      normalizedSummary.length > 0 &&
+                      normalizedSummary !== normalizedName;
                     const descriptionPreview = toInlinePreviewText(
                       item.description?.trim() ||
                         fallbackDescriptions[String(item.id)] ||
@@ -713,8 +733,8 @@ export default function ProjectDetailPage() {
                             : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md',
                         ].join(' ')}
                       >
-                        <div className="grid gap-4 sm:grid-cols-[120px_1fr]">
-                          <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
+                        <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-4 sm:grid-cols-[120px_minmax(0,1fr)]">
+                          <div className="relative aspect-3/4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-100">
                             {item.thumbnailUrl ? (
                               <img
                                 src={item.thumbnailUrl}
@@ -723,7 +743,9 @@ export default function ProjectDetailPage() {
                                 decoding="async"
                                 className={[
                                   'h-full w-full object-contain transition',
-                                  soldOut ? 'grayscale-[0.8] brightness-95' : '',
+                                  soldOut
+                                    ? 'grayscale-[0.8] brightness-95'
+                                    : '',
                                 ].join(' ')}
                               />
                             ) : (
@@ -742,14 +764,33 @@ export default function ProjectDetailPage() {
                           </div>
 
                           <div className="flex min-w-0 flex-col">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <StatusBadge
-                                status={item.status}
-                                className="px-2.5 py-0.5 text-xs"
-                              />
-                              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500">
-                                {saleTypeLabel}
-                              </span>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <StatusBadge
+                                  status={item.status}
+                                  className="px-2.5 py-0.5 text-xs"
+                                />
+                                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+                                  {saleTypeLabel}
+                                </span>
+                              </div>
+                              {item.saleType === 'NORMAL' && normalStockTag && (
+                                <span
+                                  className={[
+                                    'inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold leading-none',
+                                    normalStockTag.tone === 'danger'
+                                      ? 'border-rose-200 bg-rose-50 text-rose-700'
+                                      : normalStockTag.tone === 'warning'
+                                        ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                        : normalStockTag.tone === 'neutral'
+                                          ? 'border-slate-200 bg-slate-100 text-slate-500'
+                                          : 'border-sky-200 bg-sky-50 text-sky-700',
+                                  ].join(' ')}
+                                >
+                                  <Package className="h-3.5 w-3.5" aria-hidden="true" />
+                                  {normalStockTag.label}
+                                </span>
+                              )}
                             </div>
 
                             <h3
@@ -776,7 +817,7 @@ export default function ProjectDetailPage() {
                                 '구매/수령/유의사항은 상세 보기에서 확인해주세요.'}
                             </p>
 
-                            <div className="mt-2.5 flex flex-wrap items-baseline gap-2">
+                            <div className="mt-2.5 flex flex-wrap items-center gap-2">
                               <span
                                 className={[
                                   'text-xl font-bold',
@@ -785,26 +826,6 @@ export default function ProjectDetailPage() {
                               >
                                 {formatMoney(item.price)}원
                               </span>
-                              {item.saleType === 'NORMAL' && normalStockTag && (
-                                <span
-                                  className={[
-                                    'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold leading-none',
-                                    normalStockTag.tone === 'warning'
-                                      ? 'border-amber-200 bg-amber-50 text-amber-700'
-                                      : normalStockTag.tone === 'neutral'
-                                        ? 'border-slate-200 bg-slate-100 text-slate-500'
-                                        : 'border-sky-200 bg-sky-50 text-sky-700',
-                                  ].join(' ')}
-                                >
-                                  {normalStockTag.tone === 'warning' && (
-                                    <span
-                                      className="h-1.5 w-1.5 rounded-full bg-amber-500"
-                                      aria-hidden="true"
-                                    />
-                                  )}
-                                  {normalStockTag.label}
-                                </span>
-                              )}
                               {item.saleType === 'GROUPBUY' && groupBuySummary && (
                                 <span className="text-xs font-semibold text-sky-500">
                                   {groupBuySummary}
@@ -828,7 +849,10 @@ export default function ProjectDetailPage() {
                                         <button
                                           type="button"
                                           onClick={() =>
-                                            setSelectedQuantity(item.id, selectedQty - 1)
+                                            setSelectedQuantity(
+                                              item.id,
+                                              selectedQty - 1,
+                                            )
                                           }
                                           className="h-full w-9 text-slate-600 hover:bg-slate-50"
                                           aria-label={`${item.name} 수량 감소`}
@@ -841,7 +865,10 @@ export default function ProjectDetailPage() {
                                         <button
                                           type="button"
                                           onClick={() =>
-                                            setSelectedQuantity(item.id, selectedQty + 1)
+                                            setSelectedQuantity(
+                                              item.id,
+                                              selectedQty + 1,
+                                            )
                                           }
                                           className="h-full w-9 text-slate-600 hover:bg-slate-50"
                                           aria-label={`${item.name} 수량 증가`}
@@ -880,7 +907,9 @@ export default function ProjectDetailPage() {
 
                   {journalItems.length > 0 && (
                     <section className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                      <h3 className="text-sm font-bold text-slate-800">디지털 저널</h3>
+                      <h3 className="text-sm font-bold text-slate-800">
+                        디지털 저널
+                      </h3>
                       <div className="mt-3 space-y-3">
                         {journalItems.map((item) => {
                           const isJournalDownloadable = item.status === 'OPEN';
@@ -896,7 +925,7 @@ export default function ProjectDetailPage() {
                               className="rounded-xl border border-slate-200 bg-white p-3"
                             >
                               <div className="grid gap-3 sm:grid-cols-[90px_1fr] sm:items-center">
-                                <div className="aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                                <div className="aspect-3/4 overflow-hidden rounded-xl border border-slate-200 bg-white">
                                   {item.thumbnailUrl ? (
                                     <img
                                       src={item.thumbnailUrl}
@@ -946,7 +975,8 @@ export default function ProjectDetailPage() {
                                         }
                                       }}
                                       disabled={
-                                        downloadingId === item.id || !isJournalDownloadable
+                                        downloadingId === item.id ||
+                                        !isJournalDownloadable
                                       }
                                       className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
@@ -972,7 +1002,9 @@ export default function ProjectDetailPage() {
                 </div>
 
                 <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24">
-                  <h3 className="text-sm font-bold text-slate-900">선택된 옵션</h3>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    선택된 옵션
+                  </h3>
 
                   {selectedEntries.length === 0 ? (
                     <p className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-500">
@@ -1003,7 +1035,9 @@ export default function ProjectDetailPage() {
                             <div className="inline-flex h-8 items-center overflow-hidden rounded-lg border border-slate-200 bg-white">
                               <button
                                 type="button"
-                                onClick={() => setSelectedQuantity(item.id, quantity - 1)}
+                                onClick={() =>
+                                  setSelectedQuantity(item.id, quantity - 1)
+                                }
                                 className="h-full w-8 text-slate-600 hover:bg-slate-50"
                                 aria-label={`${item.name} 수량 감소`}
                               >
@@ -1014,7 +1048,9 @@ export default function ProjectDetailPage() {
                               </span>
                               <button
                                 type="button"
-                                onClick={() => setSelectedQuantity(item.id, quantity + 1)}
+                                onClick={() =>
+                                  setSelectedQuantity(item.id, quantity + 1)
+                                }
                                 className="h-full w-8 text-slate-600 hover:bg-slate-50"
                                 aria-label={`${item.name} 수량 증가`}
                               >

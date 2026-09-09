@@ -15,6 +15,7 @@ import { getItemSaleTypeLabel } from '../../../constants/itemLabels';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
+import { Package } from 'lucide-react';
 
 function formatMoney(value?: number | null) {
   if (value === null || value === undefined) return '-';
@@ -25,7 +26,7 @@ type ItemImageLike = { imageUrl?: string | null; url?: string | null };
 
 type NormalStockTag = {
   label: string;
-  tone: 'info' | 'warning' | 'neutral';
+  tone: 'info' | 'warning' | 'neutral' | 'danger';
 };
 
 const LOW_STOCK_THRESHOLD = 5;
@@ -86,14 +87,14 @@ function ProductGallery({
   const activeImage = images[activeIndex];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="aspect-square w-full">
+        <div className="aspect-3/4 w-full">
           {activeImage ? (
             <button
               type="button"
               onClick={() => onOpen(activeImage)}
-              className="h-full w-full"
+              className="block h-full w-full"
               aria-label="대표 이미지 크게 보기"
             >
               <img
@@ -132,7 +133,7 @@ function ProductGallery({
                   alt={`${name} 썸네일 ${idx + 1}`}
                   loading="lazy"
                   decoding="async"
-                  className="h-20 w-20 object-contain"
+                  className="block h-20 w-15 bg-white object-contain"
                 />
               </button>
             ))}
@@ -181,28 +182,20 @@ function PurchaseCard({
           {formatMoney(item.price)}원
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
-          {item.saleType === 'NORMAL' && isSoldOut && (
-            <span className="inline-flex items-center rounded-full border border-rose-300 bg-rose-100 px-3.5 py-1.5 text-sm font-semibold leading-none text-rose-700">
-              SOLD OUT
-            </span>
-          )}
           {item.saleType === 'NORMAL' && normalStockTag && (
             <span
               className={[
                 'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold leading-none',
-                normalStockTag.tone === 'warning'
+                normalStockTag.tone === 'danger'
+                  ? 'border-rose-200 bg-rose-50 text-rose-700'
+                  : normalStockTag.tone === 'warning'
                   ? 'border-amber-200 bg-amber-50 text-amber-700'
                   : normalStockTag.tone === 'neutral'
                     ? 'border-slate-200 bg-slate-100 text-slate-500'
                     : 'border-sky-200 bg-sky-50 text-sky-700',
               ].join(' ')}
             >
-              {normalStockTag.tone === 'warning' && (
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-amber-500"
-                  aria-hidden="true"
-                />
-              )}
+              <Package className="h-4 w-4" aria-hidden="true" />
               {normalStockTag.label}
             </span>
           )}
@@ -320,7 +313,7 @@ function DetailImagesViewer({
   return (
     <div className="mt-5 space-y-4">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-        <div className="aspect-square w-full">
+        <div className="aspect-3/4 w-full">
           {preview && (
             <button
               type="button"
@@ -358,7 +351,7 @@ function DetailImagesViewer({
               alt={`${name} 상세 썸네일 ${idx + 1}`}
               loading="lazy"
               decoding="async"
-              className="h-20 w-20 object-contain"
+              className="block h-20 w-15 bg-white object-contain"
             />
           </button>
         ))}
@@ -406,12 +399,14 @@ export default function ProjectItemDetailPage() {
     return null;
   };
 
-  const getNormalStockTag = (availableStock: number | null): NormalStockTag | null => {
+  const getNormalStockTag = (
+    availableStock: number | null,
+  ): NormalStockTag | null => {
     if (availableStock === null) {
       return { label: '재고 확인 중', tone: 'neutral' };
     }
     if (availableStock <= 0) {
-      return null;
+      return { label: '품절', tone: 'danger' };
     }
     if (availableStock <= LOW_STOCK_THRESHOLD) {
       return {
@@ -529,9 +524,7 @@ export default function ProjectItemDetailPage() {
     availableStock <= 0;
   const isPurchasable = item.status === 'OPEN' && !isSoldOut;
   const normalStockTag =
-    item.saleType === 'NORMAL'
-      ? getNormalStockTag(availableStock)
-      : null;
+    item.saleType === 'NORMAL' ? getNormalStockTag(availableStock) : null;
   const groupBuySummary =
     item.saleType === 'GROUPBUY'
       ? targetQty !== null && fundedQty !== null
