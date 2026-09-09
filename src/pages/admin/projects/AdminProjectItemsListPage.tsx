@@ -181,12 +181,12 @@ export default function AdminProjectItemsListPage() {
                     to={`/admin/items/${item.id}`}
                     className="flex gap-4"
                   >
-                    <div className="h-20 w-24 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    <div className="aspect-3/4 w-20 overflow-hidden rounded-xl border border-slate-200 bg-white">
                       {item.thumbnailUrl ? (
                         <img
                           src={item.thumbnailUrl}
                           alt={item.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold text-slate-400">
